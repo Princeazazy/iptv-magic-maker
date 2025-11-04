@@ -22,39 +22,75 @@ serve(async (req) => {
 
     console.log('Fetching m3u from:', url);
     
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
-    
-    try {
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        },
-        signal: controller.signal
-      });
+    // Retry logic for network errors
+    let lastError;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 second timeout
       
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        console.error('Failed to fetch m3u:', response.status, response.statusText);
-        return new Response(
-          JSON.stringify({ error: 'Failed to fetch m3u file' }),
-          { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+      try {
+        console.log(`Attempt ${attempt} to fetch m3u...`);
+        
+        const response = await fetch(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': '*/*',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive'
+          },
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        console.log(`Response status: ${response.status} ${response.statusText}`);
+        
+        if (!response.ok) {
+          console.error(`Failed to fetch m3u on attempt ${attempt}:`, response.status, response.statusText);
+          if (attempt === 3) {
+            return new Response(
+              JSON.stringify({ 
+                error: `Failed to fetch m3u file: ${response.status} ${response.statusText}`,
+                details: 'The IPTV service may be temporarily unavailable. Please try again later.'
+              }),
+              { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          // Wait before retry
+          await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+          continue;
+        }
 
-      const content = await response.text();
-      console.log('Successfully fetched m3u, length:', content.length);
-      
-      return new Response(
-        JSON.stringify({ content }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    } catch (fetchError) {
-      clearTimeout(timeoutId);
-      console.error('Fetch error:', fetchError);
-      throw fetchError;
+        const content = await response.text();
+        console.log('Successfully fetched m3u, length:', content.length);
+        
+        if (!content || content.length === 0) {
+          console.error('Empty content received');
+          if (attempt === 3) {
+            return new Response(
+              JSON.stringify({ error: 'Empty content received from IPTV service' }),
+              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          continue;
+        }
+        
+        return new Response(
+          JSON.stringify({ content }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        console.error(`Fetch error on attempt ${attempt}:`, fetchError);
+        lastError = fetchError;
+        
+        if (attempt < 3) {
+          await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+        }
+      }
     }
+    
+    throw lastError || new Error('Failed to fetch m3u after 3 attempts');
   } catch (error) {
     console.error('Error in fetch-m3u:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
