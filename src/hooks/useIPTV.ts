@@ -34,8 +34,9 @@ export const useIPTV = (m3uUrl: string) => {
         const parsedChannels = parseM3U(data.content);
         setChannels(parsedChannels);
         setError(null);
-      } catch (err) {
-        setError('Failed to load channels');
+      } catch (err: any) {
+        const errorMessage = err?.message || 'Failed to load channels. The IPTV service may be down or your credentials may be invalid.';
+        setError(errorMessage);
         console.error('Error loading m3u:', err);
       } finally {
         setLoading(false);
