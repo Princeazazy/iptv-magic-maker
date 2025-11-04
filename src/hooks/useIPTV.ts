@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Channel {
   id: string;
@@ -17,10 +18,20 @@ export const useIPTV = (m3uUrl: string) => {
     const fetchM3U = async () => {
       try {
         setLoading(true);
-        const response = await fetch(m3uUrl);
-        const text = await response.text();
         
-        const parsedChannels = parseM3U(text);
+        const { data, error: fetchError } = await supabase.functions.invoke('fetch-m3u', {
+          body: { url: m3uUrl }
+        });
+
+        if (fetchError) {
+          throw fetchError;
+        }
+
+        if (!data || !data.content) {
+          throw new Error('No content received from server');
+        }
+        
+        const parsedChannels = parseM3U(data.content);
         setChannels(parsedChannels);
         setError(null);
       } catch (err) {

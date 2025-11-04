@@ -1,0 +1,4 @@
+project_id = "bqoommphwscjebnoqrpb"
+
+[functions.fetch-m3u]
+verify_jwt = false
