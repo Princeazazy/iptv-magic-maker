@@ -5,7 +5,7 @@ import { VideoPlayer } from '@/components/VideoPlayer';
 import { ChannelList } from '@/components/ChannelList';
 import { useToast } from '@/hooks/use-toast';
 
-const M3U_URL = 'https://cloudott.org:80/get.php?username=princeazazy&password=Azazy@2001&type=m3u_plus&output=ts';
+const M3U_URL = 'http://cloudott.org:80/get.php?username=princeazazy&password=Azazy@2001&type=m3u_plus&output=ts';
 
 const Index = () => {
   const { channels, loading, error } = useIPTV(M3U_URL);
