@@ -53,6 +53,19 @@ const parseM3U = (content: string): Channel[] => {
   const channels: Channel[] = [];
   let currentChannel: Partial<Channel> = {};
 
+  // Keywords to filter out VOD content (movies and series)
+  const vodKeywords = [
+    'movie', 'movies', 'film', 'films', 'cinema',
+    'series', 'tv show', 'tvshow', 'episode', 'season',
+    'vod', 'on demand', 'on-demand',
+    '24/7', '24-7', 'marathon'
+  ];
+
+  const isVODContent = (group: string = '', name: string = ''): boolean => {
+    const combined = `${group} ${name}`.toLowerCase();
+    return vodKeywords.some(keyword => combined.includes(keyword));
+  };
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
 
@@ -65,11 +78,16 @@ const parseM3U = (content: string): Channel[] => {
         id: `channel-${channels.length}`,
         name: nameMatch?.trim() || 'Unknown Channel',
         logo: logoMatch ? logoMatch[1] : undefined,
-        group: groupMatch ? groupMatch[1] : 'Uncategorized',
+        group: groupMatch ? groupMatch[1] : 'Live TV',
       };
     } else if (line && !line.startsWith('#') && currentChannel.name) {
       currentChannel.url = line;
-      channels.push(currentChannel as Channel);
+      
+      // Only add if it's not VOD content
+      if (!isVODContent(currentChannel.group, currentChannel.name)) {
+        channels.push(currentChannel as Channel);
+      }
+      
       currentChannel = {};
     }
   }

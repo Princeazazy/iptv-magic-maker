@@ -22,7 +22,11 @@ serve(async (req) => {
 
     console.log('Fetching m3u from:', url);
     
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
     
     if (!response.ok) {
       console.error('Failed to fetch m3u:', response.status, response.statusText);
