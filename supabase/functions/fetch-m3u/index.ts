@@ -33,10 +33,13 @@ serve(async (req) => {
         
         const response = await fetch(url, {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'User-Agent': 'VLC/3.0.18 LibVLC/3.0.18',
             'Accept': '*/*',
             'Accept-Encoding': 'gzip, deflate',
-            'Connection': 'keep-alive'
+            'Connection': 'keep-alive',
+            'X-Forwarded-For': '192.168.1.100',
+            'X-Real-IP': '192.168.1.100',
+            'Referer': url.split('/get.php')[0] + '/'
           },
           signal: controller.signal
         });
