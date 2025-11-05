@@ -16,6 +16,11 @@ export const useIPTV = (m3uUrl: string) => {
 
   useEffect(() => {
     const fetchM3U = async () => {
+      if (!m3uUrl || !m3uUrl.trim()) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         

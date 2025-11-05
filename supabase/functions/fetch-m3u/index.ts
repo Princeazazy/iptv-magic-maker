@@ -35,13 +35,13 @@ serve(async (req) => {
           headers: {
             'User-Agent': 'VLC/3.0.18 LibVLC/3.0.18',
             'Accept': '*/*',
-            'Accept-Encoding': 'gzip, deflate',
             'Connection': 'keep-alive',
             'X-Forwarded-For': '192.168.1.100',
             'X-Real-IP': '192.168.1.100',
             'Referer': url.split('/get.php')[0] + '/'
           },
-          signal: controller.signal
+          signal: controller.signal,
+          redirect: 'follow'
         });
         
         clearTimeout(timeoutId);
