@@ -22,24 +22,27 @@ serve(async (req) => {
 
     console.log('Fetching m3u from:', url);
     
-    // Retry logic for network errors
+    // Multiple user agents to try
+    const userAgents = [
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'VLC/3.0.18 LibVLC/3.0.18',
+      'Lavf/58.76.100'
+    ];
+    
+    // Retry logic with different user agents
     let lastError;
-    for (let attempt = 1; attempt <= 3; attempt++) {
+    for (let attempt = 1; attempt <= 4; attempt++) {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
       
       try {
-        console.log(`Attempt ${attempt} to fetch m3u...`);
+        console.log(`Attempt ${attempt} with user agent: ${userAgents[attempt - 1] || userAgents[0]}`);
         
         const response = await fetch(url, {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': '*/*',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Accept-Encoding': 'identity',
-            'Connection': 'keep-alive',
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
+            'User-Agent': userAgents[attempt - 1] || userAgents[0],
+            'Accept': '*/*'
           },
           signal: controller.signal,
           redirect: 'follow'
@@ -51,17 +54,17 @@ serve(async (req) => {
         
         if (!response.ok) {
           console.error(`Failed to fetch m3u on attempt ${attempt}:`, response.status, response.statusText);
-          if (attempt === 3) {
+          if (attempt === 4) {
             return new Response(
               JSON.stringify({ 
                 error: `Failed to fetch m3u file: ${response.status} ${response.statusText}`,
-                details: 'The IPTV service may be temporarily unavailable. Please try again later.'
+                details: 'Try accessing the URL directly in your browser. If it works there, the IPTV provider may be blocking server requests.'
               }),
               { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             );
           }
-          // Wait before retry
-          await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+          // Wait before retry with different user agent
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
           continue;
         }
 
@@ -70,7 +73,7 @@ serve(async (req) => {
         
         if (!content || content.length === 0) {
           console.error('Empty content received');
-          if (attempt === 3) {
+          if (attempt === 4) {
             return new Response(
               JSON.stringify({ error: 'Empty content received from IPTV service' }),
               { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -88,13 +91,13 @@ serve(async (req) => {
         console.error(`Fetch error on attempt ${attempt}:`, fetchError);
         lastError = fetchError;
         
-        if (attempt < 3) {
-          await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+        if (attempt < 4) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
         }
       }
     }
     
-    throw lastError || new Error('Failed to fetch m3u after 3 attempts');
+    throw lastError || new Error('Failed to fetch m3u after multiple attempts with different configurations');
   } catch (error) {
     console.error('Error in fetch-m3u:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

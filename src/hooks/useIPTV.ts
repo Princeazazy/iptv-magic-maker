@@ -24,6 +24,31 @@ export const useIPTV = (m3uUrl: string) => {
       try {
         setLoading(true);
         
+        // Try direct fetch first (works better for IPTV providers)
+        console.log('Attempting direct fetch from browser...');
+        try {
+          const directResponse = await fetch(m3uUrl, {
+            mode: 'cors',
+            credentials: 'omit',
+            headers: {
+              'Accept': '*/*',
+            }
+          });
+          
+          if (directResponse.ok) {
+            const content = await directResponse.text();
+            console.log('Direct fetch successful, parsing channels...');
+            const parsedChannels = parseM3U(content);
+            setChannels(parsedChannels);
+            setError(null);
+            setLoading(false);
+            return;
+          }
+        } catch (directError) {
+          console.log('Direct fetch failed, trying edge function...', directError);
+        }
+        
+        // Fallback to edge function with enhanced headers
         const { data, error: fetchError } = await supabase.functions.invoke('fetch-m3u', {
           body: { url: m3uUrl }
         });
