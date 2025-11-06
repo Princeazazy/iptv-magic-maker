@@ -81,8 +81,39 @@ export const useIPTV = (m3uUrl: string) => {
         setError(null);
       } catch (err: any) {
         console.error('Error loading m3u:', err);
-        const errorMessage = err?.message || 'Failed to load channels. Please check your M3U URL and internet connection.';
-        setError(errorMessage);
+        
+        // For browser preview, load demo data
+        if (typeof (window as any).Capacitor === 'undefined') {
+          console.log('Loading demo channels for browser preview...');
+          const demoChannels: Channel[] = [
+            {
+              id: 'demo-1',
+              name: 'BBC News',
+              url: 'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index_5.m3u8',
+              logo: 'https://i.imgur.com/7iJVHmC.png',
+              group: 'News'
+            },
+            {
+              id: 'demo-2',
+              name: 'Al Jazeera English',
+              url: 'https://live-hls-web-aje.getaj.net/AJE/index.m3u8',
+              logo: 'https://i.imgur.com/xEIhBDz.png',
+              group: 'News'
+            },
+            {
+              id: 'demo-3',
+              name: 'France 24',
+              url: 'https://static.france24.com/meta/android-icon-192x192.png',
+              logo: 'https://i.imgur.com/EcMwBCN.png',
+              group: 'News'
+            }
+          ];
+          setChannels(demoChannels);
+          setError(null);
+        } else {
+          const errorMessage = err?.message || 'Failed to load channels. Please check your M3U URL and internet connection.';
+          setError(errorMessage);
+        }
       } finally {
         setLoading(false);
       }
