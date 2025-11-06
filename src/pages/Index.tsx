@@ -8,7 +8,9 @@ import { useToast } from '@/hooks/use-toast';
 const IPTV_URL = 'http://myhand.org:8080/get.php?username=25370763999522&password=34479960743076&type=m3u_plus&output=ts';
 
 const Index = () => {
+  console.log('Index component rendering');
   const { channels, loading, error } = useIPTV(IPTV_URL);
+  console.log('IPTV hook result:', { channelsCount: channels.length, loading, error });
   const [currentChannel, setCurrentChannel] = useState<Channel | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const { toast } = useToast();

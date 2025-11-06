@@ -11,13 +11,17 @@ export interface Channel {
 }
 
 export const useIPTV = (m3uUrl: string) => {
+  console.log('useIPTV hook called with URL:', m3uUrl);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('useIPTV useEffect running');
     const fetchM3U = async () => {
+      console.log('fetchM3U function called');
       if (!m3uUrl || !m3uUrl.trim()) {
+        console.log('No M3U URL provided');
         setLoading(false);
         return;
       }
