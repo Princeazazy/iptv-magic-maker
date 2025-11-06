@@ -22,17 +22,27 @@ serve(async (req) => {
 
     console.log('Fetching m3u from:', url);
     
-    // Multiple user agents to try
+    // Multiple user agents to try - IPTV-specific ones
     const userAgents = [
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'IPTV Smarters/1.0',
+      'okHttp/4.9.0',
+      'Dalvik/2.1.0 (Linux; U; Android 11; SM-G960F Build/R16NW)',
+      'Mozilla/5.0 (Linux; Android 11; SM-G960F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
       'VLC/3.0.18 LibVLC/3.0.18',
       'Lavf/58.76.100'
     ];
     
-    // Retry logic with different user agents
+    // Residential IP addresses to try (common home ISP ranges)
+    const spoofIPs = [
+      '192.168.1.1',
+      '10.0.0.1',
+      '172.16.0.1',
+      '100.64.0.1'
+    ];
+    
+    // Retry logic with different user agents and IP spoofing
     let lastError;
-    for (let attempt = 1; attempt <= 4; attempt++) {
+    for (let attempt = 1; attempt <= 6; attempt++) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
       
@@ -42,16 +52,21 @@ serve(async (req) => {
         // Extract domain from URL for Referer header
         const urlObj = new URL(url);
         const referer = `${urlObj.protocol}//${urlObj.host}/`;
+        const spoofIP = spoofIPs[(attempt - 1) % spoofIPs.length];
         
         const response = await fetch(url, {
           headers: {
-            'User-Agent': userAgents[attempt - 1] || userAgents[0],
+            'User-Agent': userAgents[(attempt - 1) % userAgents.length] || userAgents[0],
             'Referer': referer,
             'Origin': referer.replace(/\/$/, ''),
             'Accept': '*/*',
             'Accept-Language': 'en-US,en;q=0.9',
             'Accept-Encoding': 'identity',
-            'Connection': 'keep-alive'
+            'Connection': 'keep-alive',
+            'X-Forwarded-For': spoofIP,
+            'X-Real-IP': spoofIP,
+            'X-Client-IP': spoofIP,
+            'X-Originating-IP': spoofIP
           },
           signal: controller.signal,
           redirect: 'follow'
@@ -63,7 +78,7 @@ serve(async (req) => {
         
         if (!response.ok) {
           console.error(`Failed to fetch m3u on attempt ${attempt}:`, response.status, response.statusText);
-          if (attempt === 4) {
+          if (attempt === 6) {
             return new Response(
               JSON.stringify({ 
                 error: `Failed to fetch m3u file: ${response.status} ${response.statusText}`,
@@ -82,7 +97,7 @@ serve(async (req) => {
         
         if (!content || content.length === 0) {
           console.error('Empty content received');
-          if (attempt === 4) {
+          if (attempt === 6) {
             return new Response(
               JSON.stringify({ error: 'Empty content received from IPTV service' }),
               { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -100,7 +115,7 @@ serve(async (req) => {
         console.error(`Fetch error on attempt ${attempt}:`, fetchError);
         lastError = fetchError;
         
-        if (attempt < 4) {
+        if (attempt < 6) {
           await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
         }
       }
