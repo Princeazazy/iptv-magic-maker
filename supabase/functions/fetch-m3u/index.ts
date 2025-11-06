@@ -39,10 +39,19 @@ serve(async (req) => {
       try {
         console.log(`Attempt ${attempt} with user agent: ${userAgents[attempt - 1] || userAgents[0]}`);
         
+        // Extract domain from URL for Referer header
+        const urlObj = new URL(url);
+        const referer = `${urlObj.protocol}//${urlObj.host}/`;
+        
         const response = await fetch(url, {
           headers: {
             'User-Agent': userAgents[attempt - 1] || userAgents[0],
-            'Accept': '*/*'
+            'Referer': referer,
+            'Origin': referer.replace(/\/$/, ''),
+            'Accept': '*/*',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'identity',
+            'Connection': 'keep-alive'
           },
           signal: controller.signal,
           redirect: 'follow'

@@ -27,11 +27,15 @@ export const useIPTV = (m3uUrl: string) => {
         // Try direct fetch first (works better for IPTV providers)
         console.log('Attempting direct fetch from browser...');
         try {
+          const urlObj = new URL(m3uUrl);
+          const referer = `${urlObj.protocol}//${urlObj.host}/`;
+          
           const directResponse = await fetch(m3uUrl, {
             mode: 'cors',
             credentials: 'omit',
             headers: {
               'Accept': '*/*',
+              'Referer': referer,
             }
           });
           
