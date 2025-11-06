@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { Http } from '@capacitor/http';
 
 export interface Channel {
   id: string;
@@ -23,28 +23,22 @@ export const useIPTV = (m3uUrl: string) => {
 
       try {
         setLoading(true);
-        console.log('Fetching M3U from browser...');
+        console.log('Fetching M3U using native HTTP...');
         
-        // Fetch directly from browser - the ONLY way that works with this provider
-        const response = await fetch(m3uUrl, {
-          mode: 'no-cors',
-          credentials: 'omit',
-          cache: 'no-cache'
+        // Use Capacitor's native HTTP to bypass CORS completely
+        const response = await Http.request({
+          method: 'GET',
+          url: m3uUrl,
+          headers: {
+            'User-Agent': 'Mozilla/5.0',
+          }
         });
         
-        // Try to read as text
-        let content;
-        try {
-          content = await response.text();
-        } catch (e) {
-          // If no-cors mode, try alternative approach with a proxy
-          console.log('No-cors blocked, trying with cors mode...');
-          const corsResponse = await fetch(m3uUrl, {
-            mode: 'cors',
-            credentials: 'omit',
-          });
-          content = await corsResponse.text();
+        if (response.status !== 200) {
+          throw new Error(`Failed to fetch playlist. Status: ${response.status}`);
         }
+        
+        const content = response.data;
         
         if (!content || content.length === 0) {
           throw new Error('Empty response from IPTV provider. Please check your credentials.');
@@ -61,16 +55,7 @@ export const useIPTV = (m3uUrl: string) => {
         setError(null);
       } catch (err: any) {
         console.error('Error loading m3u:', err);
-        let errorMessage = 'Failed to load channels. ';
-        
-        if (err.message?.includes('CORS') || err.message?.includes('NetworkError')) {
-          errorMessage += 'Your IPTV provider blocks web browsers. You may need to use a native IPTV app instead.';
-        } else if (err.message?.includes('Empty response')) {
-          errorMessage += err.message;
-        } else {
-          errorMessage += 'Please check your internet connection and M3U URL credentials.';
-        }
-        
+        const errorMessage = err?.message || 'Failed to load channels. Please check your M3U URL and internet connection.';
         setError(errorMessage);
       } finally {
         setLoading(false);
