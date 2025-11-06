@@ -5,7 +5,7 @@ import { VideoPlayer } from '@/components/VideoPlayer';
 import { ChannelList } from '@/components/ChannelList';
 import { useToast } from '@/hooks/use-toast';
 
-const IPTV_URL = 'http://myhand.org:8080/get.php?username=25370763999522&password=34479960743076&type=m3u_plus&output=ts';
+const IPTV_URL = 'https://cloudott.org:80/get.php?username=princeazazy&password=Azazy@2001&type=m3u_plus&output=ts';
 
 const Index = () => {
   console.log('Index component rendering');
