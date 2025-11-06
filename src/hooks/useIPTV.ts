@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Http } from '@capacitor/http';
+import { Capacitor } from '@capacitor/core';
 
 export interface Channel {
   id: string;
@@ -23,22 +24,41 @@ export const useIPTV = (m3uUrl: string) => {
 
       try {
         setLoading(true);
-        console.log('Fetching M3U using native HTTP...');
         
-        // Use Capacitor's native HTTP to bypass CORS completely
-        const response = await Http.request({
-          method: 'GET',
-          url: m3uUrl,
-          headers: {
-            'User-Agent': 'Mozilla/5.0',
+        let content: string;
+        
+        // Check if we're running as a native app
+        if (Capacitor.isNativePlatform()) {
+          console.log('Fetching M3U using native HTTP...');
+          
+          // Use Capacitor's native HTTP to bypass CORS completely
+          const response = await Http.request({
+            method: 'GET',
+            url: m3uUrl,
+            headers: {
+              'User-Agent': 'Mozilla/5.0',
+            }
+          });
+          
+          if (response.status !== 200) {
+            throw new Error(`Failed to fetch playlist. Status: ${response.status}`);
           }
-        });
-        
-        if (response.status !== 200) {
-          throw new Error(`Failed to fetch playlist. Status: ${response.status}`);
+          
+          content = response.data;
+        } else {
+          // Fallback for web browser preview (for testing only)
+          console.log('Fetching M3U from browser (preview mode)...');
+          const response = await fetch(m3uUrl, {
+            mode: 'cors',
+            credentials: 'omit',
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: This will work in the native app`);
+          }
+          
+          content = await response.text();
         }
-        
-        const content = response.data;
         
         if (!content || content.length === 0) {
           throw new Error('Empty response from IPTV provider. Please check your credentials.');
