@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Http } from '@capacitor/http';
-import { Capacitor } from '@capacitor/core';
 
 export interface Channel {
   id: string;
@@ -31,11 +29,15 @@ export const useIPTV = (m3uUrl: string) => {
         
         let content: string;
         
-        // Check if we're running as a native app
-        if (Capacitor.isNativePlatform()) {
+        // Check if Capacitor is available (native app)
+        const isNative = typeof (window as any).Capacitor !== 'undefined';
+        
+        if (isNative) {
           console.log('Fetching M3U using native HTTP...');
           
-          // Use Capacitor's native HTTP to bypass CORS completely
+          // Dynamically import Capacitor HTTP
+          const { Http } = await import('@capacitor/http');
+          
           const response = await Http.request({
             method: 'GET',
             url: m3uUrl,
@@ -50,7 +52,7 @@ export const useIPTV = (m3uUrl: string) => {
           
           content = response.data;
         } else {
-          // Fallback for web browser preview (for testing only)
+          // Fallback for web browser preview
           console.log('Fetching M3U from browser (preview mode)...');
           const response = await fetch(m3uUrl, {
             mode: 'cors',
