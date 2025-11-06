@@ -23,55 +23,55 @@ export const useIPTV = (m3uUrl: string) => {
 
       try {
         setLoading(true);
+        console.log('Fetching M3U from browser...');
         
-        // Try direct fetch first (works better for IPTV providers)
-        console.log('Attempting direct fetch from browser...');
+        // Fetch directly from browser - the ONLY way that works with this provider
+        const response = await fetch(m3uUrl, {
+          mode: 'no-cors',
+          credentials: 'omit',
+          cache: 'no-cache'
+        });
+        
+        // Try to read as text
+        let content;
         try {
-          const urlObj = new URL(m3uUrl);
-          const referer = `${urlObj.protocol}//${urlObj.host}/`;
-          
-          const directResponse = await fetch(m3uUrl, {
+          content = await response.text();
+        } catch (e) {
+          // If no-cors mode, try alternative approach with a proxy
+          console.log('No-cors blocked, trying with cors mode...');
+          const corsResponse = await fetch(m3uUrl, {
             mode: 'cors',
             credentials: 'omit',
-            headers: {
-              'Accept': '*/*',
-              'Referer': referer,
-            }
           });
-          
-          if (directResponse.ok) {
-            const content = await directResponse.text();
-            console.log('Direct fetch successful, parsing channels...');
-            const parsedChannels = parseM3U(content);
-            setChannels(parsedChannels);
-            setError(null);
-            setLoading(false);
-            return;
-          }
-        } catch (directError) {
-          console.log('Direct fetch failed, trying edge function...', directError);
+          content = await corsResponse.text();
         }
         
-        // Fallback to edge function with enhanced headers
-        const { data, error: fetchError } = await supabase.functions.invoke('fetch-m3u', {
-          body: { url: m3uUrl }
-        });
-
-        if (fetchError) {
-          throw fetchError;
-        }
-
-        if (!data || !data.content) {
-          throw new Error('No content received from server');
+        if (!content || content.length === 0) {
+          throw new Error('Empty response from IPTV provider. Please check your credentials.');
         }
         
-        const parsedChannels = parseM3U(data.content);
+        console.log('M3U fetch successful, parsing channels...');
+        const parsedChannels = parseM3U(content);
+        
+        if (parsedChannels.length === 0) {
+          throw new Error('No channels found in playlist. The M3U file may be empty or invalid.');
+        }
+        
         setChannels(parsedChannels);
         setError(null);
       } catch (err: any) {
-        const errorMessage = err?.message || 'Failed to load channels. The IPTV service may be down or your credentials may be invalid.';
-        setError(errorMessage);
         console.error('Error loading m3u:', err);
+        let errorMessage = 'Failed to load channels. ';
+        
+        if (err.message?.includes('CORS') || err.message?.includes('NetworkError')) {
+          errorMessage += 'Your IPTV provider blocks web browsers. You may need to use a native IPTV app instead.';
+        } else if (err.message?.includes('Empty response')) {
+          errorMessage += err.message;
+        } else {
+          errorMessage += 'Please check your internet connection and M3U URL credentials.';
+        }
+        
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
