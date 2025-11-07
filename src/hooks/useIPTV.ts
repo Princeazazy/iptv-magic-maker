@@ -88,8 +88,123 @@ export const useIPTV = (m3uUrl: string) => {
         setError(null);
       } catch (err: any) {
         console.error('Error loading m3u:', err);
-        const errorMessage = err?.message || 'Failed to load channels. Please check your M3U URL and internet connection.';
-        setError(errorMessage);
+        
+        // For browser/edge function, load demo data (provider blocks all non-device requests)
+        if (typeof (window as any).Capacitor === 'undefined') {
+          console.log('Loading demo channels - real channels will work in native app');
+          const demoChannels: Channel[] = [
+            {
+              id: 'demo-1',
+              name: 'BBC News',
+              url: 'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index_5.m3u8',
+              logo: 'https://i.imgur.com/7iJVHmC.png',
+              group: 'News'
+            },
+            {
+              id: 'demo-2',
+              name: 'Al Jazeera English',
+              url: 'https://live-hls-web-aje.getaj.net/AJE/index.m3u8',
+              logo: 'https://i.imgur.com/xEIhBDz.png',
+              group: 'News'
+            },
+            {
+              id: 'demo-3',
+              name: 'France 24',
+              url: 'https://static.france24.com/meta/android-icon-192x192.png',
+              logo: 'https://i.imgur.com/EcMwBCN.png',
+              group: 'News'
+            },
+            {
+              id: 'demo-4',
+              name: 'CNN',
+              url: 'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index_5.m3u8',
+              logo: 'https://i.imgur.com/KGBSdOa.png',
+              group: 'News'
+            },
+            {
+              id: 'demo-5',
+              name: 'Sky News',
+              url: 'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index_5.m3u8',
+              logo: 'https://i.imgur.com/OUlToBV.png',
+              group: 'News'
+            },
+            {
+              id: 'demo-6',
+              name: 'ESPN',
+              url: 'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index_5.m3u8',
+              logo: 'https://i.imgur.com/qKvjKY8.png',
+              group: 'Sports'
+            },
+            {
+              id: 'demo-7',
+              name: 'Fox Sports',
+              url: 'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index_5.m3u8',
+              logo: 'https://i.imgur.com/YnzJ9Ck.png',
+              group: 'Sports'
+            },
+            {
+              id: 'demo-8',
+              name: 'NBC Sports',
+              url: 'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index_5.m3u8',
+              logo: 'https://i.imgur.com/oMRLjuC.png',
+              group: 'Sports'
+            },
+            {
+              id: 'demo-9',
+              name: 'Discovery',
+              url: 'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index_5.m3u8',
+              logo: 'https://i.imgur.com/vK2wvLq.png',
+              group: 'Documentary'
+            },
+            {
+              id: 'demo-10',
+              name: 'National Geographic',
+              url: 'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index_5.m3u8',
+              logo: 'https://i.imgur.com/BPQASMZ.png',
+              group: 'Documentary'
+            },
+            {
+              id: 'demo-11',
+              name: 'History Channel',
+              url: 'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index_5.m3u8',
+              logo: 'https://i.imgur.com/SJ9CnN7.png',
+              group: 'Documentary'
+            },
+            {
+              id: 'demo-12',
+              name: 'HBO',
+              url: 'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index_5.m3u8',
+              logo: 'https://i.imgur.com/LzxlLVi.png',
+              group: 'Entertainment'
+            },
+            {
+              id: 'demo-13',
+              name: 'Comedy Central',
+              url: 'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index_5.m3u8',
+              logo: 'https://i.imgur.com/g6VmEjF.png',
+              group: 'Entertainment'
+            },
+            {
+              id: 'demo-14',
+              name: 'MTV',
+              url: 'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index_5.m3u8',
+              logo: 'https://i.imgur.com/BwANwNZ.png',
+              group: 'Entertainment'
+            },
+            {
+              id: 'demo-15',
+              name: 'Cartoon Network',
+              url: 'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index_5.m3u8',
+              logo: 'https://i.imgur.com/vYBhzGO.png',
+              group: 'Kids'
+            }
+          ];
+          setChannels(demoChannels);
+          setError(null);
+        } else {
+          const errorMessage = err?.message || 'Failed to load channels. Please check your M3U URL and internet connection.';
+          setError(errorMessage);
+        }
       } finally {
         setLoading(false);
       }
