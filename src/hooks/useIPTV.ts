@@ -65,11 +65,14 @@ export const useIPTV = (m3uUrl: string) => {
             }
           );
           
-          if (!response.ok) {
-            throw new Error(`Failed to fetch via edge function: ${response.status}`);
+          const data = await response.json();
+          
+          // If edge function failed (provider blocks server requests), fall back to demo channels
+          if (!response.ok || data.error) {
+            console.log('Provider blocks server requests, loading demo channels for browser preview');
+            throw new Error('DEMO_MODE');
           }
           
-          const data = await response.json();
           content = data.content;
         }
         
@@ -87,8 +90,6 @@ export const useIPTV = (m3uUrl: string) => {
         setChannels(parsedChannels);
         setError(null);
       } catch (err: any) {
-        console.error('Error loading m3u:', err);
-        
         // For browser/edge function, load demo data (provider blocks all non-device requests)
         if (typeof (window as any).Capacitor === 'undefined') {
           console.log('Loading demo channels - real channels will work in native app');
