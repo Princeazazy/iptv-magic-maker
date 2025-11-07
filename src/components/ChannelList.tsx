@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Search, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,7 @@ export const ChannelList = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGroup, setSelectedGroup] = useState<string>('all');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(0);
 
   const groups = useMemo(() => {
     const uniqueGroups = new Set(channels.map((ch) => ch.group || 'Uncategorized'));
@@ -48,6 +49,48 @@ export const ChannelList = ({
       return matchesSearch && matchesGroup && matchesFavorites;
     });
   }, [channels, searchQuery, selectedGroup, showFavoritesOnly, favorites]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (filteredChannels.length === 0) return;
+
+      const cols = window.innerWidth >= 1280 ? 6 : window.innerWidth >= 1024 ? 5 : window.innerWidth >= 768 ? 4 : 3;
+
+      switch (e.key) {
+        case 'ArrowRight':
+          e.preventDefault();
+          setFocusedIndex((prev) => Math.min(prev + 1, filteredChannels.length - 1));
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          setFocusedIndex((prev) => Math.max(prev - 1, 0));
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          setFocusedIndex((prev) => Math.min(prev + cols, filteredChannels.length - 1));
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setFocusedIndex((prev) => Math.max(prev - cols, 0));
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (filteredChannels[focusedIndex]) {
+            onChannelSelect(filteredChannels[focusedIndex]);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [filteredChannels, focusedIndex, onChannelSelect]);
+
+  // Reset focused index when filters change
+  useEffect(() => {
+    setFocusedIndex(0);
+  }, [searchQuery, selectedGroup, showFavoritesOnly]);
 
   return (
     <div className="space-y-4">
@@ -84,13 +127,14 @@ export const ChannelList = ({
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        {filteredChannels.map((channel) => (
+      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        {filteredChannels.map((channel, index) => (
           <ChannelCard
             key={channel.id}
             channel={channel}
             isPlaying={currentChannel?.id === channel.id}
             isFavorite={favorites.has(channel.id)}
+            isFocused={index === focusedIndex}
             onPlay={() => onChannelSelect(channel)}
             onToggleFavorite={() => onToggleFavorite(channel.id)}
           />
