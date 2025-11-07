@@ -65,11 +65,17 @@ export const useIPTV = (m3uUrl: string) => {
             }
           );
           
+          // Check response status before parsing JSON
+          if (!response.ok) {
+            console.log('Provider blocks server requests, loading demo channels for browser preview');
+            throw new Error('DEMO_MODE');
+          }
+          
           const data = await response.json();
           
-          // If edge function failed (provider blocks server requests), fall back to demo channels
-          if (!response.ok || data.error) {
-            console.log('Provider blocks server requests, loading demo channels for browser preview');
+          // Check if edge function returned an error
+          if (data.error) {
+            console.log('Edge function returned error, loading demo channels');
             throw new Error('DEMO_MODE');
           }
           
