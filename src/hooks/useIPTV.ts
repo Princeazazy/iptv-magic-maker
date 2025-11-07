@@ -54,32 +54,39 @@ export const useIPTV = (m3uUrl: string) => {
         } else {
           // Use edge function to bypass CORS in browser
           console.log('Fetching M3U via edge function...');
-          const response = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-m3u`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ url: m3uUrl }),
+          
+          try {
+            const response = await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-m3u`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url: m3uUrl }),
+              }
+            );
+            
+            // Check response status before parsing JSON
+            if (!response.ok) {
+              console.log('Provider blocks server requests, loading demo channels for browser preview');
+              throw new Error('DEMO_MODE');
             }
-          );
-          
-          // Check response status before parsing JSON
-          if (!response.ok) {
-            console.log('Provider blocks server requests, loading demo channels for browser preview');
+            
+            const data = await response.json();
+            
+            // Check if edge function returned an error
+            if (data.error) {
+              console.log('Edge function returned error, loading demo channels');
+              throw new Error('DEMO_MODE');
+            }
+            
+            content = data.content;
+          } catch (fetchError: any) {
+            // Edge function failed, load demo channels
+            console.log('Edge function failed, loading demo channels for browser');
             throw new Error('DEMO_MODE');
           }
-          
-          const data = await response.json();
-          
-          // Check if edge function returned an error
-          if (data.error) {
-            console.log('Edge function returned error, loading demo channels');
-            throw new Error('DEMO_MODE');
-          }
-          
-          content = data.content;
         }
         
         if (!content || content.length === 0) {
