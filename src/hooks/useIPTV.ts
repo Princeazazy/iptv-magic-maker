@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Channel {
   id: string;
@@ -144,44 +145,68 @@ export const useIPTV = (m3uUrl?: string) => {
     const fetchM3U = async () => {
       console.log('fetchM3U function called');
       
-      // Check if running on native platform
-      const isNative = Capacitor.isNativePlatform();
-      
-      // In web preview, always use demo channels (IPTV providers block server requests)
-      if (!isNative) {
-        console.log('Web preview detected - using demo channels');
-        loadDemoChannels();
-        return;
-      }
-      
       // No URL configured
       if (!effectiveUrl || !effectiveUrl.trim()) {
         console.log('No M3U URL provided, loading demo channels');
         loadDemoChannels();
         return;
       }
+      
+      // Check if running on native platform
+      const isNative = Capacitor.isNativePlatform();
 
       try {
         setLoading(true);
         
-        console.log('Fetching M3U using native HTTP...');
+        let content: string;
+        
+        if (isNative) {
+          console.log('Fetching M3U using native HTTP...');
+          // Dynamically import Capacitor HTTP
+          const { Http } = await import('@capacitor/http');
 
-        // Dynamically import Capacitor HTTP
-        const { Http } = await import('@capacitor/http');
+          const response = await Http.request({
+            method: 'GET',
+            url: effectiveUrl,
+            headers: {
+              'User-Agent': 'Mozilla/5.0',
+            },
+          });
 
-        const response = await Http.request({
-          method: 'GET',
-          url: effectiveUrl,
-          headers: {
-            'User-Agent': 'Mozilla/5.0',
-          },
-        });
-
-        if (response.status !== 200) {
-          throw new Error(`Failed to fetch playlist. Status: ${response.status}`);
+          if (response.status !== 200) {
+            throw new Error(`Failed to fetch playlist. Status: ${response.status}`);
+          }
+          
+          content = response.data;
+        } else {
+          // Web preview - try edge function proxy
+          console.log('Fetching M3U using edge function proxy...');
+          
+          const { data, error } = await supabase.functions.invoke('fetch-m3u', {
+            body: { url: effectiveUrl }
+          });
+          
+          if (error) {
+            console.error('Edge function error:', error);
+            throw new Error(`Proxy error: ${error.message}`);
+          }
+          
+          if (data?.blocked) {
+            console.log('IPTV provider blocked proxy request, using demo channels');
+            loadDemoChannels();
+            return;
+          }
+          
+          if (data?.error) {
+            throw new Error(data.error);
+          }
+          
+          if (!data?.content) {
+            throw new Error('No content received from proxy');
+          }
+          
+          content = data.content;
         }
-
-        const content = response.data;
         
         console.log('M3U fetch successful, parsing channels...');
         const parsedChannels = parseM3U(content);
@@ -194,8 +219,14 @@ export const useIPTV = (m3uUrl?: string) => {
         setError(null);
       } catch (err: any) {
         console.error('Error fetching M3U:', err);
-        const errorMessage = err?.message || 'Failed to load channels. Please check your M3U URL and internet connection.';
-        setError(errorMessage);
+        if (!isNative) {
+          // Fall back to demo channels for web
+          console.log('Falling back to demo channels');
+          loadDemoChannels();
+        } else {
+          const errorMessage = err?.message || 'Failed to load channels. Please check your M3U URL and internet connection.';
+          setError(errorMessage);
+        }
       } finally {
         setLoading(false);
       }

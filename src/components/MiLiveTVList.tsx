@@ -383,11 +383,20 @@ export const MiLiveTVList = ({
                   <div className="flex items-center gap-2">
                     <span className="mi-badge mi-badge-secondary">HD</span>
                     <span className="mi-badge mi-badge-secondary">EPG</span>
-                    <button
+                    <span
+                      role="button"
+                      tabIndex={0}
                       onClick={(e) => {
                         e.stopPropagation();
                         onToggleFavorite(channel.id);
                       }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.stopPropagation();
+                          onToggleFavorite(channel.id);
+                        }
+                      }}
+                      className="cursor-pointer"
                     >
                       <Star
                         className={`w-5 h-5 ${
@@ -396,7 +405,7 @@ export const MiLiveTVList = ({
                             : 'text-muted-foreground hover:text-foreground'
                         }`}
                       />
-                    </button>
+                    </span>
                   </div>
                 </button>
               ))}
@@ -444,11 +453,20 @@ export const MiLiveTVList = ({
                         <span className="mi-badge mi-badge-secondary">HD</span>
                         <span className="mi-badge mi-badge-secondary">EPG</span>
                       </div>
-                      <button
+                      <span
+                        role="button"
+                        tabIndex={0}
                         onClick={(e) => {
                           e.stopPropagation();
                           onToggleFavorite(channel.id);
                         }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.stopPropagation();
+                            onToggleFavorite(channel.id);
+                          }
+                        }}
+                        className="cursor-pointer"
                       >
                         <Star
                           className={`w-5 h-5 ${
@@ -457,7 +475,7 @@ export const MiLiveTVList = ({
                               : 'text-muted-foreground hover:text-foreground'
                           }`}
                         />
-                      </button>
+                      </span>
                     </div>
                   </div>
                 </button>
