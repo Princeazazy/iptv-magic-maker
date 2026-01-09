@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Tv, Film, Clapperboard, Trophy, User, RefreshCw, Clock, LogOut, Search, Settings, Mic, Cloud } from 'lucide-react';
+import arabianPalaceBg from '@/assets/arabian-palace-bg.png';
 
 interface MiHomeScreenProps {
   channelCount: number;
@@ -35,8 +36,13 @@ export const MiHomeScreen = ({
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Background gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
+      {/* Background image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${arabianPalaceBg})` }}
+      />
+      {/* Dark overlay for readability */}
+      <div className="absolute inset-0 bg-background/70" />
       
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-10 py-6">
