@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 
 export interface Channel {
   id: string;
@@ -29,75 +30,33 @@ export const useIPTV = (m3uUrl: string) => {
         
         let content: string;
         
-        // Check if Capacitor is available (native app)
-        const isNative = typeof (window as any).Capacitor !== 'undefined';
-        
-        if (isNative) {
-          console.log('Fetching M3U using native HTTP...');
-          
-          // Dynamically import Capacitor HTTP
-          const { Http } = await import('@capacitor/http');
-          
-          const response = await Http.request({
-            method: 'GET',
-            url: m3uUrl,
-            headers: {
-              'User-Agent': 'Mozilla/5.0',
-            }
-          });
-          
-          if (response.status !== 200) {
-            throw new Error(`Failed to fetch playlist. Status: ${response.status}`);
-          }
-          
-          content = response.data;
-        } else {
-          // Use edge function to bypass CORS in browser
-          console.log('Fetching M3U via edge function...');
+        // Only real IPTV fetching is supported on native devices.
+        // In the web preview, many IPTV providers block server/proxy requests and CORS prevents direct access,
+        // so we intentionally fall back to demo channels.
+        const isNative = Capacitor.isNativePlatform();
 
-          try {
-            const response = await fetch(
-              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-m3u`,
-              {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ url: m3uUrl }),
-              }
-            );
-
-            // Check response status before parsing JSON
-            if (!response.ok) {
-              console.log('Provider blocks server requests, loading demo channels for browser preview');
-              throw new Error('DEMO_MODE');
-            }
-
-            const data = await response.json();
-
-            // Edge function can return { blocked: true, ... } as a soft-failure
-            if (data?.blocked) {
-              console.log('Provider blocked server-side fetch, loading demo channels for browser');
-              throw new Error('DEMO_MODE');
-            }
-
-            // Check if edge function returned an error
-            if (data?.error) {
-              console.log('Edge function returned error, loading demo channels');
-              throw new Error('DEMO_MODE');
-            }
-
-            content = data.content;
-          } catch (fetchError: any) {
-            // Edge function failed, load demo channels
-            console.log('Edge function failed, loading demo channels for browser');
-            throw new Error('DEMO_MODE');
-          }
+        if (!isNative) {
+          throw new Error('DEMO_MODE');
         }
 
-        if (!content || content.length === 0) {
-          throw new Error('Empty response from IPTV provider. Please check your credentials.');
+        console.log('Fetching M3U using native HTTP...');
+
+        // Dynamically import Capacitor HTTP
+        const { Http } = await import('@capacitor/http');
+
+        const response = await Http.request({
+          method: 'GET',
+          url: m3uUrl,
+          headers: {
+            'User-Agent': 'Mozilla/5.0',
+          },
+        });
+
+        if (response.status !== 200) {
+          throw new Error(`Failed to fetch playlist. Status: ${response.status}`);
         }
+
+        content = response.data;
         
         console.log('M3U fetch successful, parsing channels...');
         const parsedChannels = parseM3U(content);
@@ -109,8 +68,8 @@ export const useIPTV = (m3uUrl: string) => {
         setChannels(parsedChannels);
         setError(null);
       } catch (err: any) {
-        // For browser/edge function, load demo data (provider blocks all non-device requests)
-        if (typeof (window as any).Capacitor === 'undefined') {
+        // For web preview, load demo data (providers commonly block server/proxy requests)
+        if (!Capacitor.isNativePlatform()) {
           console.log('Loading demo channels - real channels will work in native app');
           const demoChannels: Channel[] = [
             {
