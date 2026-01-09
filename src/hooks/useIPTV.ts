@@ -54,7 +54,7 @@ export const useIPTV = (m3uUrl: string) => {
         } else {
           // Use edge function to bypass CORS in browser
           console.log('Fetching M3U via edge function...');
-          
+
           try {
             const response = await fetch(
               `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-m3u`,
@@ -66,21 +66,27 @@ export const useIPTV = (m3uUrl: string) => {
                 body: JSON.stringify({ url: m3uUrl }),
               }
             );
-            
+
             // Check response status before parsing JSON
             if (!response.ok) {
               console.log('Provider blocks server requests, loading demo channels for browser preview');
               throw new Error('DEMO_MODE');
             }
-            
+
             const data = await response.json();
-            
+
+            // Edge function can return { blocked: true, ... } as a soft-failure
+            if (data?.blocked) {
+              console.log('Provider blocked server-side fetch, loading demo channels for browser');
+              throw new Error('DEMO_MODE');
+            }
+
             // Check if edge function returned an error
-            if (data.error) {
+            if (data?.error) {
               console.log('Edge function returned error, loading demo channels');
               throw new Error('DEMO_MODE');
             }
-            
+
             content = data.content;
           } catch (fetchError: any) {
             // Edge function failed, load demo channels
@@ -88,7 +94,7 @@ export const useIPTV = (m3uUrl: string) => {
             throw new Error('DEMO_MODE');
           }
         }
-        
+
         if (!content || content.length === 0) {
           throw new Error('Empty response from IPTV provider. Please check your credentials.');
         }
