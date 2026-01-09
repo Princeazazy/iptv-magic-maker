@@ -6,75 +6,77 @@
 
 @layer base {
   :root {
-    --background: 228 30% 10%;
-    --foreground: 210 20% 90%;
-    --card: 228 25% 14%;
-    --card-foreground: 210 20% 90%;
-    --popover: 228 25% 12%;
-    --popover-foreground: 210 20% 90%;
-    --primary: 0 75% 55%;
+    --background: 228 25% 8%;
+    --foreground: 0 0% 95%;
+    --card: 228 20% 12%;
+    --card-foreground: 0 0% 95%;
+    --popover: 228 20% 10%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 0 80% 55%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 228 20% 18%;
-    --secondary-foreground: 210 20% 90%;
-    --muted: 228 20% 20%;
-    --muted-foreground: 210 15% 55%;
-    --accent: 0 75% 55%;
+    --secondary: 228 15% 16%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 228 15% 18%;
+    --muted-foreground: 220 10% 55%;
+    --accent: 25 100% 55%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 228 20% 20%;
-    --input: 228 20% 18%;
-    --ring: 0 75% 55%;
-    --radius: 0.75rem;
+    --border: 228 15% 18%;
+    --input: 228 15% 14%;
+    --ring: 0 80% 55%;
+    --radius: 1rem;
     
     /* Sidebar */
-    --sidebar-background: 228 30% 8%;
-    --sidebar-foreground: 210 20% 90%;
-    --sidebar-primary: 0 75% 55%;
+    --sidebar-background: 228 25% 6%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 0 80% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 228 25% 14%;
-    --sidebar-accent-foreground: 210 20% 90%;
-    --sidebar-border: 228 20% 15%;
-    --sidebar-ring: 0 75% 55%;
+    --sidebar-accent: 228 20% 12%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 228 15% 15%;
+    --sidebar-ring: 0 80% 55%;
     
     /* Custom Mi Player colors */
-    --mi-dark: 228 30% 10%;
-    --mi-darker: 228 30% 6%;
-    --mi-card: 228 25% 14%;
-    --mi-red: 0 75% 55%;
-    --mi-red-glow: 0 75% 45%;
-    --mi-text: 210 20% 90%;
-    --mi-text-muted: 210 15% 55%;
+    --mi-dark: 228 25% 8%;
+    --mi-darker: 228 25% 5%;
+    --mi-card: 228 20% 12%;
+    --mi-card-hover: 228 20% 15%;
+    --mi-red: 0 80% 55%;
+    --mi-red-glow: 0 80% 45%;
+    --mi-orange: 25 100% 55%;
+    --mi-text: 0 0% 95%;
+    --mi-text-muted: 220 10% 55%;
   }
 
   .dark {
-    --background: 228 30% 10%;
-    --foreground: 210 20% 90%;
-    --card: 228 25% 14%;
-    --card-foreground: 210 20% 90%;
-    --popover: 228 25% 12%;
-    --popover-foreground: 210 20% 90%;
-    --primary: 0 75% 55%;
+    --background: 228 25% 8%;
+    --foreground: 0 0% 95%;
+    --card: 228 20% 12%;
+    --card-foreground: 0 0% 95%;
+    --popover: 228 20% 10%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 0 80% 55%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 228 20% 18%;
-    --secondary-foreground: 210 20% 90%;
-    --muted: 228 20% 20%;
-    --muted-foreground: 210 15% 55%;
-    --accent: 0 75% 55%;
+    --secondary: 228 15% 16%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 228 15% 18%;
+    --muted-foreground: 220 10% 55%;
+    --accent: 25 100% 55%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 228 20% 20%;
-    --input: 228 20% 18%;
-    --ring: 0 75% 55%;
-    --sidebar-background: 228 30% 8%;
-    --sidebar-foreground: 210 20% 90%;
-    --sidebar-primary: 0 75% 55%;
+    --border: 228 15% 18%;
+    --input: 228 15% 14%;
+    --ring: 0 80% 55%;
+    --sidebar-background: 228 25% 6%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 0 80% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 228 25% 14%;
-    --sidebar-accent-foreground: 210 20% 90%;
-    --sidebar-border: 228 20% 15%;
-    --sidebar-ring: 0 75% 55%;
+    --sidebar-accent: 228 20% 12%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 228 15% 15%;
+    --sidebar-ring: 0 80% 55%;
   }
 }
 
@@ -91,20 +93,24 @@
 
 @layer components {
   .mi-glow {
-    box-shadow: 0 0 20px hsl(var(--mi-red) / 0.3);
+    box-shadow: 0 0 20px hsl(var(--mi-red) / 0.4);
   }
   
-  .mi-card-hover {
-    @apply transition-all duration-200;
+  .mi-card {
+    @apply bg-card rounded-2xl border border-border/30 transition-all duration-200;
   }
   
-  .mi-card-hover:hover {
-    @apply scale-105;
-    box-shadow: 0 8px 25px hsl(0 0% 0% / 0.4);
+  .mi-card:hover {
+    @apply bg-card/80;
+    box-shadow: 0 4px 20px hsl(0 0% 0% / 0.3);
+  }
+
+  .mi-card-selected {
+    @apply border-l-4 border-l-primary bg-card;
   }
   
   .mi-nav-item {
-    @apply flex items-center justify-center w-12 h-12 rounded-full transition-all duration-200;
+    @apply flex items-center justify-center w-14 h-14 rounded-full transition-all duration-200;
   }
   
   .mi-nav-item:hover {
@@ -112,7 +118,34 @@
   }
   
   .mi-nav-item.active {
+    @apply bg-secondary text-foreground;
+  }
+
+  .mi-badge {
+    @apply px-2 py-0.5 text-xs font-semibold rounded;
+  }
+
+  .mi-badge-primary {
     @apply bg-primary text-primary-foreground;
-    box-shadow: 0 0 15px hsl(var(--mi-red) / 0.5);
+  }
+
+  .mi-badge-secondary {
+    @apply bg-muted text-muted-foreground;
+  }
+
+  .mi-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .mi-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .mi-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-muted rounded-full;
+  }
+
+  .mi-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
   }
 }

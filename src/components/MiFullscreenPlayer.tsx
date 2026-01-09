@@ -8,9 +8,10 @@ import {
   SkipForward,
   Star,
   Cloud,
-  ChevronDown,
+  ChevronUp,
   Subtitles,
   RectangleHorizontal,
+  Settings,
 } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
 
@@ -135,9 +136,57 @@ export const MiFullscreenPlayer = ({
           showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
-        {/* Top Left - Channel Logo & Info */}
-        <div className="absolute top-6 left-6 flex items-start gap-4">
-          <div className="w-20 h-16 bg-black/50 rounded-lg flex items-center justify-center p-2">
+        {/* Top Center - Collapse Arrow */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          className="absolute top-4 left-1/2 -translate-x-1/2 p-2"
+        >
+          <ChevronUp className="w-8 h-8 text-white/60 hover:text-white transition-colors" />
+        </button>
+
+        {/* Bottom Left - Time */}
+        <div className="absolute bottom-6 left-6 flex items-center gap-4">
+          <span className="text-white font-medium text-lg">
+            {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+          <div className="flex items-center gap-2 text-white/80">
+            <Cloud className="w-5 h-5" />
+            <span>24°</span>
+          </div>
+        </div>
+
+        {/* Top Right - Channel Info */}
+        <div className="absolute top-6 right-6 text-right">
+          <p className="text-white/60 text-lg">{currentTime}</p>
+          <p className="text-white/80 text-sm mt-1">{channel.group || 'Live TV'}</p>
+          <h1 className="text-white text-2xl font-bold">{channel.name}</h1>
+          
+          {/* Badges */}
+          <div className="flex items-center justify-end gap-2 mt-3">
+            <span className="px-3 py-1 bg-primary text-primary-foreground text-sm font-semibold rounded">
+              Live
+            </span>
+            <span className="px-3 py-1 bg-white/20 text-white text-sm font-semibold rounded">
+              EPG
+            </span>
+          </div>
+
+          {/* Favorite Star */}
+          <button onClick={onToggleFavorite} className="mt-4">
+            <Star
+              className={`w-7 h-7 ${
+                isFavorite ? 'fill-accent text-accent' : 'text-white/60 hover:text-white'
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Bottom Right - Channel Logo */}
+        <div className="absolute bottom-6 right-6">
+          <div className="w-20 h-16 rounded-lg flex items-center justify-center overflow-hidden">
             {channel.logo ? (
               <img
                 src={channel.logo}
@@ -148,108 +197,28 @@ export const MiFullscreenPlayer = ({
                 }}
               />
             ) : (
-              <span className="text-white font-bold text-lg">{channel.name.charAt(0)}</span>
+              <div className="w-16 h-16 rounded-lg border-2 border-accent flex items-center justify-center">
+                <span className="text-accent font-bold text-xl">{channel.name.charAt(0)}</span>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Top Right - Time & Weather */}
-        <div className="absolute top-6 right-6 flex items-center gap-4">
-          <span className="text-white font-medium text-lg">
-            {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </span>
-          <div className="flex items-center gap-1 text-white/80">
-            <Cloud className="w-5 h-5" />
-            <span>24°</span>
-          </div>
-        </div>
-
-        {/* Left Side - Channel Info */}
-        <div className="absolute bottom-32 left-6">
-          {/* Favorite Star */}
-          <button onClick={onToggleFavorite} className="mb-4">
-            <Star
-              className={`w-8 h-8 ${
-                isFavorite ? 'fill-primary text-primary' : 'text-white/50'
-              }`}
-            />
-          </button>
-
-          {/* Badges */}
-          <div className="flex items-center gap-2 mb-3">
-            <span className="px-3 py-1 bg-primary text-primary-foreground text-sm font-semibold rounded">
-              Live
-            </span>
-            <span className="px-3 py-1 bg-white/20 text-white text-sm font-semibold rounded">
-              EPG
-            </span>
-          </div>
-
-          {/* Program Title */}
-          <h1 className="text-white text-3xl font-bold mb-1">{channel.name}</h1>
-          <p className="text-white/60">{channel.group || 'Live TV'}</p>
-
-          {/* Elapsed Time */}
-          <p className="text-white text-2xl font-light mt-4">{currentTime}</p>
-        </div>
-
-        {/* Bottom Center - Playback Controls */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-6">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onPrevious?.();
-            }}
-            className="p-3 rounded-full hover:bg-white/10 transition-colors"
-          >
-            <SkipBack className="w-8 h-8 text-white" />
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              togglePlay();
-            }}
-            className="p-4 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
-          >
-            {isPlaying ? (
-              <Pause className="w-10 h-10 text-white" />
-            ) : (
-              <Play className="w-10 h-10 text-white ml-1" />
-            )}
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onNext?.();
-            }}
-            className="p-3 rounded-full hover:bg-white/10 transition-colors"
-          >
-            <SkipForward className="w-8 h-8 text-white" />
-          </button>
-        </div>
-
-        {/* Bottom Right - Additional Controls */}
-        <div className="absolute bottom-8 right-6 flex items-center gap-3">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleMute();
-            }}
-            className="w-12 h-12 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-          >
-            {isMuted ? (
-              <VolumeX className="w-6 h-6 text-white" />
-            ) : (
-              <Volume2 className="w-6 h-6 text-white" />
-            )}
-          </button>
-
+        {/* Top Left - Controls */}
+        <div className="absolute top-6 left-6 flex items-center gap-3">
           <button className="w-12 h-12 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-            <span className="text-white text-xs font-bold">4K</span>
+            <span className="text-white text-sm font-bold">1x</span>
           </button>
-
+          <button className="w-12 h-12 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+            <Subtitles className="w-6 h-6 text-white" />
+          </button>
+          <button className="w-12 h-12 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+            <Settings className="w-6 h-6 text-white" />
+          </button>
+          <button className="w-12 h-12 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+            <span className="text-white text-sm font-bold">4K</span>
+          </button>
+          
           {/* Aspect Ratio */}
           <div className="relative">
             <button
@@ -266,7 +235,7 @@ export const MiFullscreenPlayer = ({
 
             {/* Aspect Ratio Menu */}
             {showAspectMenu && (
-              <div className="absolute bottom-14 right-0 bg-card rounded-xl overflow-hidden shadow-xl min-w-[120px]">
+              <div className="absolute top-14 left-0 bg-card rounded-xl overflow-hidden shadow-xl min-w-[120px]">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -307,25 +276,57 @@ export const MiFullscreenPlayer = ({
             )}
           </div>
 
-          <button className="w-12 h-12 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-            <Subtitles className="w-6 h-6 text-white" />
-          </button>
-
-          <button className="w-12 h-12 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-            <span className="text-white text-xs font-bold">1x</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleMute();
+            }}
+            className="w-12 h-12 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+          >
+            {isMuted ? (
+              <VolumeX className="w-6 h-6 text-white" />
+            ) : (
+              <Volume2 className="w-6 h-6 text-white" />
+            )}
           </button>
         </div>
 
-        {/* Bottom Center - Collapse Arrow */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose();
-          }}
-          className="absolute bottom-2 left-1/2 -translate-x-1/2"
-        >
-          <ChevronDown className="w-8 h-8 text-white/50 hover:text-white transition-colors" />
-        </button>
+        {/* Center - Playback Controls */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-8">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onPrevious?.();
+            }}
+            className="p-3 rounded-full hover:bg-white/10 transition-colors"
+          >
+            <SkipBack className="w-10 h-10 text-white" />
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              togglePlay();
+            }}
+            className="w-20 h-20 rounded-full bg-white/30 hover:bg-white/40 transition-colors flex items-center justify-center backdrop-blur-sm"
+          >
+            {isPlaying ? (
+              <Pause className="w-10 h-10 text-white" />
+            ) : (
+              <Play className="w-10 h-10 text-white ml-1" />
+            )}
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onNext?.();
+            }}
+            className="p-3 rounded-full hover:bg-white/10 transition-colors"
+          >
+            <SkipForward className="w-10 h-10 text-white" />
+          </button>
+        </div>
       </div>
     </div>
   );

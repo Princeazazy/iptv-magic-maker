@@ -19,7 +19,6 @@ export const MiHomeScreen = ({
   onReload,
 }: MiHomeScreenProps) => {
   const [time, setTime] = useState(new Date());
-  const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -40,26 +39,25 @@ export const MiHomeScreen = ({
       <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
       
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-8 py-6">
+      <header className="relative z-10 flex items-center justify-between px-10 py-6">
         {/* Logo */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <div className="text-primary font-bold text-3xl">
-              <span className="text-primary">M</span>
-              <span className="text-[#FF6B35]">i</span>
-            </div>
-            <span className="text-muted-foreground text-sm ml-2">Player Pro</span>
+          <div className="flex items-center">
+            <span className="text-4xl font-bold">
+              <span className="text-primary">m</span>
+              <span className="text-accent">i</span>
+            </span>
+            <span className="text-muted-foreground text-lg ml-3">Player Pro</span>
           </div>
         </div>
 
         {/* Search */}
         <div className="flex items-center gap-3">
-          <button className="w-12 h-12 rounded-full bg-secondary/50 flex items-center justify-center hover:bg-secondary transition-colors">
+          <button className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors">
             <Mic className="w-5 h-5 text-muted-foreground" />
           </button>
-          <div className="flex items-center gap-2 bg-secondary/30 rounded-full px-4 py-2.5 min-w-[200px]">
-            <Search className="w-4 h-4 text-muted-foreground" />
-            <span className="text-muted-foreground text-sm">Search</span>
+          <div className="flex items-center gap-3 bg-secondary/50 rounded-full px-5 py-3 min-w-[200px]">
+            <span className="text-muted-foreground">Search</span>
           </div>
         </div>
 
@@ -67,47 +65,47 @@ export const MiHomeScreen = ({
         <div className="flex items-center gap-4">
           <button 
             onClick={() => onNavigate('settings')}
-            className="w-12 h-12 rounded-full bg-secondary/50 flex items-center justify-center hover:bg-secondary transition-colors"
+            className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
           >
-            <Settings className="w-5 h-5 text-muted-foreground" />
+            <Settings className="w-6 h-6 text-muted-foreground" />
           </button>
-          <div className="w-12 h-12 rounded-full bg-primary overflow-hidden border-2 border-primary">
+          <div className="w-14 h-14 rounded-full bg-primary overflow-hidden ring-4 ring-primary/30">
             <div className="w-full h-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-              <User className="w-6 h-6 text-primary-foreground" />
+              <User className="w-7 h-7 text-primary-foreground" />
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10 px-8 pt-4 pb-8">
-        <div className="flex gap-6">
+      <main className="relative z-10 px-10 pt-6 pb-8">
+        <div className="flex gap-5 items-start">
           {/* Live TV - Large Card */}
           <button
             onClick={() => onNavigate('live')}
-            className="relative w-80 h-96 bg-card/80 backdrop-blur-sm rounded-2xl overflow-hidden group hover:scale-[1.02] transition-transform cursor-pointer border border-border/50"
+            className="relative w-[320px] h-[440px] bg-card rounded-2xl overflow-hidden group hover:bg-card/80 transition-all cursor-pointer border border-border/30"
           >
             {/* Last Update Badge */}
-            <div className="absolute top-4 left-4 flex items-center gap-2 text-muted-foreground text-xs">
-              <RefreshCw className="w-3 h-3" />
+            <div className="absolute top-5 left-5 flex items-center gap-2 text-muted-foreground text-sm">
+              <RefreshCw className="w-4 h-4" />
               <span>Last Update : 2 day ago</span>
             </div>
 
             {/* Icon */}
-            <div className="absolute bottom-32 left-1/2 -translate-x-1/2">
-              <div className="w-20 h-20 rounded-2xl bg-muted/50 flex items-center justify-center">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -mt-8">
+              <div className="w-20 h-20 rounded-2xl bg-secondary/80 flex items-center justify-center">
                 <Tv className="w-10 h-10 text-muted-foreground" />
               </div>
             </div>
 
             {/* Title */}
-            <div className="absolute bottom-8 left-6">
-              <h2 className="text-2xl font-bold text-foreground">Live TV's</h2>
-              <p className="text-muted-foreground text-sm">+{channelCount.toLocaleString()} Channels</p>
+            <div className="absolute bottom-12 left-6">
+              <h2 className="text-3xl font-bold text-foreground">Live TV's</h2>
+              <p className="text-muted-foreground mt-1">+{channelCount.toLocaleString()} Channels</p>
             </div>
 
             {/* Selection indicator */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-20 h-1 bg-primary rounded-full" />
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-24 h-1.5 bg-foreground rounded-full" />
           </button>
 
           {/* Middle Column - Movies & Series */}
@@ -115,38 +113,38 @@ export const MiHomeScreen = ({
             {/* Movies Card */}
             <button
               onClick={() => onNavigate('movies')}
-              className="relative w-56 h-44 bg-card/60 backdrop-blur-sm rounded-2xl overflow-hidden group hover:scale-[1.02] transition-transform cursor-pointer border border-border/50"
+              className="relative w-[240px] h-[210px] bg-card rounded-2xl overflow-hidden group hover:bg-card/80 transition-all cursor-pointer border border-border/30"
             >
-              <div className="absolute top-4 left-4">
-                <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
-                  <Film className="w-5 h-5 text-muted-foreground" />
+              <div className="absolute top-5 left-5">
+                <div className="w-12 h-12 rounded-xl bg-secondary/80 flex items-center justify-center">
+                  <Film className="w-6 h-6 text-muted-foreground" />
                 </div>
               </div>
-              <div className="absolute bottom-4 left-4">
-                <h3 className="text-xl font-semibold text-foreground">Movies</h3>
-                <p className="text-muted-foreground text-xs">+{movieCount} Movies</p>
+              <div className="absolute bottom-5 left-5">
+                <h3 className="text-2xl font-semibold text-foreground">Movies</h3>
+                <p className="text-muted-foreground text-sm mt-0.5">+{movieCount} Movies</p>
               </div>
             </button>
 
             {/* Series Card */}
             <button
               onClick={() => onNavigate('series')}
-              className="relative w-56 h-44 bg-card/60 backdrop-blur-sm rounded-2xl overflow-hidden group hover:scale-[1.02] transition-transform cursor-pointer border border-border/50"
+              className="relative w-[240px] h-[210px] bg-card rounded-2xl overflow-hidden group hover:bg-card/80 transition-all cursor-pointer border border-border/30"
             >
               {/* New Badge */}
-              <div className="absolute top-4 right-4">
-                <span className="px-2 py-0.5 bg-primary text-primary-foreground text-xs font-semibold rounded">
+              <div className="absolute top-5 right-5">
+                <span className="px-3 py-1 bg-accent text-accent-foreground text-sm font-semibold rounded-md">
                   New
                 </span>
               </div>
-              <div className="absolute top-4 left-4">
-                <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
-                  <Clapperboard className="w-5 h-5 text-muted-foreground" />
+              <div className="absolute top-5 left-5">
+                <div className="w-12 h-12 rounded-xl bg-secondary/80 flex items-center justify-center">
+                  <Clapperboard className="w-6 h-6 text-muted-foreground" />
                 </div>
               </div>
-              <div className="absolute bottom-4 left-4">
-                <h3 className="text-xl font-semibold text-foreground">Series</h3>
-                <p className="text-muted-foreground text-xs">+{seriesCount} Series</p>
+              <div className="absolute bottom-5 left-5">
+                <h3 className="text-2xl font-semibold text-foreground">Series</h3>
+                <p className="text-muted-foreground text-sm mt-0.5">+{seriesCount} Series</p>
               </div>
             </button>
           </div>
@@ -154,52 +152,57 @@ export const MiHomeScreen = ({
           {/* Sports Guide Card */}
           <button
             onClick={() => onNavigate('sports')}
-            className="relative w-56 h-[376px] bg-card/60 backdrop-blur-sm rounded-2xl overflow-hidden group hover:scale-[1.02] transition-transform cursor-pointer border border-border/50"
+            className="relative w-[240px] h-[440px] bg-card rounded-2xl overflow-hidden group hover:bg-card/80 transition-all cursor-pointer border border-border/30 bg-gradient-to-b from-card to-card/80"
+            style={{
+              backgroundImage: 'linear-gradient(to bottom, hsl(228 20% 12% / 0.9), hsl(228 20% 12% / 0.95)), url("https://images.unsplash.com/photo-1461896836934- voices?w=400")',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
           >
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-secondary/60 flex items-center justify-center">
                 <Trophy className="w-8 h-8 text-muted-foreground" />
               </div>
             </div>
-            <div className="absolute bottom-8 left-4">
-              <h3 className="text-xl font-semibold text-foreground">Sports Guide</h3>
-              <p className="text-muted-foreground text-xs">+{sportsCount} in playlist</p>
+            <div className="absolute bottom-8 left-5">
+              <h3 className="text-2xl font-semibold text-foreground">Sports Guide</h3>
+              <p className="text-muted-foreground text-sm mt-0.5">+{sportsCount} in playlist</p>
             </div>
           </button>
 
           {/* Quick Actions Menu */}
-          <div className="flex flex-col gap-2 min-w-[180px]">
-            <button className="flex items-center gap-3 px-4 py-3 bg-card/40 rounded-xl hover:bg-card/60 transition-colors">
+          <div className="flex flex-col gap-3 min-w-[200px]">
+            <button className="flex items-center gap-4 px-5 py-4 bg-card rounded-xl hover:bg-card/80 transition-colors border border-border/30">
               <User className="w-5 h-5 text-muted-foreground" />
-              <span className="text-foreground text-sm">Account</span>
+              <span className="text-foreground">Account</span>
             </button>
             <button 
               onClick={onReload}
-              className="flex items-center gap-3 px-4 py-3 bg-card/40 rounded-xl hover:bg-card/60 transition-colors"
+              className="flex items-center gap-4 px-5 py-4 bg-card rounded-xl hover:bg-card/80 transition-colors border border-border/30"
             >
               <RefreshCw className="w-5 h-5 text-muted-foreground" />
-              <span className="text-foreground text-sm">Reload</span>
+              <span className="text-foreground">Reload</span>
             </button>
-            <button className="flex items-center gap-3 px-4 py-3 bg-card/40 rounded-xl hover:bg-card/60 transition-colors">
+            <button className="flex items-center gap-4 px-5 py-4 bg-card rounded-xl hover:bg-card/80 transition-colors border border-border/30">
               <Clock className="w-5 h-5 text-muted-foreground" />
-              <span className="text-foreground text-sm">Catch up</span>
+              <span className="text-foreground">Catch up</span>
             </button>
-            <button className="flex items-center gap-3 px-4 py-3 bg-card/40 rounded-xl hover:bg-card/60 transition-colors">
+            <button className="flex items-center gap-4 px-5 py-4 bg-card rounded-xl hover:bg-card/80 transition-colors border border-border/30">
               <LogOut className="w-5 h-5 text-muted-foreground" />
-              <span className="text-foreground text-sm">Exit</span>
+              <span className="text-foreground">Exit</span>
             </button>
           </div>
         </div>
       </main>
 
       {/* Bottom Right - Time & Weather */}
-      <div className="absolute bottom-8 right-8 text-right">
-        <div className="flex items-center justify-end gap-2 text-muted-foreground mb-2">
-          <Cloud className="w-5 h-5" />
-          <span className="text-sm">24°</span>
+      <div className="absolute bottom-10 right-12 text-right">
+        <div className="flex items-center justify-end gap-2 text-muted-foreground mb-3">
+          <Cloud className="w-6 h-6" />
+          <span className="text-lg">24°</span>
         </div>
-        <p className="text-5xl font-light text-foreground">{formatTime()}</p>
-        <p className="text-muted-foreground">{formatDate()}</p>
+        <p className="text-6xl font-light text-foreground tracking-tight">{formatTime()}</p>
+        <p className="text-muted-foreground text-lg mt-1">{formatDate()}</p>
       </div>
     </div>
   );

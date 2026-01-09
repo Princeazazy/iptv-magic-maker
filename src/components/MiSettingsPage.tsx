@@ -16,12 +16,12 @@ export const MiSettingsPage = ({ onBack }: MiSettingsPageProps) => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="flex items-center justify-between px-8 py-6">
+      <header className="flex items-center justify-between px-10 py-6">
         {/* Back & Title */}
         <div className="flex items-center gap-4">
           <button
             onClick={onBack}
-            className="w-12 h-12 rounded-full bg-secondary/50 flex items-center justify-center hover:bg-secondary transition-colors"
+            className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
           >
             <ChevronLeft className="w-6 h-6 text-muted-foreground" />
           </button>
@@ -29,50 +29,48 @@ export const MiSettingsPage = ({ onBack }: MiSettingsPageProps) => {
         </div>
 
         {/* Logo */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            <div className="text-primary font-bold text-2xl">
-              <span className="text-primary">M</span>
-              <span className="text-[#FF6B35]">i</span>
-            </div>
-            <span className="text-muted-foreground text-sm ml-2">Player Pro</span>
-          </div>
+        <div className="flex items-center">
+          <span className="text-3xl font-bold">
+            <span className="text-primary">m</span>
+            <span className="text-accent">i</span>
+          </span>
+          <span className="text-muted-foreground text-lg ml-3">Player Pro</span>
         </div>
 
         {/* Time & Weather */}
-        <div className="flex items-center gap-4">
-          <span className="text-foreground font-medium">
+        <div className="flex items-center gap-6">
+          <span className="text-foreground font-medium text-lg">
             {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <Cloud className="w-4 h-4" />
-            <span className="text-sm">24°</span>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Cloud className="w-5 h-5" />
+            <span>24°</span>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="px-8 py-8">
-        <div className="max-w-4xl mx-auto flex gap-8">
+      <main className="px-10 py-12">
+        <div className="max-w-5xl mx-auto flex gap-8">
           {/* User Profile Card */}
-          <div className="flex-1 bg-card/60 rounded-2xl p-8">
-            <div className="flex items-center gap-6">
+          <div className="flex-1 bg-card rounded-2xl p-8 border border-border/30">
+            <div className="flex items-center gap-6 mb-8">
               {/* Avatar */}
-              <div className="w-24 h-24 rounded-full bg-primary overflow-hidden border-4 border-primary">
+              <div className="w-28 h-28 rounded-full bg-primary overflow-hidden ring-4 ring-primary/30">
                 <div className="w-full h-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-                  <User className="w-12 h-12 text-primary-foreground" />
+                  <User className="w-14 h-14 text-primary-foreground" />
                 </div>
               </div>
 
               {/* User Info */}
               <div>
-                <h2 className="text-2xl font-bold text-foreground">User</h2>
-                <p className="text-muted-foreground">user@example.com</p>
+                <h2 className="text-2xl font-bold text-foreground">Mohammad Reza</h2>
+                <p className="text-muted-foreground">mrfarahzad@gmail.com</p>
               </div>
             </div>
 
             {/* Account Button */}
-            <button className="mt-8 w-full flex items-center gap-3 px-6 py-4 bg-card rounded-xl hover:bg-muted transition-colors">
+            <button className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-secondary rounded-xl hover:bg-secondary/80 transition-colors">
               <User className="w-5 h-5 text-muted-foreground" />
               <span className="text-foreground font-medium">Account</span>
             </button>
@@ -81,33 +79,33 @@ export const MiSettingsPage = ({ onBack }: MiSettingsPageProps) => {
           {/* Settings Options */}
           <div className="flex-1 space-y-4">
             {/* Parent Control */}
-            <button className="w-full flex items-center gap-4 px-6 py-5 bg-card/60 rounded-2xl hover:bg-card transition-colors">
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                <Shield className="w-5 h-5 text-muted-foreground" />
+            <button className="w-full flex items-center gap-4 px-6 py-5 bg-card rounded-2xl hover:bg-card/80 transition-colors border border-border/30">
+              <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center">
+                <Shield className="w-6 h-6 text-muted-foreground" />
               </div>
-              <span className="text-foreground font-medium">Parent Control</span>
+              <span className="text-foreground font-medium text-lg">Parent Control</span>
             </button>
 
             {/* Change Playlist */}
-            <button className="w-full flex items-center gap-4 px-6 py-5 bg-card/80 rounded-2xl hover:bg-card transition-colors border border-border/50">
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                <ListVideo className="w-5 h-5 text-muted-foreground" />
+            <button className="w-full flex items-center gap-4 px-6 py-5 bg-card rounded-2xl hover:bg-card/80 transition-colors border border-border/30">
+              <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center">
+                <ListVideo className="w-6 h-6 text-muted-foreground" />
               </div>
-              <span className="text-foreground font-medium">Change Playlist</span>
+              <span className="text-foreground font-medium text-lg">Change Playlist</span>
             </button>
 
             {/* Delete Cache */}
-            <button className="w-full flex items-center gap-4 px-6 py-5 bg-card/60 rounded-2xl hover:bg-card transition-colors">
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                <Trash2 className="w-5 h-5 text-muted-foreground" />
+            <button className="w-full flex items-center gap-4 px-6 py-5 bg-card rounded-2xl hover:bg-card/80 transition-colors border border-border/30">
+              <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-muted-foreground" />
               </div>
-              <span className="text-foreground font-medium">Delete Cache</span>
+              <span className="text-foreground font-medium text-lg">Delete Cache</span>
             </button>
           </div>
         </div>
 
         {/* Version */}
-        <p className="text-center text-muted-foreground text-sm mt-12">Version 1.1.1</p>
+        <p className="text-center text-muted-foreground text-sm mt-16">Version 1.1.1</p>
       </main>
     </div>
   );

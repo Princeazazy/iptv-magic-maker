@@ -91,14 +91,14 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="flex items-center justify-center mb-4">
-            <div className="text-primary font-bold text-4xl">
-              <span className="text-primary">M</span>
-              <span className="text-[#FF6B35]">i</span>
-            </div>
-            <span className="text-muted-foreground text-lg ml-2">Player Pro</span>
+          <div className="flex items-center justify-center mb-6">
+            <span className="text-5xl font-bold">
+              <span className="text-primary">m</span>
+              <span className="text-accent">i</span>
+            </span>
+            <span className="text-muted-foreground text-xl ml-3">Player Pro</span>
           </div>
-          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+          <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
           <p className="text-muted-foreground">Loading channels...</p>
         </div>
       </div>
@@ -109,17 +109,17 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md px-4">
-          <div className="flex items-center justify-center mb-4">
-            <div className="text-destructive font-bold text-4xl">
-              <span>M</span>
-              <span>i</span>
-            </div>
+          <div className="flex items-center justify-center mb-6">
+            <span className="text-5xl font-bold">
+              <span className="text-destructive">m</span>
+              <span className="text-destructive">i</span>
+            </span>
           </div>
-          <p className="text-destructive mb-2 font-semibold">Failed to load channels</p>
-          <p className="text-muted-foreground text-sm mb-4">{error}</p>
+          <p className="text-destructive mb-2 font-semibold text-lg">Failed to load channels</p>
+          <p className="text-muted-foreground text-sm mb-6">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+            className="px-8 py-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors font-medium"
           >
             Try Again
           </button>
