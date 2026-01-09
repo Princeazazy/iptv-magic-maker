@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useIPTV, Channel } from '@/hooks/useIPTV';
 import { MiHomeScreen } from '@/components/MiHomeScreen';
@@ -19,6 +19,14 @@ const Index = () => {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { toast } = useToast();
+
+  // Filter channels by current screen category
+  const filteredChannelsByCategory = useMemo(() => {
+    if (currentScreen === 'home' || currentScreen === 'settings') {
+      return channels;
+    }
+    return channels.filter(ch => ch.type === currentScreen);
+  }, [channels, currentScreen]);
 
   const handlePlaylistChange = useCallback(() => {
     // Trigger a re-render to use new playlist URL
@@ -70,17 +78,17 @@ const Index = () => {
 
   const handleNextChannel = () => {
     if (!currentChannel) return;
-    const currentIndex = channels.findIndex((c) => c.id === currentChannel.id);
-    if (currentIndex < channels.length - 1) {
-      setCurrentChannel(channels[currentIndex + 1]);
+    const currentIndex = filteredChannelsByCategory.findIndex((c) => c.id === currentChannel.id);
+    if (currentIndex < filteredChannelsByCategory.length - 1) {
+      setCurrentChannel(filteredChannelsByCategory[currentIndex + 1]);
     }
   };
 
   const handlePreviousChannel = () => {
     if (!currentChannel) return;
-    const currentIndex = channels.findIndex((c) => c.id === currentChannel.id);
+    const currentIndex = filteredChannelsByCategory.findIndex((c) => c.id === currentChannel.id);
     if (currentIndex > 0) {
-      setCurrentChannel(channels[currentIndex - 1]);
+      setCurrentChannel(filteredChannelsByCategory[currentIndex - 1]);
     }
   };
 
@@ -173,7 +181,7 @@ const Index = () => {
       return (
         <div className="h-screen bg-background overflow-hidden">
           <MiLiveTVList
-            channels={channels}
+            channels={filteredChannelsByCategory}
             currentChannel={currentChannel}
             favorites={favorites}
             searchQuery={searchQuery}

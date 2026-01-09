@@ -5,10 +5,45 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Determine content type from group/name
+function getContentType(group: string, name: string): 'live' | 'movies' | 'series' | 'sports' {
+  const combined = `${group} ${name}`.toLowerCase();
+  
+  // Sports detection
+  if (combined.includes('sport') || combined.includes('football') || 
+      combined.includes('soccer') || combined.includes('basketball') ||
+      combined.includes('tennis') || combined.includes('cricket') ||
+      combined.includes('boxing') || combined.includes('wrestling') ||
+      combined.includes('nfl') || combined.includes('nba') ||
+      combined.includes('mlb') || combined.includes('nhl') ||
+      combined.includes('espn') || combined.includes('fox sport') ||
+      combined.includes('bein') || combined.includes('sky sport')) {
+    return 'sports';
+  }
+  
+  // Movies detection
+  if (combined.includes('movie') || combined.includes('film') || 
+      combined.includes('cinema') || combined.includes('vod') ||
+      combined.includes('on demand') || combined.includes('24/7') ||
+      combined.includes('24-7')) {
+    return 'movies';
+  }
+  
+  // Series detection
+  if (combined.includes('series') || combined.includes('tv show') ||
+      combined.includes('episode') || combined.includes('season') ||
+      combined.includes('netflix') || combined.includes('hbo max') ||
+      combined.includes('amazon') || combined.includes('hulu')) {
+    return 'series';
+  }
+  
+  return 'live';
+}
+
 // Parse M3U content as we stream it, extracting channels incrementally
 // Returns parsed channels array to avoid keeping full content in memory
-function parseM3UContent(chunk: string, existingChannels: { name: string; url: string; logo: string; group: string }[], partialLine: string): {
-  channels: { name: string; url: string; logo: string; group: string }[];
+function parseM3UContent(chunk: string, existingChannels: { name: string; url: string; logo: string; group: string; type: string }[], partialLine: string): {
+  channels: { name: string; url: string; logo: string; group: string; type: string }[];
   remainingPartial: string;
 } {
   const content = partialLine + chunk;
@@ -17,7 +52,7 @@ function parseM3UContent(chunk: string, existingChannels: { name: string; url: s
   // Keep the last line as partial if it doesn't end with newline
   const remainingPartial = chunk.endsWith('\n') ? '' : lines.pop() || '';
   
-  let currentChannel: { name: string; url: string; logo: string; group: string } | null = null;
+  let currentChannel: { name: string; url: string; logo: string; group: string; type: string } | null = null;
   
   for (const line of lines) {
     const trimmedLine = line.trim();
@@ -28,11 +63,16 @@ function parseM3UContent(chunk: string, existingChannels: { name: string; url: s
       const logoMatch = trimmedLine.match(/tvg-logo="([^"]+)"/);
       const groupMatch = trimmedLine.match(/group-title="([^"]+)"/);
       
+      const name = nameMatch ? nameMatch[1].trim() : 'Unknown Channel';
+      const group = groupMatch ? groupMatch[1] : 'Uncategorized';
+      const type = getContentType(group, name);
+      
       currentChannel = {
-        name: nameMatch ? nameMatch[1].trim() : 'Unknown Channel',
+        name,
         url: '',
         logo: logoMatch ? logoMatch[1] : '',
-        group: groupMatch ? groupMatch[1] : 'Uncategorized'
+        group,
+        type
       };
     } else if (currentChannel && trimmedLine && !trimmedLine.startsWith('#')) {
       // This is the URL line
@@ -121,7 +161,7 @@ serve(async (req) => {
         }
 
         const decoder = new TextDecoder();
-        const channels: { name: string; url: string; logo: string; group: string }[] = [];
+        const channels: { name: string; url: string; logo: string; group: string; type: string }[] = [];
         let partialLine = '';
         let bytesRead = 0;
         const maxBytes = 10 * 1024 * 1024; // Process max 10MB to stay within limits

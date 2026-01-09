@@ -8,6 +8,7 @@ export interface Channel {
   url: string;
   logo?: string;
   group?: string;
+  type?: 'live' | 'movies' | 'series' | 'sports';
 }
 
 const PLAYLIST_STORAGE_KEY = 'mi-player-playlist-url';
@@ -201,7 +202,7 @@ export const useIPTV = (m3uUrl?: string) => {
             throw new Error(data.error);
           }
           
-          // Edge function now returns pre-parsed channels
+          // Edge function now returns pre-parsed channels with type
           if (data?.channels && Array.isArray(data.channels)) {
             console.log(`Received ${data.channels.length} pre-parsed channels from edge function`);
             const parsedChannels = data.channels
@@ -211,7 +212,8 @@ export const useIPTV = (m3uUrl?: string) => {
                 name: ch.name,
                 url: ch.url,
                 logo: ch.logo || undefined,
-                group: ch.group || 'Live TV'
+                group: ch.group || 'Live TV',
+                type: ch.type || 'live'
               }));
             
             if (parsedChannels.length === 0) {
