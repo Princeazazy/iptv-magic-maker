@@ -30,53 +30,108 @@ const getCategoryTitle = (category: string): string => {
   }
 };
 
-// Country flag image URLs (circular flags)
-const getCountryFlag = (group: string): string => {
+// Country flag image URLs using flagcdn.com (circular flags)
+const getCountryFlagUrl = (group: string): string | null => {
   const groupLower = group.toLowerCase();
-  const flagMap: Record<string, string> = {
-    'ukraine': '🇺🇦',
-    'brazil': '🇧🇷',
-    'germany': '🇩🇪',
-    'united states': '🇺🇸',
-    'usa': '🇺🇸',
-    'us': '🇺🇸',
-    'france': '🇫🇷',
-    'portugal': '🇵🇹',
-    'south africa': '🇿🇦',
-    'china': '🇨🇳',
-    'uk': '🇬🇧',
-    'united kingdom': '🇬🇧',
-    'spain': '🇪🇸',
-    'italy': '🇮🇹',
-    'canada': '🇨🇦',
-    'australia': '🇦🇺',
-    'japan': '🇯🇵',
-    'korea': '🇰🇷',
-    'india': '🇮🇳',
-    'mexico': '🇲🇽',
-    'argentina': '🇦🇷',
-    'netherlands': '🇳🇱',
-    'belgium': '🇧🇪',
-    'sweden': '🇸🇪',
-    'norway': '🇳🇴',
-    'denmark': '🇩🇰',
-    'finland': '🇫🇮',
-    'poland': '🇵🇱',
-    'russia': '🇷🇺',
-    'turkey': '🇹🇷',
-    'egypt': '🇪🇬',
-    'saudi': '🇸🇦',
-    'uae': '🇦🇪',
-    'news': '📰',
-    'sports': '⚽',
-    'documentary': '🎬',
-    'entertainment': '🎭',
-    'kids': '👶',
+  const countryCodeMap: Record<string, string> = {
+    'ukraine': 'ua',
+    'brazil': 'br',
+    'germany': 'de',
+    'united states': 'us',
+    'usa': 'us',
+    'us': 'us',
+    'france': 'fr',
+    'portugal': 'pt',
+    'south africa': 'za',
+    'china': 'cn',
+    'uk': 'gb',
+    'united kingdom': 'gb',
+    'spain': 'es',
+    'italy': 'it',
+    'canada': 'ca',
+    'australia': 'au',
+    'japan': 'jp',
+    'korea': 'kr',
+    'india': 'in',
+    'mexico': 'mx',
+    'argentina': 'ar',
+    'netherlands': 'nl',
+    'belgium': 'be',
+    'sweden': 'se',
+    'norway': 'no',
+    'denmark': 'dk',
+    'finland': 'fi',
+    'poland': 'pl',
+    'russia': 'ru',
+    'turkey': 'tr',
+    'egypt': 'eg',
+    'saudi': 'sa',
+    'uae': 'ae',
+    'greece': 'gr',
+    'czech': 'cz',
+    'austria': 'at',
+    'switzerland': 'ch',
+    'ireland': 'ie',
+    'romania': 'ro',
+    'hungary': 'hu',
+    'thailand': 'th',
+    'vietnam': 'vn',
+    'indonesia': 'id',
+    'malaysia': 'my',
+    'philippines': 'ph',
+    'pakistan': 'pk',
+    'bangladesh': 'bd',
+    'israel': 'il',
+    'iran': 'ir',
+    'iraq': 'iq',
+    'kuwait': 'kw',
+    'qatar': 'qa',
+    'bahrain': 'bh',
+    'oman': 'om',
+    'jordan': 'jo',
+    'lebanon': 'lb',
+    'morocco': 'ma',
+    'algeria': 'dz',
+    'tunisia': 'tn',
+    'nigeria': 'ng',
+    'kenya': 'ke',
+    'ghana': 'gh',
+    'colombia': 'co',
+    'chile': 'cl',
+    'peru': 'pe',
+    'venezuela': 've',
+    'ecuador': 'ec',
+    'uruguay': 'uy',
+    'paraguay': 'py',
+    'bolivia': 'bo',
+    'cuba': 'cu',
+    'puerto rico': 'pr',
+    'new zealand': 'nz',
+    'singapore': 'sg',
+    'hong kong': 'hk',
+    'taiwan': 'tw',
   };
 
-  for (const [key, flag] of Object.entries(flagMap)) {
-    if (groupLower.includes(key)) return flag;
+  for (const [key, code] of Object.entries(countryCodeMap)) {
+    if (groupLower.includes(key)) {
+      return `https://flagcdn.com/w80/${code}.png`;
+    }
   }
+  return null;
+};
+
+// Fallback emoji for non-country categories
+const getCategoryEmoji = (group: string): string => {
+  const groupLower = group.toLowerCase();
+  if (groupLower.includes('news')) return '📰';
+  if (groupLower.includes('sport')) return '⚽';
+  if (groupLower.includes('documentary') || groupLower.includes('doc')) return '🎬';
+  if (groupLower.includes('entertainment')) return '🎭';
+  if (groupLower.includes('kids') || groupLower.includes('child')) return '👶';
+  if (groupLower.includes('music')) return '🎵';
+  if (groupLower.includes('movie') || groupLower.includes('film')) return '🎥';
+  if (groupLower.includes('series')) return '📺';
+  if (groupLower.includes('religious') || groupLower.includes('faith')) return '⛪';
   return '🌐';
 };
 
@@ -196,8 +251,16 @@ export const MiLiveTVList = ({
                   : 'text-muted-foreground hover:bg-card/50 hover:text-foreground'
               }`}
             >
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-xl overflow-hidden">
-                <span>{getCountryFlag(group.name)}</span>
+              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                {getCountryFlagUrl(group.name) ? (
+                  <img 
+                    src={getCountryFlagUrl(group.name)!} 
+                    alt={group.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-xl">{getCategoryEmoji(group.name)}</span>
+                )}
               </div>
               <div className="flex-1 text-left">
                 <p className={`text-sm truncate ${selectedGroup === group.name ? 'font-semibold text-foreground' : ''}`}>
