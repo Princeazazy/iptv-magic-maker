@@ -1,24 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useIPTV, Channel } from '@/hooks/useIPTV';
-import { MiHeader } from '@/components/MiHeader';
-import { MiSidebar } from '@/components/MiSidebar';
-import { MiChannelList } from '@/components/MiChannelList';
-import { MiVideoPlayer } from '@/components/MiVideoPlayer';
+import { MiHomeScreen } from '@/components/MiHomeScreen';
+import { MiLiveTVList } from '@/components/MiLiveTVList';
+import { MiSettingsPage } from '@/components/MiSettingsPage';
+import { MiFullscreenPlayer } from '@/components/MiFullscreenPlayer';
 import { useToast } from '@/hooks/use-toast';
 
 const IPTV_URL = 'http://myhand.org:8080/get.php?username=25370763999522&password=34479960743076&type=m3u_plus&output=ts';
 
-type NavItem = 'live' | 'movies' | 'series' | 'sports' | 'favorites' | 'settings';
+type Screen = 'home' | 'live' | 'movies' | 'series' | 'sports' | 'settings';
 
 const Index = () => {
   const { channels, loading, error } = useIPTV(IPTV_URL);
+  const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [currentChannel, setCurrentChannel] = useState<Channel | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const [activeNav, setActiveNav] = useState<NavItem>('live');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -33,6 +33,12 @@ const Index = () => {
   }, [favorites]);
 
   const handleToggleFavorite = (channelId: string) => {
+    if (!channelId) {
+      // Toggle favorites view mode
+      setShowFavoritesOnly(!showFavoritesOnly);
+      return;
+    }
+
     setFavorites((prev) => {
       const newFavorites = new Set(prev);
       if (newFavorites.has(channelId)) {
@@ -52,39 +58,14 @@ const Index = () => {
     });
   };
 
-  const handleNavSelect = (item: NavItem) => {
-    setActiveNav(item);
-    if (item === 'favorites') {
-      setShowFavoritesOnly(true);
-    } else {
-      setShowFavoritesOnly(false);
-    }
-  };
-
-  const handleFavoritesClick = () => {
-    setShowFavoritesOnly(!showFavoritesOnly);
-    if (!showFavoritesOnly) {
-      setActiveNav('favorites');
-    } else {
-      setActiveNav('live');
-    }
-  };
-
-  const getNavTitle = () => {
-    switch (activeNav) {
-      case 'live': return "Live TV's";
-      case 'movies': return 'Movies';
-      case 'series': return 'Series';
-      case 'sports': return 'Sports Guide';
-      case 'favorites': return 'Favorites';
-      case 'settings': return 'Settings';
-      default: return "Live TV's";
-    }
+  const handleChannelSelect = (channel: Channel) => {
+    setCurrentChannel(channel);
+    setIsFullscreen(true);
   };
 
   const handleNextChannel = () => {
     if (!currentChannel) return;
-    const currentIndex = channels.findIndex(c => c.id === currentChannel.id);
+    const currentIndex = channels.findIndex((c) => c.id === currentChannel.id);
     if (currentIndex < channels.length - 1) {
       setCurrentChannel(channels[currentIndex + 1]);
     }
@@ -92,18 +73,30 @@ const Index = () => {
 
   const handlePreviousChannel = () => {
     if (!currentChannel) return;
-    const currentIndex = channels.findIndex(c => c.id === currentChannel.id);
+    const currentIndex = channels.findIndex((c) => c.id === currentChannel.id);
     if (currentIndex > 0) {
       setCurrentChannel(channels[currentIndex - 1]);
     }
+  };
+
+  const handleNavigate = (section: 'live' | 'movies' | 'series' | 'sports' | 'settings') => {
+    setCurrentScreen(section);
+  };
+
+  const handleReload = () => {
+    window.location.reload();
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-primary-foreground font-bold text-xl">Mi</span>
+          <div className="flex items-center justify-center mb-4">
+            <div className="text-primary font-bold text-4xl">
+              <span className="text-primary">M</span>
+              <span className="text-[#FF6B35]">i</span>
+            </div>
+            <span className="text-muted-foreground text-lg ml-2">Player Pro</span>
           </div>
           <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
           <p className="text-muted-foreground">Loading channels...</p>
@@ -116,12 +109,15 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md px-4">
-          <div className="w-16 h-16 bg-destructive/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-destructive font-bold text-xl">!</span>
+          <div className="flex items-center justify-center mb-4">
+            <div className="text-destructive font-bold text-4xl">
+              <span>M</span>
+              <span>i</span>
+            </div>
           </div>
           <p className="text-destructive mb-2 font-semibold">Failed to load channels</p>
           <p className="text-muted-foreground text-sm mb-4">{error}</p>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
           >
@@ -132,56 +128,62 @@ const Index = () => {
     );
   }
 
-  return (
-    <div className="h-screen bg-background flex overflow-hidden">
-      {/* Sidebar */}
-      <MiSidebar
-        activeItem={activeNav}
-        onItemSelect={handleNavSelect}
-        collapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+  // Fullscreen player overlay
+  if (isFullscreen && currentChannel) {
+    return (
+      <MiFullscreenPlayer
+        channel={currentChannel}
+        isFavorite={favorites.has(currentChannel.id)}
+        onClose={() => setIsFullscreen(false)}
+        onNext={handleNextChannel}
+        onPrevious={handlePreviousChannel}
+        onToggleFavorite={() => handleToggleFavorite(currentChannel.id)}
       />
+    );
+  }
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <MiHeader
-          title={getNavTitle()}
-          onSearchChange={setSearchQuery}
-          onFavoritesClick={handleFavoritesClick}
-          showFavorites={showFavoritesOnly}
+  // Render screens based on current screen
+  switch (currentScreen) {
+    case 'home':
+      return (
+        <MiHomeScreen
+          channelCount={channels.length}
+          onNavigate={handleNavigate}
+          onReload={handleReload}
         />
+      );
 
-        {/* Content Area */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Video Player (when channel selected) */}
-          {currentChannel && (
-            <div className="w-full lg:w-1/2 xl:w-2/5 p-4 flex flex-col">
-              <MiVideoPlayer
-                channel={currentChannel}
-                onClose={() => setCurrentChannel(null)}
-                onNext={handleNextChannel}
-                onPrevious={handlePreviousChannel}
-              />
-            </div>
-          )}
+    case 'settings':
+      return <MiSettingsPage onBack={() => setCurrentScreen('home')} />;
 
-          {/* Channel List */}
-          <div className={`flex-1 overflow-hidden ${currentChannel ? 'hidden lg:block' : ''}`}>
-            <MiChannelList
-              channels={channels}
-              currentChannel={currentChannel}
-              favorites={favorites}
-              searchQuery={searchQuery}
-              showFavoritesOnly={showFavoritesOnly}
-              onChannelSelect={setCurrentChannel}
-              onToggleFavorite={handleToggleFavorite}
-            />
-          </div>
+    case 'live':
+    case 'movies':
+    case 'series':
+    case 'sports':
+      return (
+        <div className="h-screen bg-background overflow-hidden">
+          <MiLiveTVList
+            channels={channels}
+            currentChannel={currentChannel}
+            favorites={favorites}
+            searchQuery={searchQuery}
+            showFavoritesOnly={showFavoritesOnly}
+            onChannelSelect={handleChannelSelect}
+            onToggleFavorite={handleToggleFavorite}
+            onBack={() => setCurrentScreen('home')}
+          />
         </div>
-      </div>
-    </div>
-  );
+      );
+
+    default:
+      return (
+        <MiHomeScreen
+          channelCount={channels.length}
+          onNavigate={handleNavigate}
+          onReload={handleReload}
+        />
+      );
+  }
 };
 
 export default Index;
