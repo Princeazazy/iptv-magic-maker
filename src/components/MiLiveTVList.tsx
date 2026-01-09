@@ -18,7 +18,17 @@ interface MiLiveTVListProps {
   onChannelSelect: (channel: Channel) => void;
   onToggleFavorite: (channelId: string) => void;
   onBack: () => void;
+  category?: 'live' | 'movies' | 'series' | 'sports';
 }
+
+const getCategoryTitle = (category: string): string => {
+  switch (category) {
+    case 'movies': return 'Movies';
+    case 'series': return 'Series';
+    case 'sports': return 'Sports Guide';
+    default: return "Live TV's";
+  }
+};
 
 // Country flag emoji helper
 const getCountryFlag = (group: string): string => {
@@ -74,6 +84,7 @@ export const MiLiveTVList = ({
   onChannelSelect,
   onToggleFavorite,
   onBack,
+  category = 'live',
 }: MiLiveTVListProps) => {
   const [selectedGroup, setSelectedGroup] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('number');
@@ -160,10 +171,10 @@ export const MiLiveTVList = ({
             {showFavoritesOnly ? (
               <>
                 <span className="font-bold">Favorites</span>{' '}
-                <span className="font-normal text-muted-foreground">Live TV's</span>
+                <span className="font-normal text-muted-foreground">{getCategoryTitle(category)}</span>
               </>
             ) : (
-              "Live TV's"
+              getCategoryTitle(category)
             )}
           </h1>
         </div>

@@ -171,6 +171,7 @@ const Index = () => {
             onChannelSelect={handleChannelSelect}
             onToggleFavorite={handleToggleFavorite}
             onBack={() => setCurrentScreen('home')}
+            category={currentScreen}
           />
         </div>
       );
