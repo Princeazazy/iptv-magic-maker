@@ -179,11 +179,11 @@ export const useIPTV = (m3uUrl?: string) => {
           
           content = response.data;
         } else {
-          // Web preview - try edge function proxy
+          // Web preview - try edge function proxy (streams and parses server-side)
           console.log('Fetching M3U using edge function proxy...');
           
           const { data, error } = await supabase.functions.invoke('fetch-m3u', {
-            body: { url: effectiveUrl }
+            body: { url: effectiveUrl, maxChannels: 5000 }
           });
           
           if (error) {
@@ -201,13 +201,33 @@ export const useIPTV = (m3uUrl?: string) => {
             throw new Error(data.error);
           }
           
-          if (!data?.content) {
-            throw new Error('No content received from proxy');
+          // Edge function now returns pre-parsed channels
+          if (data?.channels && Array.isArray(data.channels)) {
+            console.log(`Received ${data.channels.length} pre-parsed channels from edge function`);
+            const parsedChannels = data.channels
+              .filter((ch: any) => ch.url && ch.name)
+              .map((ch: any, idx: number) => ({
+                id: `channel-${idx}`,
+                name: ch.name,
+                url: ch.url,
+                logo: ch.logo || undefined,
+                group: ch.group || 'Live TV'
+              }));
+            
+            if (parsedChannels.length === 0) {
+              throw new Error('No valid channels found in playlist');
+            }
+            
+            setChannels(parsedChannels);
+            setError(null);
+            setLoading(false);
+            return;
           }
           
-          content = data.content;
+          throw new Error('Invalid response from proxy');
         }
         
+        // Native path: parse locally
         console.log('M3U fetch successful, parsing channels...');
         const parsedChannels = parseM3U(content);
         
