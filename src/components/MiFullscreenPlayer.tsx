@@ -10,7 +10,7 @@ import {
   Cloud,
   ChevronDown,
   Subtitles,
-  MonitorPlay,
+  RectangleHorizontal,
 } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
 
@@ -261,7 +261,7 @@ export const MiFullscreenPlayer = ({
                 showAspectMenu ? 'bg-white/30' : 'bg-white/10 hover:bg-white/20'
               }`}
             >
-              <MonitorPlay className="w-6 h-6 text-white" />
+              <RectangleHorizontal className="w-6 h-6 text-white" />
             </button>
 
             {/* Aspect Ratio Menu */}
