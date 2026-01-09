@@ -9,8 +9,17 @@ export interface Channel {
   group?: string;
 }
 
-export const useIPTV = (m3uUrl: string) => {
-  console.log('useIPTV hook called with URL:', m3uUrl);
+const PLAYLIST_STORAGE_KEY = 'mi-player-playlist-url';
+
+export const getStoredPlaylistUrl = (): string => {
+  return localStorage.getItem(PLAYLIST_STORAGE_KEY) || '';
+};
+
+export const useIPTV = (m3uUrl?: string) => {
+  // Use provided URL or fall back to stored URL
+  const effectiveUrl = m3uUrl || getStoredPlaylistUrl();
+  
+  console.log('useIPTV hook called with URL:', effectiveUrl);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,10 +28,10 @@ export const useIPTV = (m3uUrl: string) => {
     console.log('useIPTV useEffect running');
     const fetchM3U = async () => {
       console.log('fetchM3U function called');
-      if (!m3uUrl || !m3uUrl.trim()) {
-        console.log('No M3U URL provided');
-        setLoading(false);
-        return;
+      if (!effectiveUrl || !effectiveUrl.trim()) {
+        console.log('No M3U URL provided, loading demo channels');
+        // No URL configured, go to demo mode
+        throw new Error('DEMO_MODE');
       }
 
       try {
@@ -46,7 +55,7 @@ export const useIPTV = (m3uUrl: string) => {
 
         const response = await Http.request({
           method: 'GET',
-          url: m3uUrl,
+          url: effectiveUrl,
           headers: {
             'User-Agent': 'Mozilla/5.0',
           },
@@ -190,7 +199,7 @@ export const useIPTV = (m3uUrl: string) => {
     };
 
     fetchM3U();
-  }, [m3uUrl]);
+  }, [effectiveUrl]);
 
   return { channels, loading, error };
 };
