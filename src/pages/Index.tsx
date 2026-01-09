@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useIPTV, Channel } from '@/hooks/useIPTV';
 import { MiHomeScreen } from '@/components/MiHomeScreen';
@@ -7,12 +7,11 @@ import { MiSettingsPage } from '@/components/MiSettingsPage';
 import { MiFullscreenPlayer } from '@/components/MiFullscreenPlayer';
 import { useToast } from '@/hooks/use-toast';
 
-const IPTV_URL = 'http://myhand.org:8080/get.php?username=25370763999522&password=34479960743076&type=m3u_plus&output=ts';
-
 type Screen = 'home' | 'live' | 'movies' | 'series' | 'sports' | 'settings';
 
 const Index = () => {
-  const { channels, loading, error } = useIPTV(IPTV_URL);
+  const [playlistVersion, setPlaylistVersion] = useState(0);
+  const { channels, loading, error } = useIPTV();
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [currentChannel, setCurrentChannel] = useState<Channel | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -20,6 +19,12 @@ const Index = () => {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { toast } = useToast();
+
+  const handlePlaylistChange = useCallback(() => {
+    // Trigger a re-render to use new playlist URL
+    setPlaylistVersion(v => v + 1);
+    window.location.reload();
+  }, []);
 
   useEffect(() => {
     const savedFavorites = localStorage.getItem('iptv-favorites');
@@ -154,7 +159,12 @@ const Index = () => {
       );
 
     case 'settings':
-      return <MiSettingsPage onBack={() => setCurrentScreen('home')} />;
+      return (
+        <MiSettingsPage 
+          onBack={() => setCurrentScreen('home')} 
+          onPlaylistChange={handlePlaylistChange}
+        />
+      );
 
     case 'live':
     case 'movies':
