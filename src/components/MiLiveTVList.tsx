@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { ChevronLeft, ChevronDown, Search, Star, Tv, Cloud } from 'lucide-react';
+import { ChevronLeft, Search, Star, Tv, Cloud, User } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
 import {
   Select,
@@ -249,8 +249,8 @@ export const MiLiveTVList = ({
             <button className="w-10 h-10 rounded-full bg-secondary/50 flex items-center justify-center hover:bg-secondary transition-colors">
               <Search className="w-5 h-5 text-muted-foreground" />
             </button>
-            <div className="w-10 h-10 rounded-full bg-primary overflow-hidden">
-              <div className="w-full h-full bg-gradient-to-br from-primary to-primary/80" />
+            <div className="w-10 h-10 rounded-full bg-primary overflow-hidden flex items-center justify-center">
+              <User className="w-5 h-5 text-primary-foreground" />
             </div>
           </div>
         </div>

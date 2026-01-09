@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Tv, Film, Clapperboard, Bike, User, RefreshCw, Clock, LogOut, Search, Settings, Mic, Cloud } from 'lucide-react';
+import { Tv, Film, Clapperboard, Trophy, User, RefreshCw, Clock, LogOut, Search, Settings, Mic, Cloud } from 'lucide-react';
 
 interface MiHomeScreenProps {
   channelCount: number;
@@ -158,7 +158,7 @@ export const MiHomeScreen = ({
           >
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
               <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center">
-                <Bike className="w-8 h-8 text-muted-foreground" />
+                <Trophy className="w-8 h-8 text-muted-foreground" />
               </div>
             </div>
             <div className="absolute bottom-8 left-4">
