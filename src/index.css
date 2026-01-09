@@ -2,70 +2,79 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Mi Player Pro Design System - Dark TV Theme */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 263 70% 50%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 335 78% 60%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 263 70% 50%;
+    --background: 228 30% 10%;
+    --foreground: 210 20% 90%;
+    --card: 228 25% 14%;
+    --card-foreground: 210 20% 90%;
+    --popover: 228 25% 12%;
+    --popover-foreground: 210 20% 90%;
+    --primary: 0 75% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 228 20% 18%;
+    --secondary-foreground: 210 20% 90%;
+    --muted: 228 20% 20%;
+    --muted-foreground: 210 15% 55%;
+    --accent: 0 75% 55%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 228 20% 20%;
+    --input: 228 20% 18%;
+    --ring: 0 75% 55%;
     --radius: 0.75rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 3.9%;
-    --sidebar-primary: 263 70% 50%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 0 0% 96.1%;
-    --sidebar-accent-foreground: 0 0% 9%;
-    --sidebar-border: 0 0% 89.8%;
-    --sidebar-ring: 263 70% 50%;
+    
+    /* Sidebar */
+    --sidebar-background: 228 30% 8%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 0 75% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 228 25% 14%;
+    --sidebar-accent-foreground: 210 20% 90%;
+    --sidebar-border: 228 20% 15%;
+    --sidebar-ring: 0 75% 55%;
+    
+    /* Custom Mi Player colors */
+    --mi-dark: 228 30% 10%;
+    --mi-darker: 228 30% 6%;
+    --mi-card: 228 25% 14%;
+    --mi-red: 0 75% 55%;
+    --mi-red-glow: 0 75% 45%;
+    --mi-text: 210 20% 90%;
+    --mi-text-muted: 210 15% 55%;
   }
 
   .dark {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
-    --card: 224 71% 6%;
-    --card-foreground: 213 31% 91%;
-    --popover: 224 71% 4%;
-    --popover-foreground: 213 31% 91%;
-    --primary: 263 70% 50%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 222 47% 11%;
-    --secondary-foreground: 213 31% 91%;
-    --muted: 223 47% 11%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 335 78% 60%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 213 31% 91%;
-    --border: 216 34% 17%;
-    --input: 216 34% 17%;
-    --ring: 263 70% 50%;
-    --sidebar-background: 224 71% 4%;
-    --sidebar-foreground: 213 31% 91%;
-    --sidebar-primary: 263 70% 50%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 222 47% 11%;
-    --sidebar-accent-foreground: 213 31% 91%;
-    --sidebar-border: 216 34% 17%;
-    --sidebar-ring: 263 70% 50%;
+    --background: 228 30% 10%;
+    --foreground: 210 20% 90%;
+    --card: 228 25% 14%;
+    --card-foreground: 210 20% 90%;
+    --popover: 228 25% 12%;
+    --popover-foreground: 210 20% 90%;
+    --primary: 0 75% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 228 20% 18%;
+    --secondary-foreground: 210 20% 90%;
+    --muted: 228 20% 20%;
+    --muted-foreground: 210 15% 55%;
+    --accent: 0 75% 55%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 228 20% 20%;
+    --input: 228 20% 18%;
+    --ring: 0 75% 55%;
+    --sidebar-background: 228 30% 8%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 0 75% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 228 25% 14%;
+    --sidebar-accent-foreground: 210 20% 90%;
+    --sidebar-border: 228 20% 15%;
+    --sidebar-ring: 0 75% 55%;
   }
 }
 
@@ -76,5 +85,34 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+}
+
+@layer components {
+  .mi-glow {
+    box-shadow: 0 0 20px hsl(var(--mi-red) / 0.3);
+  }
+  
+  .mi-card-hover {
+    @apply transition-all duration-200;
+  }
+  
+  .mi-card-hover:hover {
+    @apply scale-105;
+    box-shadow: 0 8px 25px hsl(0 0% 0% / 0.4);
+  }
+  
+  .mi-nav-item {
+    @apply flex items-center justify-center w-12 h-12 rounded-full transition-all duration-200;
+  }
+  
+  .mi-nav-item:hover {
+    @apply bg-muted;
+  }
+  
+  .mi-nav-item.active {
+    @apply bg-primary text-primary-foreground;
+    box-shadow: 0 0 15px hsl(var(--mi-red) / 0.5);
   }
 }
