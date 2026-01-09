@@ -30,94 +30,255 @@ const getCategoryTitle = (category: string): string => {
   }
 };
 
-// Country flag image URLs using flagcdn.com (circular flags)
-const getCountryFlagUrl = (group: string): string | null => {
-  const groupLower = group.toLowerCase();
-  const countryCodeMap: Record<string, string> = {
-    'ukraine': 'ua',
-    'brazil': 'br',
-    'germany': 'de',
-    'united states': 'us',
-    'usa': 'us',
-    'us': 'us',
-    'france': 'fr',
-    'portugal': 'pt',
-    'south africa': 'za',
-    'china': 'cn',
-    'uk': 'gb',
-    'united kingdom': 'gb',
-    'spain': 'es',
-    'italy': 'it',
-    'canada': 'ca',
-    'australia': 'au',
-    'japan': 'jp',
-    'korea': 'kr',
-    'india': 'in',
-    'mexico': 'mx',
-    'argentina': 'ar',
-    'netherlands': 'nl',
-    'belgium': 'be',
-    'sweden': 'se',
-    'norway': 'no',
-    'denmark': 'dk',
-    'finland': 'fi',
-    'poland': 'pl',
-    'russia': 'ru',
-    'turkey': 'tr',
-    'egypt': 'eg',
-    'saudi': 'sa',
-    'uae': 'ae',
-    'greece': 'gr',
-    'czech': 'cz',
-    'austria': 'at',
-    'switzerland': 'ch',
-    'ireland': 'ie',
-    'romania': 'ro',
-    'hungary': 'hu',
-    'thailand': 'th',
-    'vietnam': 'vn',
-    'indonesia': 'id',
-    'malaysia': 'my',
-    'philippines': 'ph',
-    'pakistan': 'pk',
-    'bangladesh': 'bd',
-    'israel': 'il',
-    'iran': 'ir',
-    'iraq': 'iq',
-    'kuwait': 'kw',
-    'qatar': 'qa',
-    'bahrain': 'bh',
-    'oman': 'om',
-    'jordan': 'jo',
-    'lebanon': 'lb',
-    'morocco': 'ma',
-    'algeria': 'dz',
-    'tunisia': 'tn',
-    'nigeria': 'ng',
-    'kenya': 'ke',
-    'ghana': 'gh',
-    'colombia': 'co',
-    'chile': 'cl',
-    'peru': 'pe',
-    'venezuela': 've',
-    'ecuador': 'ec',
-    'uruguay': 'uy',
-    'paraguay': 'py',
-    'bolivia': 'bo',
-    'cuba': 'cu',
-    'puerto rico': 'pr',
-    'new zealand': 'nz',
-    'singapore': 'sg',
-    'hong kong': 'hk',
-    'taiwan': 'tw',
-  };
+// Country code to full name and flag mapping
+const countryCodeToInfo: Record<string, { name: string; code: string }> = {
+  'ad': { name: 'Andorra', code: 'ad' },
+  'ae': { name: 'United Arab Emirates', code: 'ae' },
+  'af': { name: 'Afghanistan', code: 'af' },
+  'ag': { name: 'Antigua and Barbuda', code: 'ag' },
+  'al': { name: 'Albania', code: 'al' },
+  'am': { name: 'Armenia', code: 'am' },
+  'ao': { name: 'Angola', code: 'ao' },
+  'ar': { name: 'Argentina', code: 'ar' },
+  'at': { name: 'Austria', code: 'at' },
+  'au': { name: 'Australia', code: 'au' },
+  'az': { name: 'Azerbaijan', code: 'az' },
+  'ba': { name: 'Bosnia and Herzegovina', code: 'ba' },
+  'bb': { name: 'Barbados', code: 'bb' },
+  'bd': { name: 'Bangladesh', code: 'bd' },
+  'be': { name: 'Belgium', code: 'be' },
+  'bf': { name: 'Burkina Faso', code: 'bf' },
+  'bg': { name: 'Bulgaria', code: 'bg' },
+  'bh': { name: 'Bahrain', code: 'bh' },
+  'bi': { name: 'Burundi', code: 'bi' },
+  'bj': { name: 'Benin', code: 'bj' },
+  'bn': { name: 'Brunei', code: 'bn' },
+  'bo': { name: 'Bolivia', code: 'bo' },
+  'br': { name: 'Brazil', code: 'br' },
+  'bs': { name: 'Bahamas', code: 'bs' },
+  'bt': { name: 'Bhutan', code: 'bt' },
+  'bw': { name: 'Botswana', code: 'bw' },
+  'by': { name: 'Belarus', code: 'by' },
+  'bz': { name: 'Belize', code: 'bz' },
+  'ca': { name: 'Canada', code: 'ca' },
+  'cd': { name: 'DR Congo', code: 'cd' },
+  'cf': { name: 'Central African Republic', code: 'cf' },
+  'cg': { name: 'Congo', code: 'cg' },
+  'ch': { name: 'Switzerland', code: 'ch' },
+  'ci': { name: 'Ivory Coast', code: 'ci' },
+  'cl': { name: 'Chile', code: 'cl' },
+  'cm': { name: 'Cameroon', code: 'cm' },
+  'cn': { name: 'China', code: 'cn' },
+  'co': { name: 'Colombia', code: 'co' },
+  'cr': { name: 'Costa Rica', code: 'cr' },
+  'cu': { name: 'Cuba', code: 'cu' },
+  'cv': { name: 'Cape Verde', code: 'cv' },
+  'cy': { name: 'Cyprus', code: 'cy' },
+  'cz': { name: 'Czech Republic', code: 'cz' },
+  'de': { name: 'Germany', code: 'de' },
+  'dj': { name: 'Djibouti', code: 'dj' },
+  'dk': { name: 'Denmark', code: 'dk' },
+  'dm': { name: 'Dominica', code: 'dm' },
+  'do': { name: 'Dominican Republic', code: 'do' },
+  'dz': { name: 'Algeria', code: 'dz' },
+  'ec': { name: 'Ecuador', code: 'ec' },
+  'ee': { name: 'Estonia', code: 'ee' },
+  'eg': { name: 'Egypt', code: 'eg' },
+  'er': { name: 'Eritrea', code: 'er' },
+  'es': { name: 'Spain', code: 'es' },
+  'et': { name: 'Ethiopia', code: 'et' },
+  'fi': { name: 'Finland', code: 'fi' },
+  'fj': { name: 'Fiji', code: 'fj' },
+  'fr': { name: 'France', code: 'fr' },
+  'ga': { name: 'Gabon', code: 'ga' },
+  'gb': { name: 'United Kingdom', code: 'gb' },
+  'gd': { name: 'Grenada', code: 'gd' },
+  'ge': { name: 'Georgia', code: 'ge' },
+  'gh': { name: 'Ghana', code: 'gh' },
+  'gm': { name: 'Gambia', code: 'gm' },
+  'gn': { name: 'Guinea', code: 'gn' },
+  'gq': { name: 'Equatorial Guinea', code: 'gq' },
+  'gr': { name: 'Greece', code: 'gr' },
+  'gt': { name: 'Guatemala', code: 'gt' },
+  'gw': { name: 'Guinea-Bissau', code: 'gw' },
+  'gy': { name: 'Guyana', code: 'gy' },
+  'hk': { name: 'Hong Kong', code: 'hk' },
+  'hn': { name: 'Honduras', code: 'hn' },
+  'hr': { name: 'Croatia', code: 'hr' },
+  'ht': { name: 'Haiti', code: 'ht' },
+  'hu': { name: 'Hungary', code: 'hu' },
+  'id': { name: 'Indonesia', code: 'id' },
+  'ie': { name: 'Ireland', code: 'ie' },
+  'il': { name: 'Israel', code: 'il' },
+  'in': { name: 'India', code: 'in' },
+  'iq': { name: 'Iraq', code: 'iq' },
+  'ir': { name: 'Iran', code: 'ir' },
+  'is': { name: 'Iceland', code: 'is' },
+  'it': { name: 'Italy', code: 'it' },
+  'jm': { name: 'Jamaica', code: 'jm' },
+  'jo': { name: 'Jordan', code: 'jo' },
+  'jp': { name: 'Japan', code: 'jp' },
+  'ke': { name: 'Kenya', code: 'ke' },
+  'kg': { name: 'Kyrgyzstan', code: 'kg' },
+  'kh': { name: 'Cambodia', code: 'kh' },
+  'km': { name: 'Comoros', code: 'km' },
+  'kn': { name: 'Saint Kitts and Nevis', code: 'kn' },
+  'kp': { name: 'North Korea', code: 'kp' },
+  'kr': { name: 'South Korea', code: 'kr' },
+  'kw': { name: 'Kuwait', code: 'kw' },
+  'kz': { name: 'Kazakhstan', code: 'kz' },
+  'la': { name: 'Laos', code: 'la' },
+  'lb': { name: 'Lebanon', code: 'lb' },
+  'lc': { name: 'Saint Lucia', code: 'lc' },
+  'li': { name: 'Liechtenstein', code: 'li' },
+  'lk': { name: 'Sri Lanka', code: 'lk' },
+  'lr': { name: 'Liberia', code: 'lr' },
+  'ls': { name: 'Lesotho', code: 'ls' },
+  'lt': { name: 'Lithuania', code: 'lt' },
+  'lu': { name: 'Luxembourg', code: 'lu' },
+  'lv': { name: 'Latvia', code: 'lv' },
+  'ly': { name: 'Libya', code: 'ly' },
+  'ma': { name: 'Morocco', code: 'ma' },
+  'mc': { name: 'Monaco', code: 'mc' },
+  'md': { name: 'Moldova', code: 'md' },
+  'me': { name: 'Montenegro', code: 'me' },
+  'mg': { name: 'Madagascar', code: 'mg' },
+  'mk': { name: 'North Macedonia', code: 'mk' },
+  'ml': { name: 'Mali', code: 'ml' },
+  'mm': { name: 'Myanmar', code: 'mm' },
+  'mn': { name: 'Mongolia', code: 'mn' },
+  'mo': { name: 'Macau', code: 'mo' },
+  'mr': { name: 'Mauritania', code: 'mr' },
+  'mt': { name: 'Malta', code: 'mt' },
+  'mu': { name: 'Mauritius', code: 'mu' },
+  'mv': { name: 'Maldives', code: 'mv' },
+  'mw': { name: 'Malawi', code: 'mw' },
+  'mx': { name: 'Mexico', code: 'mx' },
+  'my': { name: 'Malaysia', code: 'my' },
+  'mz': { name: 'Mozambique', code: 'mz' },
+  'na': { name: 'Namibia', code: 'na' },
+  'ne': { name: 'Niger', code: 'ne' },
+  'ng': { name: 'Nigeria', code: 'ng' },
+  'ni': { name: 'Nicaragua', code: 'ni' },
+  'nl': { name: 'Netherlands', code: 'nl' },
+  'no': { name: 'Norway', code: 'no' },
+  'np': { name: 'Nepal', code: 'np' },
+  'nz': { name: 'New Zealand', code: 'nz' },
+  'om': { name: 'Oman', code: 'om' },
+  'pa': { name: 'Panama', code: 'pa' },
+  'pe': { name: 'Peru', code: 'pe' },
+  'pg': { name: 'Papua New Guinea', code: 'pg' },
+  'ph': { name: 'Philippines', code: 'ph' },
+  'pk': { name: 'Pakistan', code: 'pk' },
+  'pl': { name: 'Poland', code: 'pl' },
+  'pr': { name: 'Puerto Rico', code: 'pr' },
+  'ps': { name: 'Palestine', code: 'ps' },
+  'pt': { name: 'Portugal', code: 'pt' },
+  'py': { name: 'Paraguay', code: 'py' },
+  'qa': { name: 'Qatar', code: 'qa' },
+  'ro': { name: 'Romania', code: 'ro' },
+  'rs': { name: 'Serbia', code: 'rs' },
+  'ru': { name: 'Russia', code: 'ru' },
+  'rw': { name: 'Rwanda', code: 'rw' },
+  'sa': { name: 'Saudi Arabia', code: 'sa' },
+  'sb': { name: 'Solomon Islands', code: 'sb' },
+  'sc': { name: 'Seychelles', code: 'sc' },
+  'sd': { name: 'Sudan', code: 'sd' },
+  'se': { name: 'Sweden', code: 'se' },
+  'sg': { name: 'Singapore', code: 'sg' },
+  'si': { name: 'Slovenia', code: 'si' },
+  'sk': { name: 'Slovakia', code: 'sk' },
+  'sl': { name: 'Sierra Leone', code: 'sl' },
+  'sm': { name: 'San Marino', code: 'sm' },
+  'sn': { name: 'Senegal', code: 'sn' },
+  'so': { name: 'Somalia', code: 'so' },
+  'sr': { name: 'Suriname', code: 'sr' },
+  'ss': { name: 'South Sudan', code: 'ss' },
+  'sv': { name: 'El Salvador', code: 'sv' },
+  'sy': { name: 'Syria', code: 'sy' },
+  'sz': { name: 'Eswatini', code: 'sz' },
+  'td': { name: 'Chad', code: 'td' },
+  'tg': { name: 'Togo', code: 'tg' },
+  'th': { name: 'Thailand', code: 'th' },
+  'tj': { name: 'Tajikistan', code: 'tj' },
+  'tl': { name: 'Timor-Leste', code: 'tl' },
+  'tm': { name: 'Turkmenistan', code: 'tm' },
+  'tn': { name: 'Tunisia', code: 'tn' },
+  'to': { name: 'Tonga', code: 'to' },
+  'tr': { name: 'Turkey', code: 'tr' },
+  'tt': { name: 'Trinidad and Tobago', code: 'tt' },
+  'tw': { name: 'Taiwan', code: 'tw' },
+  'tz': { name: 'Tanzania', code: 'tz' },
+  'ua': { name: 'Ukraine', code: 'ua' },
+  'ug': { name: 'Uganda', code: 'ug' },
+  'uk': { name: 'United Kingdom', code: 'gb' },
+  'us': { name: 'United States', code: 'us' },
+  'usa': { name: 'United States', code: 'us' },
+  'uy': { name: 'Uruguay', code: 'uy' },
+  'uz': { name: 'Uzbekistan', code: 'uz' },
+  've': { name: 'Venezuela', code: 've' },
+  'vn': { name: 'Vietnam', code: 'vn' },
+  'vu': { name: 'Vanuatu', code: 'vu' },
+  'ws': { name: 'Samoa', code: 'ws' },
+  'xk': { name: 'Kosovo', code: 'xk' },
+  'ye': { name: 'Yemen', code: 'ye' },
+  'za': { name: 'South Africa', code: 'za' },
+  'zm': { name: 'Zambia', code: 'zm' },
+  'zw': { name: 'Zimbabwe', code: 'zw' },
+};
 
-  for (const [key, code] of Object.entries(countryCodeMap)) {
-    if (groupLower.includes(key)) {
-      return `https://flagcdn.com/w80/${code}.png`;
+// Get country info from group name (handles both codes like "DE" and full names like "Germany")
+const getCountryInfo = (group: string): { name: string; code: string; flagUrl: string } | null => {
+  const groupLower = group.toLowerCase().trim();
+  
+  // First check if it's a direct country code match (e.g., "DE", "US")
+  if (countryCodeToInfo[groupLower]) {
+    const info = countryCodeToInfo[groupLower];
+    return {
+      name: info.name,
+      code: info.code,
+      flagUrl: `https://flagcdn.com/w80/${info.code}.png`
+    };
+  }
+  
+  // Check if group starts with a country code followed by separator (e.g., "DE |", "US:")
+  const codeMatch = groupLower.match(/^([a-z]{2})[\s|:\-]/);
+  if (codeMatch && countryCodeToInfo[codeMatch[1]]) {
+    const info = countryCodeToInfo[codeMatch[1]];
+    return {
+      name: info.name,
+      code: info.code,
+      flagUrl: `https://flagcdn.com/w80/${info.code}.png`
+    };
+  }
+  
+  // Search for country name within the group string
+  for (const [code, info] of Object.entries(countryCodeToInfo)) {
+    if (groupLower.includes(info.name.toLowerCase())) {
+      return {
+        name: info.name,
+        code: info.code,
+        flagUrl: `https://flagcdn.com/w80/${info.code}.png`
+      };
     }
   }
+  
   return null;
+};
+
+// Get display name for a group (converts codes to full names)
+const getDisplayName = (group: string): string => {
+  const countryInfo = getCountryInfo(group);
+  if (countryInfo) {
+    return countryInfo.name;
+  }
+  return group;
+};
+
+// Country flag image URLs using flagcdn.com (circular flags)
+const getCountryFlagUrl = (group: string): string | null => {
+  const countryInfo = getCountryInfo(group);
+  return countryInfo?.flagUrl || null;
 };
 
 // Fallback emoji for non-country categories
@@ -264,7 +425,7 @@ export const MiLiveTVList = ({
               </div>
               <div className="flex-1 text-left">
                 <p className={`text-sm truncate ${selectedGroup === group.name ? 'font-semibold text-foreground' : ''}`}>
-                  {group.name}
+                  {getDisplayName(group.name)}
                 </p>
                 {selectedGroup === group.name && (
                   <p className="text-xs text-muted-foreground">{group.count} Channels</p>
