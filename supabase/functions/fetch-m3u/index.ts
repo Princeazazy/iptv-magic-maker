@@ -91,8 +91,8 @@ serve(async (req) => {
   }
 
   try {
-    const { url, maxChannels = 5000 } = await req.json();
-    
+    const { url, maxChannels = 50000, maxBytesMB = 80 } = await req.json();
+
     if (!url) {
       return new Response(
         JSON.stringify({ error: 'URL is required' }),
@@ -100,8 +100,13 @@ serve(async (req) => {
       );
     }
 
-    console.log('Fetching m3u from:', url, 'maxChannels:', maxChannels);
-    
+    const rawMaxBytesMB = typeof maxBytesMB === 'number' ? maxBytesMB : Number(maxBytesMB);
+    const safeMaxBytesMB = Number.isFinite(rawMaxBytesMB)
+      ? Math.min(Math.max(rawMaxBytesMB, 1), 200)
+      : 80;
+
+    console.log('Fetching m3u from:', url, 'maxChannels:', maxChannels, 'maxBytesMB:', safeMaxBytesMB);
+
     // Multiple user agents to try - IPTV-specific ones
     const userAgents = [
       'IPTV Smarters/1.0',
@@ -109,18 +114,18 @@ serve(async (req) => {
       'Dalvik/2.1.0 (Linux; U; Android 11; SM-G960F Build/R16NW)',
       'VLC/3.0.18 LibVLC/3.0.18',
     ];
-    
+
     let lastError;
     for (let attempt = 1; attempt <= 4; attempt++) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
-      
+
       try {
         console.log(`Attempt ${attempt} with user agent: ${userAgents[attempt - 1] || userAgents[0]}`);
-        
+
         const urlObj = new URL(url);
         const referer = `${urlObj.protocol}//${urlObj.host}/`;
-        
+
         const response = await fetch(url, {
           headers: {
             'User-Agent': userAgents[(attempt - 1) % userAgents.length] || userAgents[0],
@@ -132,11 +137,11 @@ serve(async (req) => {
           signal: controller.signal,
           redirect: 'follow'
         });
-        
+
         clearTimeout(timeoutId);
-        
+
         console.log(`Response status: ${response.status} ${response.statusText}`);
-        
+
         if (!response.ok) {
           console.error(`Failed to fetch m3u on attempt ${attempt}:`, response.status, response.statusText);
           if (attempt === 4) {
@@ -154,7 +159,7 @@ serve(async (req) => {
         }
 
         // Stream the response body to parse channels incrementally
-        // This avoids loading the entire 68MB+ file into memory
+        // This avoids loading the entire file into memory
         const reader = response.body?.getReader();
         if (!reader) {
           throw new Error('No response body');
@@ -164,19 +169,19 @@ serve(async (req) => {
         const channels: { name: string; url: string; logo: string; group: string; type: string }[] = [];
         let partialLine = '';
         let bytesRead = 0;
-        const maxBytes = 10 * 1024 * 1024; // Process max 10MB to stay within limits
+        const maxBytes = safeMaxBytesMB * 1024 * 1024;
 
         while (true) {
           const { done, value } = await reader.read();
-          
+
           if (done) break;
-          
+
           bytesRead += value.length;
           const chunk = decoder.decode(value, { stream: true });
-          
+
           const result = parseM3UContent(chunk, channels, partialLine);
           partialLine = result.remainingPartial;
-          
+
           // Stop if we have enough channels or processed enough data
           if (channels.length >= maxChannels || bytesRead >= maxBytes) {
             console.log(`Stopping early: ${channels.length} channels, ${bytesRead} bytes read`);
