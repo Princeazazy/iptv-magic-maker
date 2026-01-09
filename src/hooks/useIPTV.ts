@@ -138,7 +138,10 @@ export const useIPTV = (m3uUrl?: string) => {
           group: 'Kids'
         }
       ];
-      setChannels(demoChannels);
+      setChannels(demoChannels.map((ch) => ({
+        ...ch,
+        type: ch.group?.toLowerCase().includes('sport') ? 'sports' : 'live',
+      })));
       setError(null);
       setLoading(false);
     };
@@ -184,7 +187,7 @@ export const useIPTV = (m3uUrl?: string) => {
           console.log('Fetching M3U using edge function proxy...');
           
           const { data, error } = await supabase.functions.invoke('fetch-m3u', {
-            body: { url: effectiveUrl, maxChannels: 5000 }
+            body: { url: effectiveUrl, maxChannels: 50000, maxBytesMB: 80 }
           });
           
           if (error) {
@@ -265,17 +268,52 @@ const parseM3U = (content: string): Channel[] => {
   const channels: Channel[] = [];
   let currentChannel: Partial<Channel> = {};
 
-  // Keywords to filter out VOD content (movies and series)
-  const vodKeywords = [
-    'movie', 'movies', 'film', 'films', 'cinema',
-    'series', 'tv show', 'tvshow', 'episode', 'season',
-    'vod', 'on demand', 'on-demand',
-    '24/7', '24-7', 'marathon'
-  ];
-
-  const isVODContent = (group: string = '', name: string = ''): boolean => {
+  const getContentType = (
+    group: string = '',
+    name: string = ''
+  ): NonNullable<Channel['type']> => {
     const combined = `${group} ${name}`.toLowerCase();
-    return vodKeywords.some(keyword => combined.includes(keyword));
+
+    if (
+      combined.includes('sport') ||
+      combined.includes('football') ||
+      combined.includes('soccer') ||
+      combined.includes('basketball') ||
+      combined.includes('tennis') ||
+      combined.includes('cricket') ||
+      combined.includes('boxing') ||
+      combined.includes('wrestling') ||
+      combined.includes('nfl') ||
+      combined.includes('nba') ||
+      combined.includes('mlb') ||
+      combined.includes('nhl')
+    ) {
+      return 'sports';
+    }
+
+    if (
+      combined.includes('movie') ||
+      combined.includes('movies') ||
+      combined.includes('film') ||
+      combined.includes('cinema') ||
+      combined.includes('vod') ||
+      combined.includes('on demand') ||
+      combined.includes('on-demand')
+    ) {
+      return 'movies';
+    }
+
+    if (
+      combined.includes('series') ||
+      combined.includes('tv show') ||
+      combined.includes('tvshow') ||
+      combined.includes('episode') ||
+      combined.includes('season')
+    ) {
+      return 'series';
+    }
+
+    return 'live';
   };
 
   for (let i = 0; i < lines.length; i++) {
@@ -286,20 +324,22 @@ const parseM3U = (content: string): Channel[] => {
       const groupMatch = line.match(/group-title="([^"]*)"/);
       const nameMatch = line.split(',').pop();
 
+      const name = nameMatch?.trim() || 'Unknown Channel';
+      const group = groupMatch ? groupMatch[1] : 'Uncategorized';
+
       currentChannel = {
         id: `channel-${channels.length}`,
-        name: nameMatch?.trim() || 'Unknown Channel',
+        name,
         logo: logoMatch ? logoMatch[1] : undefined,
-        group: groupMatch ? groupMatch[1] : 'Live TV',
+        group,
+        type: getContentType(group, name),
       };
     } else if (line && !line.startsWith('#') && currentChannel.name) {
       currentChannel.url = line;
-      
-      // Only add if it's not VOD content
-      if (!isVODContent(currentChannel.group, currentChannel.name)) {
-        channels.push(currentChannel as Channel);
-      }
-      
+
+      // Include live + movies + series (native parsing)
+      channels.push(currentChannel as Channel);
+
       currentChannel = {};
     }
   }
