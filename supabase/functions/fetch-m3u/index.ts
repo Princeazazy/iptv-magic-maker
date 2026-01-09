@@ -79,12 +79,17 @@ serve(async (req) => {
         if (!response.ok) {
           console.error(`Failed to fetch m3u on attempt ${attempt}:`, response.status, response.statusText);
           if (attempt === 6) {
+            // IMPORTANT: Return 200 so browser callers don't treat this as a hard failure.
+            // Many IPTV providers block server/proxy requests; the UI can fall back to demo mode.
             return new Response(
-              JSON.stringify({ 
+              JSON.stringify({
+                blocked: true,
+                upstream_status: response.status,
                 error: `Failed to fetch m3u file: ${response.status} ${response.statusText}`,
-                details: 'Try accessing the URL directly in your browser. If it works there, the IPTV provider may be blocking server requests.'
+                details:
+                  'Try accessing the URL directly in your browser. If it works there, the IPTV provider may be blocking server requests.',
               }),
-              { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
             );
           }
           // Wait before retry with different user agent
