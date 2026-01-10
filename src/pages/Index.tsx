@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Loader2 } from 'lucide-react';
 import { useIPTV, Channel } from '@/hooks/useIPTV';
 import { MiHomeScreen } from '@/components/MiHomeScreen';
 import { MiLiveTVList } from '@/components/MiLiveTVList';
@@ -8,6 +7,7 @@ import { MiMovieDetail } from '@/components/MiMovieDetail';
 import { MiSettingsPage } from '@/components/MiSettingsPage';
 import { MiFullscreenPlayer } from '@/components/MiFullscreenPlayer';
 import { ArabiaIntro } from '@/components/ArabiaIntro';
+import { GlobalSearchModal } from '@/components/GlobalSearchModal';
 import { useToast } from '@/hooks/use-toast';
 import arabiaLogo from '@/assets/arabia-logo.png';
 
@@ -28,6 +28,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { toast } = useToast();
 
   const handleIntroComplete = useCallback(() => {
@@ -109,6 +110,12 @@ const Index = () => {
     setCurrentScreen('detail');
   };
 
+  const handleSearchItemSelect = (item: Channel) => {
+    setSelectedItem(item);
+    setPreviousScreen('home');
+    setCurrentScreen('detail');
+  };
+
   const handlePlayFromDetail = () => {
     if (selectedItem) {
       setCurrentChannel(selectedItem);
@@ -182,18 +189,21 @@ const Index = () => {
   }
 
   // Render screens based on current screen
-  switch (currentScreen) {
-    case 'home':
-      return (
-        <MiHomeScreen
-          channelCount={liveCount}
-          movieCount={movieCount}
-          seriesCount={seriesCount}
-          sportsCount={sportsCount}
-          onNavigate={handleNavigate}
-          onReload={handleReload}
-        />
-      );
+  const renderScreen = () => {
+    switch (currentScreen) {
+      case 'home':
+        return (
+          <MiHomeScreen
+            channelCount={liveCount}
+            movieCount={movieCount}
+            seriesCount={seriesCount}
+            sportsCount={sportsCount}
+            onNavigate={handleNavigate}
+            onReload={handleReload}
+            onSearchClick={() => setIsSearchOpen(true)}
+            onVoiceSearchClick={() => setIsSearchOpen(true)}
+          />
+        );
 
     case 'settings':
       return (
@@ -250,18 +260,34 @@ const Index = () => {
         </div>
       );
 
-    default:
-      return (
-        <MiHomeScreen
-          channelCount={liveCount}
-          movieCount={movieCount}
-          seriesCount={seriesCount}
-          sportsCount={sportsCount}
-          onNavigate={handleNavigate}
-          onReload={handleReload}
-        />
-      );
-  }
+      default:
+        return (
+          <MiHomeScreen
+            channelCount={liveCount}
+            movieCount={movieCount}
+            seriesCount={seriesCount}
+            sportsCount={sportsCount}
+            onNavigate={handleNavigate}
+            onReload={handleReload}
+            onSearchClick={() => setIsSearchOpen(true)}
+            onVoiceSearchClick={() => setIsSearchOpen(true)}
+          />
+        );
+    }
+  };
+
+  return (
+    <>
+      {renderScreen()}
+      <GlobalSearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        channels={channels}
+        onChannelSelect={handleChannelSelect}
+        onItemSelect={handleSearchItemSelect}
+      />
+    </>
+  );
 };
 
 export default Index;
