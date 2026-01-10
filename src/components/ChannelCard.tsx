@@ -1,7 +1,33 @@
+import { useState } from 'react';
 import { Tv, Heart } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Channel } from '@/hooks/useIPTV';
+
+// Safe fallback component that uses React's JSX escaping instead of innerHTML
+const ChannelLogoWithFallback = ({ channel }: { channel: Channel }) => {
+  const [hasError, setHasError] = useState(false);
+
+  if (hasError) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-full">
+        <Tv className="w-16 h-16 text-muted-foreground" />
+        <span className="text-xs text-muted-foreground mt-2 text-center px-2">
+          {channel.name}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={channel.logo}
+      alt={channel.name}
+      className="w-full h-full object-contain"
+      onError={() => setHasError(true)}
+    />
+  );
+};
 
 interface ChannelCardProps {
   channel: Channel;
@@ -31,18 +57,7 @@ export const ChannelCard = ({
     >
       <div className="aspect-square w-full bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center relative p-6">
         {channel.logo ? (
-          <img
-            src={channel.logo}
-            alt={channel.name}
-            className="w-full h-full object-contain"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-              const parent = e.currentTarget.parentElement;
-              if (parent) {
-                parent.innerHTML = `<div class="flex flex-col items-center justify-center w-full h-full"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg><span class="text-xs text-muted-foreground mt-2 text-center px-2">${channel.name}</span></div>`;
-              }
-            }}
-          />
+          <ChannelLogoWithFallback channel={channel} />
         ) : (
           <div className="flex flex-col items-center justify-center w-full h-full">
             <Tv className="w-16 h-16 text-muted-foreground" />

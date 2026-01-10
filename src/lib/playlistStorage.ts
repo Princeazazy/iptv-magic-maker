@@ -19,8 +19,8 @@ const looksLikeUrl = (value: string) => {
   return v.length > 8 && (/^[a-zA-Z]+:\/\//.test(v) || v.startsWith('www.'));
 };
 
-// Default playlist URL
-const DEFAULT_PLAYLIST_URL = 'http://gas34006.cdngold.me/get.php?username=b2f76125f0&password=3efe26f2a8&type=m3u_plus&output=ts';
+// No default playlist - users must provide their own
+const DEFAULT_PLAYLIST_URL = '';
 
 export const getStoredPlaylistUrl = (): string => {
   try {
