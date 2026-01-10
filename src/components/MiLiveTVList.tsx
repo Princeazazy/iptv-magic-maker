@@ -40,7 +40,12 @@ const countryCodeToInfo: Record<string, { name: string; code: string }> = {
   'al': { name: 'Albania', code: 'al' },
   'am': { name: 'Armenia', code: 'am' },
   'ao': { name: 'Angola', code: 'ao' },
-  'ar': { name: 'Argentina', code: 'ar' },
+  // 'ar' in IPTV typically means Arabic content, not Argentina
+  'ar': { name: 'Arabic', code: 'sa' }, // Use Saudi Arabia flag for Arabic content
+  'arabic': { name: 'Arabic', code: 'sa' },
+  'arab': { name: 'Arabic', code: 'sa' },
+  'arg': { name: 'Argentina', code: 'ar' },
+  'argentina': { name: 'Argentina', code: 'ar' },
   'at': { name: 'Austria', code: 'at' },
   'au': { name: 'Australia', code: 'au' },
   'az': { name: 'Azerbaijan', code: 'az' },
