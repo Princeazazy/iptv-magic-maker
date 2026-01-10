@@ -15,7 +15,7 @@ type Screen = 'home' | 'live' | 'movies' | 'series' | 'sports' | 'settings' | 'd
 
 const Index = () => {
   const [playlistVersion, setPlaylistVersion] = useState(0);
-  const { channels, loading, error } = useIPTV();
+  const { channels, loading, error, refresh } = useIPTV();
 
   // Always show intro before home on each app load
   const [showIntro, setShowIntro] = useState(true);
@@ -200,6 +200,7 @@ const Index = () => {
             sportsCount={sportsCount}
             onNavigate={handleNavigate}
             onReload={handleReload}
+            onCatchUp={refresh}
             onSearchClick={() => setIsSearchOpen(true)}
             onVoiceSearchClick={() => setIsSearchOpen(true)}
           />
@@ -269,6 +270,7 @@ const Index = () => {
             sportsCount={sportsCount}
             onNavigate={handleNavigate}
             onReload={handleReload}
+            onCatchUp={refresh}
             onSearchClick={() => setIsSearchOpen(true)}
             onVoiceSearchClick={() => setIsSearchOpen(true)}
           />
