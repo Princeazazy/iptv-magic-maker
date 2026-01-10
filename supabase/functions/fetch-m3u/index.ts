@@ -40,8 +40,171 @@ function getContentType(group: string, name: string): 'live' | 'movies' | 'serie
   return 'live';
 }
 
-// Parse M3U content as we stream it, extracting channels incrementally
-// Returns parsed channels array to avoid keeping full content in memory
+// Parse Xtream Codes credentials from M3U URL
+function parseXtreamCredentials(url: string): { baseUrl: string; username: string; password: string } | null {
+  try {
+    const urlObj = new URL(url);
+    const username = urlObj.searchParams.get('username');
+    const password = urlObj.searchParams.get('password');
+    
+    if (username && password) {
+      const baseUrl = `${urlObj.protocol}//${urlObj.host}`;
+      return { baseUrl, username, password };
+    }
+    
+    // Try to parse from path like /get.php?username=X&password=Y
+    // or /player_api.php?username=X&password=Y
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// Fetch Xtream Codes live streams
+async function fetchXtreamLive(baseUrl: string, username: string, password: string): Promise<any[]> {
+  try {
+    console.log('Fetching Xtream live categories...');
+    const categoriesRes = await fetch(
+      `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_live_categories`,
+      { headers: { 'User-Agent': 'IPTV Smarters/1.0' } }
+    );
+    const categories = await categoriesRes.json();
+    console.log(`Found ${categories?.length || 0} live categories`);
+    
+    console.log('Fetching Xtream live streams...');
+    const streamsRes = await fetch(
+      `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_live_streams`,
+      { headers: { 'User-Agent': 'IPTV Smarters/1.0' } }
+    );
+    const streams = await streamsRes.json();
+    console.log(`Found ${streams?.length || 0} live streams`);
+    
+    if (!Array.isArray(streams)) return [];
+    
+    const categoryMap = new Map();
+    if (Array.isArray(categories)) {
+      categories.forEach((cat: any) => {
+        categoryMap.set(cat.category_id, cat.category_name);
+      });
+    }
+    
+    return streams.map((stream: any) => ({
+      name: stream.name || 'Unknown Channel',
+      url: `${baseUrl}/live/${username}/${password}/${stream.stream_id}.m3u8`,
+      logo: stream.stream_icon || '',
+      group: categoryMap.get(stream.category_id) || 'Uncategorized',
+      type: getContentType(categoryMap.get(stream.category_id) || '', stream.name || ''),
+      stream_id: stream.stream_id,
+      epg_channel_id: stream.epg_channel_id,
+    }));
+  } catch (err) {
+    console.error('Error fetching Xtream live streams:', err);
+    return [];
+  }
+}
+
+// Fetch Xtream Codes VOD (movies)
+async function fetchXtreamMovies(baseUrl: string, username: string, password: string): Promise<any[]> {
+  try {
+    console.log('Fetching Xtream VOD categories...');
+    const categoriesRes = await fetch(
+      `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_vod_categories`,
+      { headers: { 'User-Agent': 'IPTV Smarters/1.0' } }
+    );
+    const categories = await categoriesRes.json();
+    console.log(`Found ${categories?.length || 0} VOD categories`);
+    
+    console.log('Fetching Xtream VOD streams...');
+    const streamsRes = await fetch(
+      `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_vod_streams`,
+      { headers: { 'User-Agent': 'IPTV Smarters/1.0' } }
+    );
+    const streams = await streamsRes.json();
+    console.log(`Found ${streams?.length || 0} VOD streams`);
+    
+    if (!Array.isArray(streams)) return [];
+    
+    const categoryMap = new Map();
+    if (Array.isArray(categories)) {
+      categories.forEach((cat: any) => {
+        categoryMap.set(cat.category_id, cat.category_name);
+      });
+    }
+    
+    return streams.map((stream: any) => ({
+      name: stream.name || 'Unknown Movie',
+      url: `${baseUrl}/movie/${username}/${password}/${stream.stream_id}.${stream.container_extension || 'mp4'}`,
+      logo: stream.stream_icon || '',
+      group: categoryMap.get(stream.category_id) || 'Movies',
+      type: 'movies' as const,
+      stream_id: stream.stream_id,
+      rating: stream.rating,
+      year: stream.year,
+      plot: stream.plot,
+      cast: stream.cast,
+      director: stream.director,
+      genre: stream.genre,
+      duration: stream.duration,
+      container_extension: stream.container_extension,
+    }));
+  } catch (err) {
+    console.error('Error fetching Xtream VOD:', err);
+    return [];
+  }
+}
+
+// Fetch Xtream Codes series
+async function fetchXtreamSeries(baseUrl: string, username: string, password: string): Promise<any[]> {
+  try {
+    console.log('Fetching Xtream series categories...');
+    const categoriesRes = await fetch(
+      `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_series_categories`,
+      { headers: { 'User-Agent': 'IPTV Smarters/1.0' } }
+    );
+    const categories = await categoriesRes.json();
+    console.log(`Found ${categories?.length || 0} series categories`);
+    
+    console.log('Fetching Xtream series...');
+    const streamsRes = await fetch(
+      `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_series`,
+      { headers: { 'User-Agent': 'IPTV Smarters/1.0' } }
+    );
+    const streams = await streamsRes.json();
+    console.log(`Found ${streams?.length || 0} series`);
+    
+    if (!Array.isArray(streams)) return [];
+    
+    const categoryMap = new Map();
+    if (Array.isArray(categories)) {
+      categories.forEach((cat: any) => {
+        categoryMap.set(cat.category_id, cat.category_name);
+      });
+    }
+    
+    return streams.map((stream: any) => ({
+      name: stream.name || 'Unknown Series',
+      url: '', // Series need to be expanded to get episodes
+      logo: stream.cover || '',
+      group: categoryMap.get(stream.category_id) || 'Series',
+      type: 'series' as const,
+      series_id: stream.series_id,
+      rating: stream.rating,
+      year: stream.year,
+      plot: stream.plot,
+      cast: stream.cast,
+      director: stream.director,
+      genre: stream.genre,
+      backdrop_path: stream.backdrop_path,
+      last_modified: stream.last_modified,
+      releaseDate: stream.releaseDate,
+    }));
+  } catch (err) {
+    console.error('Error fetching Xtream series:', err);
+    return [];
+  }
+}
+
+// Parse M3U content as we stream it
 function parseM3UContent(chunk: string, existingChannels: { name: string; url: string; logo: string; group: string; type: string }[], partialLine: string): {
   channels: { name: string; url: string; logo: string; group: string; type: string }[];
   remainingPartial: string;
@@ -49,7 +212,6 @@ function parseM3UContent(chunk: string, existingChannels: { name: string; url: s
   const content = partialLine + chunk;
   const lines = content.split('\n');
   
-  // Keep the last line as partial if it doesn't end with newline
   const remainingPartial = chunk.endsWith('\n') ? '' : lines.pop() || '';
   
   let currentChannel: { name: string; url: string; logo: string; group: string; type: string } | null = null;
@@ -58,7 +220,6 @@ function parseM3UContent(chunk: string, existingChannels: { name: string; url: s
     const trimmedLine = line.trim();
     
     if (trimmedLine.startsWith('#EXTINF:')) {
-      // Parse channel info
       const nameMatch = trimmedLine.match(/,(.+)$/);
       const logoMatch = trimmedLine.match(/tvg-logo="([^"]+)"/);
       const groupMatch = trimmedLine.match(/group-title="([^"]+)"/);
@@ -75,7 +236,6 @@ function parseM3UContent(chunk: string, existingChannels: { name: string; url: s
         type
       };
     } else if (currentChannel && trimmedLine && !trimmedLine.startsWith('#')) {
-      // This is the URL line
       currentChannel.url = trimmedLine;
       existingChannels.push(currentChannel);
       currentChannel = null;
@@ -91,7 +251,7 @@ serve(async (req) => {
   }
 
   try {
-    const { url, maxChannels = 50000, maxBytesMB = 80 } = await req.json();
+    const { url, maxChannels = 100000, maxBytesMB = 100 } = await req.json();
 
     if (!url) {
       return new Response(
@@ -100,14 +260,49 @@ serve(async (req) => {
       );
     }
 
+    console.log('Processing URL:', url);
+    
+    // Check if this is an Xtream Codes URL
+    const xtreamCreds = parseXtreamCredentials(url);
+    
+    if (xtreamCreds) {
+      console.log('Detected Xtream Codes format, fetching via API...');
+      const { baseUrl, username, password } = xtreamCreds;
+      
+      // Fetch all content types in parallel
+      const [liveChannels, movies, series] = await Promise.all([
+        fetchXtreamLive(baseUrl, username, password),
+        fetchXtreamMovies(baseUrl, username, password),
+        fetchXtreamSeries(baseUrl, username, password),
+      ]);
+      
+      console.log(`Xtream API results: ${liveChannels.length} live, ${movies.length} movies, ${series.length} series`);
+      
+      const allChannels = [...liveChannels, ...movies, ...series];
+      
+      return new Response(
+        JSON.stringify({ 
+          channels: allChannels, 
+          totalParsed: allChannels.length,
+          isXtream: true,
+          counts: {
+            live: liveChannels.length,
+            movies: movies.length,
+            series: series.length,
+          }
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Fall back to M3U parsing for non-Xtream URLs
+    console.log('Using M3U parsing...');
+    
     const rawMaxBytesMB = typeof maxBytesMB === 'number' ? maxBytesMB : Number(maxBytesMB);
     const safeMaxBytesMB = Number.isFinite(rawMaxBytesMB)
       ? Math.min(Math.max(rawMaxBytesMB, 1), 200)
-      : 80;
+      : 100;
 
-    console.log('Fetching m3u from:', url, 'maxChannels:', maxChannels, 'maxBytesMB:', safeMaxBytesMB);
-
-    // Multiple user agents to try - IPTV-specific ones
     const userAgents = [
       'IPTV Smarters/1.0',
       'okHttp/4.9.0',
@@ -118,7 +313,7 @@ serve(async (req) => {
     let lastError;
     for (let attempt = 1; attempt <= 4; attempt++) {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
 
       try {
         console.log(`Attempt ${attempt} with user agent: ${userAgents[attempt - 1] || userAgents[0]}`);
@@ -158,8 +353,6 @@ serve(async (req) => {
           continue;
         }
 
-        // Stream the response body to parse channels incrementally
-        // This avoids loading the entire file into memory
         const reader = response.body?.getReader();
         if (!reader) {
           throw new Error('No response body');
@@ -182,7 +375,6 @@ serve(async (req) => {
           const result = parseM3UContent(chunk, channels, partialLine);
           partialLine = result.remainingPartial;
 
-          // Stop if we have enough channels or processed enough data
           if (channels.length >= maxChannels || bytesRead >= maxBytes) {
             console.log(`Stopping early: ${channels.length} channels, ${bytesRead} bytes read`);
             reader.cancel();
@@ -190,7 +382,7 @@ serve(async (req) => {
           }
         }
 
-        console.log(`Parsed ${channels.length} channels from stream`);
+        console.log(`Parsed ${channels.length} channels from M3U stream`);
         
         if (channels.length === 0) {
           console.error('No channels parsed');
@@ -203,9 +395,18 @@ serve(async (req) => {
           continue;
         }
         
-        // Return parsed channels directly instead of raw content
+        // Count by type
+        const counts = {
+          live: channels.filter(c => c.type === 'live').length,
+          movies: channels.filter(c => c.type === 'movies').length,
+          series: channels.filter(c => c.type === 'series').length,
+          sports: channels.filter(c => c.type === 'sports').length,
+        };
+        
+        console.log('Channel counts by type:', counts);
+        
         return new Response(
-          JSON.stringify({ channels, totalParsed: channels.length }),
+          JSON.stringify({ channels, totalParsed: channels.length, isXtream: false, counts }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       } catch (fetchError) {

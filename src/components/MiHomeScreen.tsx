@@ -4,18 +4,18 @@ import arabianPalaceBg from '@/assets/arabian-palace-bg.png';
 
 interface MiHomeScreenProps {
   channelCount: number;
-  movieCount?: number;
-  seriesCount?: number;
-  sportsCount?: number;
+  movieCount: number;
+  seriesCount: number;
+  sportsCount: number;
   onNavigate: (section: 'live' | 'movies' | 'series' | 'sports' | 'settings') => void;
   onReload?: () => void;
 }
 
 export const MiHomeScreen = ({
   channelCount,
-  movieCount = 1200,
-  seriesCount = 1200,
-  sportsCount = 100,
+  movieCount,
+  seriesCount,
+  sportsCount,
   onNavigate,
   onReload,
 }: MiHomeScreenProps) => {
