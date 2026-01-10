@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { getStoredPlaylistUrl, setStoredPlaylistUrl } from '@/lib/playlistStorage';
-import { AnimatedArabiaLogo } from './AnimatedArabiaLogo';
+import arabiaLogo from '@/assets/arabia-logo.png';
 
 interface MiSettingsPageProps {
   onBack: () => void;
@@ -79,7 +79,7 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
 
         {/* Center Logo */}
         <div className="flex items-center justify-center">
-          <AnimatedArabiaLogo size="lg" />
+          <img src={arabiaLogo} alt="Arabia" className="h-24 w-auto" />
         </div>
 
         {/* Time & Weather */}
