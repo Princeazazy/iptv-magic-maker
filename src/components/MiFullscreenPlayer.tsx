@@ -288,15 +288,27 @@ export const MiFullscreenPlayer = ({
           </button>
         </div>
 
-        {/* Top Center - Close Button */}
+        {/* Bottom Center - Back/Close Button */}
         <button
           onClick={(e) => {
             e.stopPropagation();
             onClose();
           }}
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 translate-y-16 p-2"
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 p-3 hover:bg-white/10 rounded-full transition-colors"
         >
-          <ChevronDown className="w-8 h-8 text-white/60 hover:text-white transition-colors" />
+          <ChevronDown className="w-10 h-10 text-white/60 hover:text-white transition-colors" />
+        </button>
+
+        {/* Top Left - Back Button (more visible) */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          className="absolute top-6 left-28 flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+        >
+          <ChevronDown className="w-5 h-5 text-white rotate-90" />
+          <span className="text-white font-medium">Back</span>
         </button>
       </div>
     </div>
