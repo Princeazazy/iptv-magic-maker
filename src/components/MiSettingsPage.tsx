@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, User, Shield, ListVideo, Trash2, Cloud, Check, X, Key, Monitor } from 'lucide-react';
+import { ChevronLeft, User, Shield, ListVideo, Trash2, Cloud, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -8,17 +8,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { getStoredPlaylistUrl, setStoredPlaylistUrl } from '@/lib/playlistStorage';
 
 interface MiSettingsPageProps {
   onBack: () => void;
   onPlaylistChange?: () => void;
 }
-
-const PLAYLIST_STORAGE_KEY = 'mi-player-playlist-url';
-
-export const getStoredPlaylistUrl = (): string => {
-  return localStorage.getItem(PLAYLIST_STORAGE_KEY) || '';
-};
 
 export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps) => {
   const [time, setTime] = useState(new Date());
@@ -39,8 +34,8 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
 
   const handleSavePlaylist = () => {
     if (playlistUrl.trim()) {
-      localStorage.setItem(PLAYLIST_STORAGE_KEY, playlistUrl.trim());
-      toast.success('Playlist saved! Channels will load on native app.');
+      setStoredPlaylistUrl(playlistUrl.trim());
+      toast.success('Playlist saved!');
       setShowPlaylistDialog(false);
       onPlaylistChange?.();
     } else {
