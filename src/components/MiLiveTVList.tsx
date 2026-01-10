@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { ChevronLeft, Search, Star, Tv, Cloud, User, Grid, List } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
+import { useProgressiveList } from '@/hooks/useProgressiveList';
 import {
   Select,
   SelectContent,
@@ -349,6 +350,16 @@ export const MiLiveTVList = ({
     return filtered;
   }, [channels, searchQuery, selectedGroup, showFavoritesOnly, favorites, sortBy]);
 
+  const {
+    visibleItems: visibleChannels,
+    onScroll,
+    ensureIndexVisible,
+    hasMore,
+  } = useProgressiveList(filteredChannels, {
+    initial: 120,
+    step: 120,
+  });
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -357,7 +368,11 @@ export const MiLiveTVList = ({
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
-          setFocusedIndex((prev) => Math.min(prev + 1, filteredChannels.length - 1));
+          setFocusedIndex((prev) => {
+            const next = Math.min(prev + 1, filteredChannels.length - 1);
+            ensureIndexVisible(next);
+            return next;
+          });
           break;
         case 'ArrowUp':
           e.preventDefault();
@@ -374,7 +389,7 @@ export const MiLiveTVList = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [filteredChannels, focusedIndex, onChannelSelect]);
+  }, [filteredChannels, focusedIndex, onChannelSelect, ensureIndexVisible]);
 
   return (
     <div className="h-full flex bg-background">
@@ -502,10 +517,10 @@ export const MiLiveTVList = ({
         </div>
 
         {/* Channel List */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 mi-scrollbar">
+        <div className="flex-1 overflow-y-auto px-6 py-4 mi-scrollbar" onScroll={onScroll}>
           {viewMode === 'list' ? (
             <div className="space-y-2">
-              {filteredChannels.map((channel, index) => (
+              {visibleChannels.map((channel, index) => (
                 <button
                   key={channel.id}
                   onClick={() => onChannelSelect(channel)}
@@ -523,6 +538,7 @@ export const MiLiveTVList = ({
                       <img
                         src={channel.logo}
                         alt={channel.name}
+                        loading="lazy"
                         className="w-full h-full object-contain p-1"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
@@ -573,7 +589,7 @@ export const MiLiveTVList = ({
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {filteredChannels.map((channel, index) => (
+              {visibleChannels.map((channel, index) => (
                 <button
                   key={channel.id}
                   onClick={() => onChannelSelect(channel)}
@@ -591,6 +607,7 @@ export const MiLiveTVList = ({
                       <img
                         src={channel.logo}
                         alt={channel.name}
+                        loading="lazy"
                         className="w-full h-full object-contain p-3"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
@@ -642,6 +659,10 @@ export const MiLiveTVList = ({
                 </button>
               ))}
             </div>
+          )}
+
+          {hasMore && (
+            <div className="py-6 text-center text-muted-foreground text-sm">Loading more…</div>
           )}
 
           {filteredChannels.length === 0 && (

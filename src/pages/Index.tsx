@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, startTransition } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useIPTV, Channel } from '@/hooks/useIPTV';
 import { MiHomeScreen } from '@/components/MiHomeScreen';
 import { MiLiveTVList } from '@/components/MiLiveTVList';
@@ -140,10 +140,8 @@ const Index = () => {
   };
 
   const handleNavigate = useCallback((section: 'live' | 'movies' | 'series' | 'sports' | 'settings') => {
-    // Use startTransition for smooth navigation without blocking UI
-    startTransition(() => {
-      setCurrentScreen(section);
-    });
+    // Navigate immediately; heavy lists render progressively inside their screens
+    setCurrentScreen(section);
   }, []);
 
   const handleReload = useCallback(() => {

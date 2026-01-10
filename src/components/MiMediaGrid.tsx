@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ChevronLeft, Search, Star, Tv, Film, User, Cloud, Grid, List } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
+import { useProgressiveList } from '@/hooks/useProgressiveList';
 import {
   Select,
   SelectContent,
@@ -54,14 +55,17 @@ export const MiMediaGrid = ({
         filtered = [...filtered].sort((a, b) => b.name.localeCompare(a.name));
         break;
       case 'rating':
-        filtered = [...filtered].sort((a, b) => 
-          parseFloat(b.rating || '0') - parseFloat(a.rating || '0')
-        );
+        filtered = [...filtered].sort((a, b) => parseFloat(b.rating || '0') - parseFloat(a.rating || '0'));
         break;
     }
 
     return filtered;
   }, [items, selectedGroup, sortBy]);
+
+  const { visibleItems, onScroll, hasMore } = useProgressiveList(filteredItems, {
+    initial: 60,
+    step: 60,
+  });
 
   const title = category === 'movies' ? 'Movies' : 'Series';
 
@@ -174,9 +178,9 @@ export const MiMediaGrid = ({
         </div>
 
         {/* Media Grid */}
-        <div className="flex-1 overflow-y-auto p-6 mi-scrollbar">
+        <div className="flex-1 overflow-y-auto p-6 mi-scrollbar" onScroll={onScroll}>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-            {filteredItems.map((item) => (
+            {visibleItems.map((item) => (
               <div
                 key={item.id}
                 onClick={() => onItemSelect(item)}
@@ -195,6 +199,7 @@ export const MiMediaGrid = ({
                     <img
                       src={item.backdrop_path?.[0] || item.logo}
                       alt={item.name}
+                      loading="lazy"
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
@@ -205,7 +210,7 @@ export const MiMediaGrid = ({
                       <Film className="w-12 h-12 text-muted-foreground" />
                     </div>
                   )}
-                  
+
                   {/* Selection indicator on hover */}
                   <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-transparent group-hover:bg-foreground transition-colors" />
                 </div>
@@ -255,12 +260,14 @@ export const MiMediaGrid = ({
             ))}
           </div>
 
+          {hasMore && (
+            <div className="py-6 text-center text-muted-foreground text-sm">Loading more…</div>
+          )}
+
           {filteredItems.length === 0 && (
             <div className="flex flex-col items-center justify-center h-64 text-center">
               <p className="text-muted-foreground text-lg">No {title.toLowerCase()} found</p>
-              <p className="text-muted-foreground/60 text-sm mt-2">
-                Try adjusting your filters
-              </p>
+              <p className="text-muted-foreground/60 text-sm mt-2">Try adjusting your filters</p>
             </div>
           )}
         </div>
