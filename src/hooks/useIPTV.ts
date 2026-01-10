@@ -190,13 +190,15 @@ export const useIPTV = (m3uUrl?: string) => {
           
           content = response.data;
         } else {
-          // Web preview - try edge function proxy (streams and parses server-side)
-          console.log('Fetching M3U using edge function proxy...');
-          
-          // Load all channels without strict limits for the native app build
+          // Web preview - use edge function proxy with reasonable limits
           console.log('Fetching M3U using edge function proxy...');
           const { data, error } = await supabase.functions.invoke('fetch-m3u', {
-            body: { url: effectiveUrl, maxChannels: 200000, maxBytesMB: 100, maxReturnPerType: 50000 }
+            body: { 
+              url: effectiveUrl, 
+              maxChannels: 50000, 
+              maxBytesMB: 100, 
+              maxReturnPerType: 10000 // Limit for web preview to prevent timeouts
+            }
           });
           
           if (error) {
@@ -275,12 +277,14 @@ export const useIPTV = (m3uUrl?: string) => {
         setError(null);
       } catch (err: any) {
         console.error('Error fetching M3U:', err);
+        const errorMessage = err?.message || 'Failed to load channels';
+        console.log('Error details:', errorMessage);
+        
         if (!isNative) {
           // Fall back to demo channels for web
-          console.log('Falling back to demo channels');
+          console.log('Falling back to demo channels due to error');
           loadDemoChannels();
         } else {
-          const errorMessage = err?.message || 'Failed to load channels. Please check your M3U URL and internet connection.';
           setError(errorMessage);
         }
       } finally {
