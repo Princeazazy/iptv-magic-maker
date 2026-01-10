@@ -46,17 +46,32 @@ function parseXtreamCredentials(url: string): { baseUrl: string; username: strin
     const urlObj = new URL(url);
     const username = urlObj.searchParams.get('username');
     const password = urlObj.searchParams.get('password');
-    
+
     if (username && password) {
       const baseUrl = `${urlObj.protocol}//${urlObj.host}`;
       return { baseUrl, username, password };
     }
-    
+
     return null;
   } catch {
     return null;
   }
 }
+
+// Many providers give an Xtream-style M3U URL (get.php?username=...&password=...&type=m3u...).
+// Using the Xtream JSON APIs for these often returns *huge* JSON arrays (40k+ items) that exceed function memory.
+// For these URLs we should prefer streaming M3U parsing instead.
+function isXtreamGetM3UUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    const path = u.pathname.toLowerCase();
+    const type = (u.searchParams.get('type') || '').toLowerCase();
+    return path.endsWith('/get.php') && type.includes('m3u');
+  } catch {
+    return false;
+  }
+}
+
 
 // Fetch and process Xtream Codes live streams with limit
 async function fetchXtreamLive(
@@ -293,36 +308,69 @@ serve(async (req) => {
   }
 
   try {
-    const { url, maxChannels = 100000, maxBytesMB = 100, maxReturnPerType = 1500 } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const {
+      url,
+      maxChannels = 100000,
+      maxBytesMB = 100,
+      maxReturnPerType = 1500,
+      preferXtreamApi = false,
+    } = (body ?? {}) as Record<string, unknown>;
 
-    if (!url) {
+    if (!url || typeof url !== 'string') {
       return new Response(
         JSON.stringify({ error: 'URL is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    const safeMaxReturnPerType =
+      typeof maxReturnPerType === 'number' && Number.isFinite(maxReturnPerType)
+        ? Math.min(Math.max(maxReturnPerType, 0), 2000)
+        : 1500;
+
+    const rawMaxChannels = typeof maxChannels === 'number' ? maxChannels : Number(maxChannels);
+    const safeMaxChannels = Number.isFinite(rawMaxChannels)
+      ? Math.min(Math.max(rawMaxChannels, 0), 20000)
+      : 20000;
+
+    // We only return up to maxReturnPerType per type; parsing far beyond that is wasted compute.
+    // Stop after ~6x to allow uneven distribution across types.
+    const stopAfterChannels = safeMaxReturnPerType > 0
+      ? Math.min(safeMaxChannels, Math.max(1000, safeMaxReturnPerType * 6))
+      : safeMaxChannels;
+
+    const rawMaxBytesMB = typeof maxBytesMB === 'number' ? maxBytesMB : Number(maxBytesMB);
+    const safeMaxBytesMB = Number.isFinite(rawMaxBytesMB)
+      ? Math.min(Math.max(rawMaxBytesMB, 1), 40)
+      : 20;
+
     console.log('Processing URL:', url);
-    
+
     // Check if this is an Xtream Codes URL
     const xtreamCreds = parseXtreamCredentials(url);
-    
-    if (xtreamCreds) {
-      console.log('Detected Xtream Codes format, fetching via API...');
+    const isGetM3U = isXtreamGetM3UUrl(url);
+
+    // NOTE: Xtream JSON endpoints (get_live_streams/get_series/...) can return tens of thousands of rows.
+    // Even if we slice afterwards, we still download + parse the full JSON array, which can exceed memory.
+    // Therefore, for get.php m3u URLs we always prefer streaming M3U parsing.
+    if (xtreamCreds && preferXtreamApi && !isGetM3U) {
+      console.log('Detected Xtream Codes API URL, fetching via API...');
       const { baseUrl, username, password } = xtreamCreds;
-      
-      // Use a reasonable limit per type to avoid memory issues
-      const limit = Math.min(maxReturnPerType || 1500, 2000);
+
+      const limit = safeMaxReturnPerType || 1500;
       console.log(`Using limit of ${limit} per content type`);
-      
+
       // Fetch all content types in parallel with limits
       const [liveResult, moviesResult, seriesResult] = await Promise.all([
         fetchXtreamLive(baseUrl, username, password, limit),
         fetchXtreamMovies(baseUrl, username, password, limit),
         fetchXtreamSeries(baseUrl, username, password, limit),
       ]);
-      
-      console.log(`Xtream API results: ${liveResult.items.length}/${liveResult.total} live, ${moviesResult.items.length}/${moviesResult.total} movies, ${seriesResult.items.length}/${seriesResult.total} series`);
+
+      console.log(
+        `Xtream API results: ${liveResult.items.length}/${liveResult.total} live, ${moviesResult.items.length}/${moviesResult.total} movies, ${seriesResult.items.length}/${seriesResult.total} series`,
+      );
 
       const returnedChannels = [
         ...liveResult.items,
@@ -351,13 +399,15 @@ serve(async (req) => {
       );
     }
 
-    // Fall back to M3U parsing for non-Xtream URLs
+    // Fall back to M3U parsing (preferred for resource safety)
+    if (xtreamCreds && !preferXtreamApi) {
+      console.log('Xtream credentials detected, but using streaming M3U parsing (preferXtreamApi=false)');
+    }
+    if (xtreamCreds && isGetM3U) {
+      console.log('Xtream get.php M3U detected, using streaming M3U parsing to avoid huge JSON API payloads');
+    }
+
     console.log('Using M3U parsing...');
-    
-    const rawMaxBytesMB = typeof maxBytesMB === 'number' ? maxBytesMB : Number(maxBytesMB);
-    const safeMaxBytesMB = Number.isFinite(rawMaxBytesMB)
-      ? Math.min(Math.max(rawMaxBytesMB, 1), 200)
-      : 100;
 
     const userAgents = [
       'IPTV Smarters/1.0',
@@ -431,7 +481,7 @@ serve(async (req) => {
           const result = parseM3UContent(chunk, channels, partialLine);
           partialLine = result.remainingPartial;
 
-          if (channels.length >= maxChannels || bytesRead >= maxBytes) {
+          if (channels.length >= stopAfterChannels || bytesRead >= maxBytes) {
             console.log(`Stopping early: ${channels.length} channels, ${bytesRead} bytes read`);
             reader.cancel();
             break;
@@ -460,11 +510,6 @@ serve(async (req) => {
         };
 
         console.log('Channel counts by type:', counts);
-
-        const safeMaxReturnPerType =
-          typeof maxReturnPerType === 'number' && Number.isFinite(maxReturnPerType)
-            ? Math.min(Math.max(maxReturnPerType, 0), 50000)
-            : 0;
 
         const returnedChannels = safeMaxReturnPerType > 0
           ? [
