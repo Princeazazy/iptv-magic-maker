@@ -7,14 +7,23 @@ import { MiMediaGrid } from '@/components/MiMediaGrid';
 import { MiMovieDetail } from '@/components/MiMovieDetail';
 import { MiSettingsPage } from '@/components/MiSettingsPage';
 import { MiFullscreenPlayer } from '@/components/MiFullscreenPlayer';
+import { ArabiaIntro } from '@/components/ArabiaIntro';
 import { useToast } from '@/hooks/use-toast';
 import arabiaLogo from '@/assets/arabia-logo.png';
 
-type Screen = 'home' | 'live' | 'movies' | 'series' | 'sports' | 'settings' | 'detail';
+type Screen = 'intro' | 'home' | 'live' | 'movies' | 'series' | 'sports' | 'settings' | 'detail';
+
+const INTRO_SHOWN_KEY = 'arabia-intro-shown';
 
 const Index = () => {
   const [playlistVersion, setPlaylistVersion] = useState(0);
   const { channels, loading, error } = useIPTV();
+  
+  // Check if intro was already shown this session
+  const [showIntro, setShowIntro] = useState(() => {
+    return !sessionStorage.getItem(INTRO_SHOWN_KEY);
+  });
+  
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [currentChannel, setCurrentChannel] = useState<Channel | null>(null);
   const [selectedItem, setSelectedItem] = useState<Channel | null>(null);
@@ -24,6 +33,11 @@ const Index = () => {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { toast } = useToast();
+  
+  const handleIntroComplete = useCallback(() => {
+    sessionStorage.setItem(INTRO_SHOWN_KEY, 'true');
+    setShowIntro(false);
+  }, []);
 
   // Filter channels by current screen category
   const filteredChannelsByCategory = useMemo(() => {
@@ -121,6 +135,11 @@ const Index = () => {
   const handleReload = () => {
     window.location.reload();
   };
+
+  // Show intro video first (once per session)
+  if (showIntro) {
+    return <ArabiaIntro onComplete={handleIntroComplete} />;
+  }
 
   if (loading) {
     return (
