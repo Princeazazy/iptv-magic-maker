@@ -292,17 +292,42 @@ const getCountryFlagUrl = (group: string): string | null => {
 const getCategoryEmoji = (group: string): string => {
   const groupLower = group.toLowerCase();
   
+  // Streaming services / Series platforms
+  if (groupLower.includes('netflix') || group.includes('نتفلكس')) return '🎬';
+  if (groupLower.includes('amazon') || groupLower.includes('prime')) return '📦';
+  if (groupLower.includes('hulu')) return '📺';
+  if (groupLower.includes('disney')) return '🏰';
+  if (groupLower.includes('hbo') || groupLower.includes('max')) return '🎭';
+  if (groupLower.includes('apple tv') || groupLower.includes('appletv')) return '🍎';
+  if (groupLower.includes('osn')) return '📡';
+  if (groupLower.includes('starz')) return '⭐';
+  if (groupLower.includes('showtime')) return '🎪';
+  if (groupLower.includes('paramount')) return '🏔️';
+  if (groupLower.includes('peacock')) return '🦚';
+  
+  // Wrestling / WWE
+  if (groupLower.includes('wwe') || group.includes('مصارعة')) return '🤼';
+  
+  // 3D Movies
+  if (groupLower.includes('3d')) return '🥽';
+  
+  // Cartoon / Kids
+  if (groupLower.includes('cartoon') || group.includes('كرتون')) return '🎨';
+  
   // VOD/Movies categories with country/region flags
   if (groupLower.includes('vod albania') || (groupLower.includes('vod') && groupLower.includes('alban'))) return '🇦🇱';
   if (groupLower.includes('vod germany') || groupLower.includes('german') || groupLower.includes('بالالمانية')) return '🇩🇪';
   if (groupLower.includes('indian') || groupLower.includes('vod india') || group.includes('هندية')) return '🇮🇳';
-  if (groupLower.includes('vod fr') || groupLower.includes('french') || groupLower.includes('فرنسي')) return '🇫🇷';
+  if (groupLower.includes('vod fr') || groupLower.includes('france')) return '🇫🇷';
   if (groupLower.includes('turk') || group.includes('تركية') || group.includes('تركي')) return '🇹🇷';
   if (groupLower.includes('vod asia') || groupLower.includes('asian')) return '🌏';
-  if (groupLower.includes('vod en') || groupLower.includes('english')) return '🇬🇧';
+  if (groupLower.includes('vod en') || groupLower.includes('subtitles')) return '🇬🇧';
+  if (groupLower.includes('russia')) return '🇷🇺';
+  if (groupLower.includes('egypt') || group.includes('مصر')) return '🇪🇬';
+  if (groupLower.includes('albania')) return '🇦🇱';
   
   // Documentary categories
-  if (groupLower.includes('doc vod') || group.includes('وثائقية') || groupLower.includes('documentary')) return '📽️';
+  if (groupLower.includes('doc vod') || groupLower.includes('doc ') || group.includes('وثائقية') || groupLower.includes('documentary')) return '📽️';
   
   // Movie categories (including abbreviations and Arabic)
   if (groupLower.includes('vod')) return '🎬';
@@ -330,7 +355,7 @@ const getCategoryEmoji = (group: string): string => {
   if (groupLower.includes('horror') || groupLower.includes('scary') || group.includes('رعب')) return '👻';
   if (groupLower.includes('action') || group.includes('اكشن') || group.includes('أكشن')) return '💥';
   if (groupLower.includes('romance') || groupLower.includes('love') || group.includes('رومانسي')) return '❤️';
-  if (groupLower.includes('animation') || groupLower.includes('cartoon') || groupLower.includes('anime') || group.includes('كرتون') || group.includes('انمي')) return '🎨';
+  if (groupLower.includes('animation') || groupLower.includes('anime') || group.includes('انمي')) return '🎨';
   if (groupLower.includes('entertainment') || group.includes('ترفيه')) return '🎪';
   
   // Media categories
@@ -365,25 +390,44 @@ const getCategoryEmoji = (group: string): string => {
   return '📺';
 };
 
-// Check if category is a VOD/Movies category
+// Check if category is a Series category
+const isSeriesCategory = (group: string): boolean => {
+  const groupLower = group.toLowerCase();
+  return groupLower.includes('series') || 
+         groupLower.includes('netflix') ||
+         groupLower.includes('hulu') ||
+         groupLower.includes('amazon') ||
+         groupLower.includes('prime') ||
+         groupLower.includes('hbo') ||
+         groupLower.includes('osn') ||
+         groupLower.includes('starz') ||
+         groupLower.includes('wwe') ||
+         group.includes('مسلسل') ||
+         group.includes('نتفلكس');
+};
+
+// Check if category is a VOD/Movies category (excludes live cinema channels)
 const isVodCategory = (group: string): boolean => {
   const groupLower = group.toLowerCase();
+  // If it contains "cinema" or live channel indicators, it's likely live TV, not VOD
+  if (groupLower.includes('cinema') || groupLower.includes('سينما')) {
+    return false;
+  }
   return groupLower.includes('vod') || 
-         groupLower.includes('mov') || 
+         groupLower.match(/\bmov\b/) !== null ||
          groupLower.includes('movie') ||
-         groupLower.includes('film') ||
-         group.includes('أفلام') ||
-         group.includes('افلام') ||
-         group.includes('فيلم');
+         groupLower.includes('3d movies') ||
+         (group.includes('أفلام') && !groupLower.includes('cinema')) ||
+         (group.includes('افلام') && !groupLower.includes('cinema'));
 };
 
 // Get count label based on category type
 const getCategoryCountLabel = (group: string, count: number): string => {
+  if (isSeriesCategory(group)) {
+    return `${count} Series`;
+  }
   if (isVodCategory(group)) {
     return `${count} Movies`;
-  }
-  if (group.toLowerCase().includes('series') || group.includes('مسلسل')) {
-    return `${count} Series`;
   }
   return `${count} Channels`;
 };
