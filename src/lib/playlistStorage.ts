@@ -19,8 +19,8 @@ const looksLikeUrl = (value: string) => {
   return v.length > 8 && (/^[a-zA-Z]+:\/\//.test(v) || v.startsWith('www.'));
 };
 
-// No default playlist - users must provide their own
-const DEFAULT_PLAYLIST_URL = '';
+// Default IPTV playlist
+const DEFAULT_PLAYLIST_URL = 'http://ui-on.me:2095/get.php?username=Ameer26&password=Azazy&type=m3u_plus&output=ts';
 
 export const getStoredPlaylistUrl = (): string => {
   try {

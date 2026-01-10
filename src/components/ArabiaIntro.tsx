@@ -76,15 +76,6 @@ export const ArabiaIntro = ({ onComplete }: ArabiaIntroProps) => {
         <source src={introVideo} type="video/mp4" />
       </video>
 
-      {(state === 'loading' || state === 'blocked' || state === 'error') && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="px-6 py-4 rounded-2xl bg-white/10 backdrop-blur-sm text-white/80 text-sm">
-            {state === 'loading' && 'Loading intro…'}
-            {state === 'blocked' && 'Tap to play with sound'}
-            {state === 'error' && 'Intro unavailable — tap to continue'}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
