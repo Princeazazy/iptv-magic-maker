@@ -177,10 +177,17 @@ export const MiMediaGrid = ({
         <div className="flex-1 overflow-y-auto p-6 mi-scrollbar">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
             {filteredItems.map((item) => (
-              <button
+              <div
                 key={item.id}
                 onClick={() => onItemSelect(item)}
-                className="group text-left"
+                className="group text-left cursor-pointer"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    onItemSelect(item);
+                  }
+                }}
               >
                 {/* Poster */}
                 <div className="mi-poster-card bg-card">
@@ -206,20 +213,34 @@ export const MiMediaGrid = ({
                 {/* Title & Info */}
                 <div className="mt-3">
                   <h3 className="text-foreground font-medium truncate">{item.name}</h3>
-                  <p className="text-muted-foreground text-sm">{item.duration || '02:10:46'}</p>
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                    {item.year && <span>{item.year}</span>}
+                    {item.duration && <span>• {item.duration}</span>}
+                    {item.rating && <span>• ⭐ {item.rating}</span>}
+                    {!item.year && !item.duration && !item.rating && <span>{item.group}</span>}
+                  </div>
                 </div>
 
                 {/* Badges & Favorite */}
                 <div className="flex items-center justify-between mt-2">
                   <div className="flex gap-1">
                     <span className="mi-badge-hd">HD</span>
-                    <span className="mi-badge-hd">EPG</span>
+                    {item.genre && <span className="mi-badge-hd">{item.genre.split(',')[0]}</span>}
                   </div>
-                  <button
+                  <div
                     onClick={(e) => {
                       e.stopPropagation();
                       onToggleFavorite(item.id);
                     }}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.stopPropagation();
+                        onToggleFavorite(item.id);
+                      }
+                    }}
+                    className="cursor-pointer"
                   >
                     <Star
                       className={`w-4 h-4 ${
@@ -228,9 +249,9 @@ export const MiMediaGrid = ({
                           : 'text-muted-foreground hover:mi-star'
                       }`}
                     />
-                  </button>
+                  </div>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
 
