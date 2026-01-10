@@ -1,4 +1,5 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useMemo, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import Hls from 'hls.js';
 import {
   Play,
@@ -13,6 +14,7 @@ import {
   Subtitles,
   Settings,
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { Channel } from '@/hooks/useIPTV';
 
 interface MiFullscreenPlayerProps {
@@ -44,35 +46,70 @@ export const MiFullscreenPlayer = ({
   const [time, setTime] = useState(new Date());
   const [error, setError] = useState<string | null>(null);
 
+  const functionConfig = useMemo(() => {
+    // Avoid import.meta.env usage; reuse values from the already-configured client.
+    const supabaseUrl = (supabase as any).supabaseUrl as string | undefined;
+    const supabaseKey = (supabase as any).supabaseKey as string | undefined;
+
+    const functionsBase = supabaseUrl ? new URL('functions/v1/', supabaseUrl).toString() : '';
+    const streamProxyUrl = functionsBase ? new URL('stream-proxy', functionsBase).toString() : '';
+
+    return { supabaseKey, streamProxyUrl };
+  }, []);
+
+  const getPlayableUrl = (rawUrl: string) => {
+    // In web builds (https), many IPTV providers only provide http:// streams.
+    // Browsers block http streams as Mixed Content, so we proxy them through the backend.
+    const isNative = Capacitor.isNativePlatform();
+    if (isNative) return rawUrl;
+
+    if (!functionConfig.streamProxyUrl) return rawUrl;
+
+    const needsProxy = rawUrl.startsWith('http://');
+    return needsProxy ? `${functionConfig.streamProxyUrl}?url=${encodeURIComponent(rawUrl)}` : rawUrl;
+  };
+
   // HLS.js initialization for streaming
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !channel.url) return;
 
     setError(null);
-    
+
     // Clean up previous HLS instance
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
     }
 
-    const url = channel.url;
-    const isHls = url.includes('.m3u8') || url.includes('m3u8');
-    
+    const originalUrl = channel.url;
+    const playableUrl = getPlayableUrl(originalUrl);
+    const isHls = originalUrl.includes('.m3u8') || originalUrl.includes('m3u8');
+
+    // Make sure volume/mute is applied
+    video.muted = isMuted;
+    video.volume = volume / 100;
+
     if (isHls && Hls.isSupported()) {
-      console.log('Using HLS.js for:', url);
+      console.log('Using HLS.js for:', playableUrl);
+
+      const supabaseKey = functionConfig.supabaseKey;
+
       const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: true,
         xhrSetup: (xhr) => {
-          xhr.setRequestHeader('User-Agent', 'IPTV Smarters/1.0');
+          // IMPORTANT: Browsers forbid setting User-Agent; only set allowed headers.
+          if (supabaseKey) {
+            xhr.setRequestHeader('apikey', supabaseKey);
+            xhr.setRequestHeader('authorization', `Bearer ${supabaseKey}`);
+          }
         },
       });
-      
-      hls.loadSource(url);
+
+      hls.loadSource(playableUrl);
       hls.attachMedia(video);
-      
+
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         console.log('HLS manifest parsed, starting playback');
         video.play().catch((e) => {
@@ -80,30 +117,30 @@ export const MiFullscreenPlayer = ({
           setIsPlaying(false);
         });
       });
-      
-      hls.on(Hls.Events.ERROR, (event, data) => {
+
+      hls.on(Hls.Events.ERROR, (_event, data) => {
         console.error('HLS error:', data);
         if (data.fatal) {
-          setError(`Playback error: ${data.type}`);
+          // Add extra hint if this is mixed content / network blocked
+          setError(`Playback error: ${data.type}${data?.response?.code ? ` (HTTP ${data.response.code})` : ''}`);
           if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-            // Try to recover
             hls.startLoad();
           } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
             hls.recoverMediaError();
           }
         }
       });
-      
+
       hlsRef.current = hls;
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       // Safari native HLS support
-      console.log('Using native HLS for:', url);
-      video.src = url;
+      console.log('Using native HLS for:', playableUrl);
+      video.src = playableUrl;
       video.play().catch(() => setIsPlaying(false));
     } else {
       // Try direct playback (for mp4, etc.)
-      console.log('Using direct playback for:', url);
-      video.src = url;
+      console.log('Using direct playback for:', playableUrl);
+      video.src = playableUrl;
       video.play().catch(() => setIsPlaying(false));
     }
 
@@ -113,7 +150,7 @@ export const MiFullscreenPlayer = ({
         hlsRef.current = null;
       }
     };
-  }, [channel.url]);
+  }, [channel.url, functionConfig.supabaseKey, functionConfig.streamProxyUrl, isMuted, volume]);
 
   // Update playback time
   useEffect(() => {
