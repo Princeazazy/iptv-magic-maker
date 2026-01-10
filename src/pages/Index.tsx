@@ -139,13 +139,13 @@ const Index = () => {
     }
   };
 
-  const handleNavigate = (section: 'live' | 'movies' | 'series' | 'sports' | 'settings') => {
+  const handleNavigate = useCallback((section: 'live' | 'movies' | 'series' | 'sports' | 'settings') => {
     setCurrentScreen(section);
-  };
+  }, []);
 
-  const handleReload = () => {
+  const handleReload = useCallback(() => {
     window.location.reload();
-  };
+  }, []);
 
   // Show intro video first (once per session)
   if (showIntro) {
