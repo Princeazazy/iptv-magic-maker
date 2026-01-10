@@ -207,6 +207,7 @@ const countryCodeToInfo: Record<string, { name: string; code: string }> = {
   'tn': { name: 'Tunisia', code: 'tn' },
   'to': { name: 'Tonga', code: 'to' },
   'tr': { name: 'Turkey', code: 'tr' },
+  'turk': { name: 'Turkey', code: 'tr' },
   'tt': { name: 'Trinidad and Tobago', code: 'tt' },
   'tw': { name: 'Taiwan', code: 'tw' },
   'tz': { name: 'Tanzania', code: 'tz' },
@@ -285,15 +286,45 @@ const getCountryFlagUrl = (group: string): string | null => {
 // Fallback emoji for non-country categories
 const getCategoryEmoji = (group: string): string => {
   const groupLower = group.toLowerCase();
+  // Sports categories
+  if (groupLower.includes('soccer') || groupLower.includes('football')) return '⚽';
+  if (groupLower.includes('basketball') || groupLower.includes('nba')) return '🏀';
+  if (groupLower.includes('tennis')) return '🎾';
+  if (groupLower.includes('golf')) return '⛳';
+  if (groupLower.includes('baseball') || groupLower.includes('mlb')) return '⚾';
+  if (groupLower.includes('hockey') || groupLower.includes('nhl')) return '🏒';
+  if (groupLower.includes('boxing') || groupLower.includes('ufc') || groupLower.includes('fight')) return '🥊';
+  if (groupLower.includes('racing') || groupLower.includes('f1') || groupLower.includes('nascar')) return '🏎️';
+  if (groupLower.includes('cricket')) return '🏏';
+  if (groupLower.includes('rugby')) return '🏉';
+  if (groupLower.includes('sport')) return '🏆';
+  // Entertainment categories
+  if (groupLower.includes('theater') || groupLower.includes('theatre') || groupLower.includes('drama')) return '🎭';
+  if (groupLower.includes('comedy') || groupLower.includes('funny')) return '😂';
+  if (groupLower.includes('horror') || groupLower.includes('scary')) return '👻';
+  if (groupLower.includes('action')) return '💥';
+  if (groupLower.includes('romance') || groupLower.includes('love')) return '❤️';
+  if (groupLower.includes('animation') || groupLower.includes('cartoon') || groupLower.includes('anime')) return '🎨';
+  if (groupLower.includes('entertainment')) return '🎪';
+  // Media categories
   if (groupLower.includes('news')) return '📰';
-  if (groupLower.includes('sport')) return '⚽';
   if (groupLower.includes('documentary') || groupLower.includes('doc')) return '🎬';
-  if (groupLower.includes('entertainment')) return '🎭';
-  if (groupLower.includes('kids') || groupLower.includes('child')) return '👶';
-  if (groupLower.includes('music')) return '🎵';
-  if (groupLower.includes('movie') || groupLower.includes('film')) return '🎥';
-  if (groupLower.includes('series')) return '📺';
-  if (groupLower.includes('religious') || groupLower.includes('faith')) return '⛪';
+  if (groupLower.includes('music') || groupLower.includes('mtv')) return '🎵';
+  if (groupLower.includes('movie') || groupLower.includes('film') || groupLower.includes('cinema')) return '🎥';
+  if (groupLower.includes('series') || groupLower.includes('show')) return '📺';
+  // Other categories
+  if (groupLower.includes('kids') || groupLower.includes('child') || groupLower.includes('junior')) return '🧸';
+  if (groupLower.includes('religious') || groupLower.includes('faith') || groupLower.includes('church')) return '⛪';
+  if (groupLower.includes('cooking') || groupLower.includes('food') || groupLower.includes('chef')) return '🍳';
+  if (groupLower.includes('nature') || groupLower.includes('wildlife') || groupLower.includes('animal')) return '🦁';
+  if (groupLower.includes('travel') || groupLower.includes('adventure')) return '✈️';
+  if (groupLower.includes('science') || groupLower.includes('discovery')) return '🔬';
+  if (groupLower.includes('history')) return '🏛️';
+  if (groupLower.includes('education') || groupLower.includes('learn')) return '📚';
+  if (groupLower.includes('gaming') || groupLower.includes('game')) return '🎮';
+  if (groupLower.includes('fashion') || groupLower.includes('lifestyle')) return '👗';
+  if (groupLower.includes('weather')) return '🌤️';
+  if (groupLower.includes('adult') || groupLower.includes('xxx')) return '🔞';
   return '🌐';
 };
 
