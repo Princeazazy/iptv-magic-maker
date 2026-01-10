@@ -314,8 +314,11 @@ const parseM3U = (content: string): Channel[] => {
     group: string = '',
     name: string = ''
   ): NonNullable<Channel['type']> => {
-    const combined = `${group} ${name}`.toLowerCase();
+    const groupLower = group.toLowerCase();
+    const nameLower = name.toLowerCase();
+    const combined = `${groupLower} ${nameLower}`;
 
+    // Sports detection (can appear in name)
     if (
       combined.includes('sport') ||
       combined.includes('football') ||
@@ -333,26 +336,34 @@ const parseM3U = (content: string): Channel[] => {
       return 'sports';
     }
 
+    // Series detection (mostly group-driven)
     if (
-      combined.includes('movie') ||
-      combined.includes('movies') ||
-      combined.includes('film') ||
-      combined.includes('cinema') ||
-      combined.includes('vod') ||
-      combined.includes('on demand') ||
-      combined.includes('on-demand')
-    ) {
-      return 'movies';
-    }
-
-    if (
-      combined.includes('series') ||
-      combined.includes('tv show') ||
-      combined.includes('tvshow') ||
-      combined.includes('episode') ||
-      combined.includes('season')
+      groupLower.includes('series') ||
+      groupLower.includes('tv show') ||
+      groupLower.includes('tvshow') ||
+      groupLower.includes('episode') ||
+      groupLower.includes('season') ||
+      groupLower.includes('netflix') ||
+      groupLower.includes('hbo') ||
+      groupLower.includes('amazon') ||
+      groupLower.includes('prime') ||
+      groupLower.includes('hulu')
     ) {
       return 'series';
+    }
+
+    // Movies/VOD detection: ONLY treat as movies when the GROUP looks like VOD.
+    // This prevents live channels like "Nile Cinema" / "Top Movies" from being misclassified.
+    if (
+      groupLower.includes('vod') ||
+      groupLower.includes('on demand') ||
+      groupLower.includes('on-demand') ||
+      groupLower.match(/\bmov\b/) !== null ||
+      groupLower.includes(' movies') ||
+      groupLower.startsWith('movies') ||
+      groupLower.includes(' film')
+    ) {
+      return 'movies';
     }
 
     return 'live';

@@ -35,36 +35,61 @@ const corsHeaders = {
 
 // Determine content type from group/name
 function getContentType(group: string, name: string): 'live' | 'movies' | 'series' | 'sports' {
-  const combined = `${group} ${name}`.toLowerCase();
-  
-  // Sports detection
-  if (combined.includes('sport') || combined.includes('football') || 
-      combined.includes('soccer') || combined.includes('basketball') ||
-      combined.includes('tennis') || combined.includes('cricket') ||
-      combined.includes('boxing') || combined.includes('wrestling') ||
-      combined.includes('nfl') || combined.includes('nba') ||
-      combined.includes('mlb') || combined.includes('nhl') ||
-      combined.includes('espn') || combined.includes('fox sport') ||
-      combined.includes('bein') || combined.includes('sky sport')) {
+  const groupLower = (group || '').toLowerCase();
+  const nameLower = (name || '').toLowerCase();
+  const combined = `${groupLower} ${nameLower}`;
+
+  // Sports detection (can appear in name)
+  if (
+    combined.includes('sport') ||
+    combined.includes('football') ||
+    combined.includes('soccer') ||
+    combined.includes('basketball') ||
+    combined.includes('tennis') ||
+    combined.includes('cricket') ||
+    combined.includes('boxing') ||
+    combined.includes('wrestling') ||
+    combined.includes('nfl') ||
+    combined.includes('nba') ||
+    combined.includes('mlb') ||
+    combined.includes('nhl') ||
+    combined.includes('espn') ||
+    combined.includes('fox sport') ||
+    combined.includes('bein') ||
+    combined.includes('sky sport')
+  ) {
     return 'sports';
   }
-  
-  // Movies detection
-  if (combined.includes('movie') || combined.includes('film') || 
-      combined.includes('cinema') || combined.includes('vod') ||
-      combined.includes('on demand') || combined.includes('24/7') ||
-      combined.includes('24-7')) {
-    return 'movies';
-  }
-  
-  // Series detection
-  if (combined.includes('series') || combined.includes('tv show') ||
-      combined.includes('episode') || combined.includes('season') ||
-      combined.includes('netflix') || combined.includes('hbo max') ||
-      combined.includes('amazon') || combined.includes('hulu')) {
+
+  // Series detection (mostly group-driven)
+  if (
+    groupLower.includes('series') ||
+    groupLower.includes('tv show') ||
+    groupLower.includes('episode') ||
+    groupLower.includes('season') ||
+    groupLower.includes('netflix') ||
+    groupLower.includes('hbo') ||
+    groupLower.includes('amazon') ||
+    groupLower.includes('prime') ||
+    groupLower.includes('hulu')
+  ) {
     return 'series';
   }
-  
+
+  // Movies/VOD detection: ONLY when the GROUP looks like VOD.
+  // Prevents live channels named "Cinema" / "Movies" from being misclassified into Movies.
+  if (
+    groupLower.includes('vod') ||
+    groupLower.includes('on demand') ||
+    groupLower.includes('on-demand') ||
+    groupLower.match(/\bmov\b/) !== null ||
+    groupLower.includes(' movies') ||
+    groupLower.startsWith('movies') ||
+    groupLower.includes(' film')
+  ) {
+    return 'movies';
+  }
+
   return 'live';
 }
 
