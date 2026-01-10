@@ -47,7 +47,11 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
   const handleDeleteCache = () => {
     localStorage.removeItem('mi-player-favorites');
     localStorage.removeItem('mi-player-last-channel');
-    toast.success('Cache cleared successfully');
+    localStorage.removeItem('mi-player-playlist-url');
+    toast.success('Cache cleared - reloading with default playlist...');
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
   };
 
   // Mock account data from Figma
