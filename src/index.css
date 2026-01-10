@@ -282,3 +282,72 @@
 .animate-scale-in {
   animation: scale-in 0.2s ease-out;
 }
+
+/* Animated smoke effect for logo */
+@keyframes smoke-rise {
+  0% {
+    filter: hue-rotate(0deg) brightness(1);
+    transform: translateY(0) scale(1);
+  }
+  25% {
+    filter: hue-rotate(10deg) brightness(1.1);
+    transform: translateY(-2px) scale(1.02);
+  }
+  50% {
+    filter: hue-rotate(-5deg) brightness(1.05);
+    transform: translateY(0) scale(1);
+  }
+  75% {
+    filter: hue-rotate(5deg) brightness(1.15);
+    transform: translateY(-1px) scale(1.01);
+  }
+  100% {
+    filter: hue-rotate(0deg) brightness(1);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes smoke-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px hsl(160 60% 40% / 0.4)) drop-shadow(0 0 20px hsl(160 60% 40% / 0.2));
+  }
+  50% {
+    filter: drop-shadow(0 0 15px hsl(160 60% 50% / 0.6)) drop-shadow(0 0 35px hsl(160 60% 45% / 0.3));
+  }
+}
+
+@keyframes smoke-drift {
+  0%, 100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  33% {
+    transform: translateX(2px) rotate(0.5deg);
+  }
+  66% {
+    transform: translateX(-1px) rotate(-0.3deg);
+  }
+}
+
+.arabia-logo-animated {
+  animation: 
+    smoke-glow 3s ease-in-out infinite,
+    smoke-drift 4s ease-in-out infinite;
+}
+
+/* Smoke overlay pseudo-element for more complex effect */
+.arabia-logo-container {
+  position: relative;
+  display: inline-block;
+}
+
+.arabia-logo-container::after {
+  content: '';
+  position: absolute;
+  top: -10%;
+  right: -5%;
+  width: 40%;
+  height: 50%;
+  background: radial-gradient(ellipse at center, hsl(160 50% 45% / 0.15) 0%, transparent 70%);
+  animation: smoke-rise 2.5s ease-in-out infinite;
+  pointer-events: none;
+}

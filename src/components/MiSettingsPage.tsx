@@ -78,8 +78,8 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
         </div>
 
         {/* Center Logo */}
-        <div className="flex items-center gap-2">
-          <img src={arabiaLogo} alt="Arabia" className="h-24 w-auto" />
+        <div className="arabia-logo-container">
+          <img src={arabiaLogo} alt="Arabia" className="h-24 w-auto arabia-logo-animated" />
         </div>
 
         {/* Time & Weather */}
