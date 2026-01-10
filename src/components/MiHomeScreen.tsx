@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Tv, Film, Clapperboard, Trophy, User, RefreshCw, Clock, LogOut, Search, Settings, Mic, Cloud } from 'lucide-react';
 import arabianPalaceBg from '@/assets/arabian-palace-bg.png';
-import arabiaLogo from '@/assets/arabia-logo.png';
+import { AnimatedArabiaLogo } from './AnimatedArabiaLogo';
+import { BackgroundMusic } from './BackgroundMusic';
 
 interface MiHomeScreenProps {
   channelCount: number;
@@ -50,11 +51,14 @@ export const MiHomeScreen = ({
       {/* Bottom fade for readability */}
       <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
       
+      {/* Background Music */}
+      <BackgroundMusic src="/audio/arabian-ambient.mp3" autoPlay defaultVolume={0.25} />
+      
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-10 py-6">
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <img src={arabiaLogo} alt="Arabia" className="h-28 w-auto" />
+          <AnimatedArabiaLogo size="lg" />
         </div>
 
         {/* Search Bar */}
