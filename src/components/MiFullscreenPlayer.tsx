@@ -49,24 +49,22 @@ export const MiFullscreenPlayer = ({
   const functionConfig = useMemo(() => {
     // Avoid import.meta.env usage; reuse values from the already-configured client.
     const supabaseUrl = (supabase as any).supabaseUrl as string | undefined;
-    const supabaseKey = (supabase as any).supabaseKey as string | undefined;
 
     const functionsBase = supabaseUrl ? new URL('functions/v1/', supabaseUrl).toString() : '';
     const streamProxyUrl = functionsBase ? new URL('stream-proxy', functionsBase).toString() : '';
 
-    return { supabaseKey, streamProxyUrl };
+    return { streamProxyUrl };
   }, []);
 
   const getPlayableUrl = (rawUrl: string) => {
-    // In web builds (https), many IPTV providers only provide http:// streams.
-    // Browsers block http streams as Mixed Content, so we proxy them through the backend.
     const isNative = Capacitor.isNativePlatform();
     if (isNative) return rawUrl;
-
     if (!functionConfig.streamProxyUrl) return rawUrl;
 
-    const needsProxy = rawUrl.startsWith('http://');
-    return needsProxy ? `${functionConfig.streamProxyUrl}?url=${encodeURIComponent(rawUrl)}` : rawUrl;
+    // Web preview runs on https; most IPTV providers give http streams.
+    return rawUrl.startsWith('http://')
+      ? `${functionConfig.streamProxyUrl}?url=${encodeURIComponent(rawUrl)}`
+      : rawUrl;
   };
 
   // HLS.js initialization for streaming
@@ -93,18 +91,9 @@ export const MiFullscreenPlayer = ({
     if (isHls && Hls.isSupported()) {
       console.log('Using HLS.js for:', playableUrl);
 
-      const supabaseKey = functionConfig.supabaseKey;
-
       const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: true,
-        xhrSetup: (xhr) => {
-          // IMPORTANT: Browsers forbid setting User-Agent; only set allowed headers.
-          if (supabaseKey) {
-            xhr.setRequestHeader('apikey', supabaseKey);
-            xhr.setRequestHeader('authorization', `Bearer ${supabaseKey}`);
-          }
-        },
       });
 
       hls.loadSource(playableUrl);
@@ -121,7 +110,6 @@ export const MiFullscreenPlayer = ({
       hls.on(Hls.Events.ERROR, (_event, data) => {
         console.error('HLS error:', data);
         if (data.fatal) {
-          // Add extra hint if this is mixed content / network blocked
           setError(`Playback error: ${data.type}${data?.response?.code ? ` (HTTP ${data.response.code})` : ''}`);
           if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
             hls.startLoad();
@@ -150,7 +138,7 @@ export const MiFullscreenPlayer = ({
         hlsRef.current = null;
       }
     };
-  }, [channel.url, functionConfig.supabaseKey, functionConfig.streamProxyUrl, isMuted, volume]);
+  }, [channel.url, functionConfig.streamProxyUrl, isMuted, volume]);
 
   // Update playback time
   useEffect(() => {
