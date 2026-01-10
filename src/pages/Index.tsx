@@ -145,19 +145,7 @@ const Index = () => {
     return <ArabiaIntro onComplete={handleIntroComplete} />;
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="flex items-center justify-center mb-6">
-            <img src={arabiaLogo} alt="Arabia" className="h-20 w-auto" />
-          </div>
-          <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading channels...</p>
-        </div>
-      </div>
-    );
-  }
+  // Loading state removed - app proceeds directly to home screen
 
   if (error) {
     return (
