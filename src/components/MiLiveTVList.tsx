@@ -292,12 +292,24 @@ const getCountryFlagUrl = (group: string): string | null => {
 const getCategoryEmoji = (group: string): string => {
   const groupLower = group.toLowerCase();
   
+  // VOD/Movies categories with country/region flags
+  if (groupLower.includes('vod albania') || (groupLower.includes('vod') && groupLower.includes('alban'))) return '🇦🇱';
+  if (groupLower.includes('vod germany') || groupLower.includes('german') || groupLower.includes('بالالمانية')) return '🇩🇪';
+  if (groupLower.includes('indian') || groupLower.includes('vod india') || group.includes('هندية')) return '🇮🇳';
+  if (groupLower.includes('vod fr') || groupLower.includes('french') || groupLower.includes('فرنسي')) return '🇫🇷';
+  if (groupLower.includes('turk') || group.includes('تركية') || group.includes('تركي')) return '🇹🇷';
+  if (groupLower.includes('vod asia') || groupLower.includes('asian')) return '🌏';
+  if (groupLower.includes('vod en') || groupLower.includes('english')) return '🇬🇧';
+  
+  // Documentary categories
+  if (groupLower.includes('doc vod') || group.includes('وثائقية') || groupLower.includes('documentary')) return '📽️';
+  
   // Movie categories (including abbreviations and Arabic)
-  // "MOV" abbreviation, "أفلام" (aflam = films in Arabic), year patterns like 2021, 2025
+  if (groupLower.includes('vod')) return '🎬';
   if (groupLower.includes('mov ') || groupLower.includes(' mov') || groupLower.match(/\bmov\b/)) return '🎬';
   if (group.includes('أفلام') || group.includes('فيلم') || group.includes('افلام')) return '🎬';
-  if (groupLower.includes('مترجمة') || group.includes('مترجم')) return '🎬'; // Translated/dubbed
-  if (groupLower.match(/\b(19|20)\d{2}\b/)) return '🎬'; // Year-based categories (1900s-2000s)
+  if (groupLower.includes('مترجمة') || group.includes('مترجم')) return '🎬';
+  if (groupLower.match(/\b(19|20)\d{2}\b/)) return '🎬';
   
   // Sports categories
   if (groupLower.includes('soccer') || groupLower.includes('football')) return '⚽';
@@ -323,7 +335,6 @@ const getCategoryEmoji = (group: string): string => {
   
   // Media categories
   if (groupLower.includes('news') || group.includes('اخبار') || group.includes('أخبار')) return '📰';
-  if (groupLower.includes('documentary') || groupLower.includes('doc') || group.includes('وثائقي')) return '🎬';
   if (groupLower.includes('music') || groupLower.includes('mtv') || group.includes('موسيقى') || group.includes('اغاني')) return '🎵';
   if (groupLower.includes('movie') || groupLower.includes('film') || groupLower.includes('cinema')) return '🎥';
   if (groupLower.includes('series') || groupLower.includes('show') || group.includes('مسلسل')) return '📺';
@@ -350,8 +361,31 @@ const getCategoryEmoji = (group: string): string => {
   if (groupLower.includes('fashion') || groupLower.includes('lifestyle') || group.includes('موضة')) return '👗';
   if (groupLower.includes('weather') || group.includes('طقس')) return '🌤️';
   if (groupLower.includes('adult') || groupLower.includes('xxx')) return '🔞';
-  if (groupLower.includes('en ') || groupLower.includes('ar ') || groupLower.includes('fr ')) return '🎬'; // Language prefixed categories
+  if (groupLower.includes('en ') || groupLower.includes('ar ') || groupLower.includes('fr ')) return '🎬';
   return '📺';
+};
+
+// Check if category is a VOD/Movies category
+const isVodCategory = (group: string): boolean => {
+  const groupLower = group.toLowerCase();
+  return groupLower.includes('vod') || 
+         groupLower.includes('mov') || 
+         groupLower.includes('movie') ||
+         groupLower.includes('film') ||
+         group.includes('أفلام') ||
+         group.includes('افلام') ||
+         group.includes('فيلم');
+};
+
+// Get count label based on category type
+const getCategoryCountLabel = (group: string, count: number): string => {
+  if (isVodCategory(group)) {
+    return `${count} Movies`;
+  }
+  if (group.toLowerCase().includes('series') || group.includes('مسلسل')) {
+    return `${count} Series`;
+  }
+  return `${count} Channels`;
 };
 
 export const MiLiveTVList = ({
@@ -500,7 +534,7 @@ export const MiLiveTVList = ({
                   {getDisplayName(group.name)}
                 </p>
                 {selectedGroup === group.name && (
-                  <p className="text-xs text-muted-foreground">{group.count} Channels</p>
+                  <p className="text-xs text-muted-foreground">{getCategoryCountLabel(group.name, group.count)}</p>
                 )}
               </div>
             </button>
