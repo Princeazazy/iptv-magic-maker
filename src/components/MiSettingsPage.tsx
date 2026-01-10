@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { getStoredPlaylistUrl, setStoredPlaylistUrl } from '@/lib/playlistStorage';
-import arabiaLogo from '@/assets/arabia-logo.png';
+import arabiaLogo from '@/assets/arabia-logo-new.png';
 
 interface MiSettingsPageProps {
   onBack: () => void;
