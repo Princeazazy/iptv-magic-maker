@@ -3,17 +3,21 @@ import { Loader2 } from 'lucide-react';
 import { useIPTV, Channel } from '@/hooks/useIPTV';
 import { MiHomeScreen } from '@/components/MiHomeScreen';
 import { MiLiveTVList } from '@/components/MiLiveTVList';
+import { MiMediaGrid } from '@/components/MiMediaGrid';
+import { MiMovieDetail } from '@/components/MiMovieDetail';
 import { MiSettingsPage } from '@/components/MiSettingsPage';
 import { MiFullscreenPlayer } from '@/components/MiFullscreenPlayer';
 import { useToast } from '@/hooks/use-toast';
 
-type Screen = 'home' | 'live' | 'movies' | 'series' | 'sports' | 'settings';
+type Screen = 'home' | 'live' | 'movies' | 'series' | 'sports' | 'settings' | 'detail';
 
 const Index = () => {
   const [playlistVersion, setPlaylistVersion] = useState(0);
   const { channels, loading, error } = useIPTV();
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [currentChannel, setCurrentChannel] = useState<Channel | null>(null);
+  const [selectedItem, setSelectedItem] = useState<Channel | null>(null);
+  const [previousScreen, setPreviousScreen] = useState<Screen>('home');
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
@@ -22,7 +26,7 @@ const Index = () => {
 
   // Filter channels by current screen category
   const filteredChannelsByCategory = useMemo(() => {
-    if (currentScreen === 'home' || currentScreen === 'settings') {
+    if (currentScreen === 'home' || currentScreen === 'settings' || currentScreen === 'detail') {
       return channels;
     }
     return channels.filter(ch => ch.type === currentScreen);
@@ -35,7 +39,6 @@ const Index = () => {
   const sportsCount = useMemo(() => channels.filter(ch => ch.type === 'sports').length, [channels]);
 
   const handlePlaylistChange = useCallback(() => {
-    // Trigger a re-render to use new playlist URL
     setPlaylistVersion(v => v + 1);
     window.location.reload();
   }, []);
@@ -53,7 +56,6 @@ const Index = () => {
 
   const handleToggleFavorite = (channelId: string) => {
     if (!channelId) {
-      // Toggle favorites view mode
       setShowFavoritesOnly(!showFavoritesOnly);
       return;
     }
@@ -80,6 +82,19 @@ const Index = () => {
   const handleChannelSelect = (channel: Channel) => {
     setCurrentChannel(channel);
     setIsFullscreen(true);
+  };
+
+  const handleItemSelect = (item: Channel) => {
+    setSelectedItem(item);
+    setPreviousScreen(currentScreen);
+    setCurrentScreen('detail');
+  };
+
+  const handlePlayFromDetail = () => {
+    if (selectedItem) {
+      setCurrentChannel(selectedItem);
+      setIsFullscreen(true);
+    }
   };
 
   const handleNextChannel = () => {
@@ -112,8 +127,8 @@ const Index = () => {
         <div className="text-center">
           <div className="flex items-center justify-center mb-6">
             <span className="text-5xl font-bold">
-              <span className="text-primary">m</span>
-              <span className="text-accent">i</span>
+              <span className="mi-logo-m">m</span>
+              <span className="mi-logo-i">i</span>
             </span>
             <span className="text-muted-foreground text-xl ml-3">Player Pro</span>
           </div>
@@ -183,9 +198,36 @@ const Index = () => {
         />
       );
 
-    case 'live':
+    case 'detail':
+      if (selectedItem) {
+        return (
+          <MiMovieDetail
+            item={selectedItem}
+            onBack={() => setCurrentScreen(previousScreen as Screen)}
+            onPlay={handlePlayFromDetail}
+            onToggleFavorite={() => handleToggleFavorite(selectedItem.id)}
+            isFavorite={favorites.has(selectedItem.id)}
+          />
+        );
+      }
+      return null;
+
     case 'movies':
     case 'series':
+      return (
+        <div className="h-screen bg-background overflow-hidden">
+          <MiMediaGrid
+            items={filteredChannelsByCategory}
+            favorites={favorites}
+            onItemSelect={handleItemSelect}
+            onToggleFavorite={handleToggleFavorite}
+            onBack={() => setCurrentScreen('home')}
+            category={currentScreen}
+          />
+        </div>
+      );
+
+    case 'live':
     case 'sports':
       return (
         <div className="h-screen bg-background overflow-hidden">

@@ -2,81 +2,102 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Mi Player Pro Design System - Dark TV Theme */
+/* Mi Player Pro Design System - Figma Exact Match */
 
 @layer base {
   :root {
-    --background: 228 25% 8%;
+    /* Core background - deep navy/purple */
+    --background: 232 30% 10%;
     --foreground: 0 0% 95%;
-    --card: 228 20% 12%;
+    
+    /* Card backgrounds */
+    --card: 232 25% 14%;
     --card-foreground: 0 0% 95%;
-    --popover: 228 20% 10%;
+    
+    /* Popover */
+    --popover: 232 25% 12%;
     --popover-foreground: 0 0% 95%;
-    --primary: 0 80% 55%;
+    
+    /* Primary - Red/Coral for Mi logo and accents */
+    --primary: 0 75% 55%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 228 15% 16%;
+    
+    /* Secondary - Darker card variant */
+    --secondary: 232 20% 18%;
     --secondary-foreground: 0 0% 95%;
-    --muted: 228 15% 18%;
-    --muted-foreground: 220 10% 55%;
-    --accent: 25 100% 55%;
+    
+    /* Muted */
+    --muted: 232 20% 20%;
+    --muted-foreground: 220 10% 50%;
+    
+    /* Accent - Orange for Mi 'i' and highlights */
+    --accent: 28 100% 55%;
     --accent-foreground: 0 0% 100%;
+    
+    /* Destructive */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 228 15% 18%;
-    --input: 228 15% 14%;
-    --ring: 0 80% 55%;
+    
+    /* Borders */
+    --border: 232 20% 20%;
+    --input: 232 20% 16%;
+    --ring: 0 75% 55%;
     --radius: 1rem;
     
     /* Sidebar */
-    --sidebar-background: 228 25% 6%;
+    --sidebar-background: 232 30% 8%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 0 80% 55%;
+    --sidebar-primary: 0 75% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 228 20% 12%;
+    --sidebar-accent: 232 25% 14%;
     --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 228 15% 15%;
-    --sidebar-ring: 0 80% 55%;
+    --sidebar-border: 232 20% 18%;
+    --sidebar-ring: 0 75% 55%;
     
-    /* Custom Mi Player colors */
-    --mi-dark: 228 25% 8%;
-    --mi-darker: 228 25% 5%;
-    --mi-card: 228 20% 12%;
-    --mi-card-hover: 228 20% 15%;
-    --mi-red: 0 80% 55%;
-    --mi-red-glow: 0 80% 45%;
-    --mi-orange: 25 100% 55%;
+    /* Custom tokens for Mi Player */
+    --mi-bg-dark: 232 30% 10%;
+    --mi-bg-darker: 232 30% 6%;
+    --mi-card: 232 25% 14%;
+    --mi-card-hover: 232 25% 18%;
+    --mi-card-selected: 232 25% 16%;
+    --mi-red: 0 75% 55%;
+    --mi-orange: 28 100% 55%;
     --mi-text: 0 0% 95%;
-    --mi-text-muted: 220 10% 55%;
+    --mi-text-muted: 220 10% 50%;
+    --mi-badge-hd: 232 20% 25%;
+    --mi-badge-live: 0 75% 55%;
+    --mi-badge-epg: 232 20% 30%;
+    --mi-star: 35 100% 55%;
   }
 
   .dark {
-    --background: 228 25% 8%;
+    --background: 232 30% 10%;
     --foreground: 0 0% 95%;
-    --card: 228 20% 12%;
+    --card: 232 25% 14%;
     --card-foreground: 0 0% 95%;
-    --popover: 228 20% 10%;
+    --popover: 232 25% 12%;
     --popover-foreground: 0 0% 95%;
-    --primary: 0 80% 55%;
+    --primary: 0 75% 55%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 228 15% 16%;
+    --secondary: 232 20% 18%;
     --secondary-foreground: 0 0% 95%;
-    --muted: 228 15% 18%;
-    --muted-foreground: 220 10% 55%;
-    --accent: 25 100% 55%;
+    --muted: 232 20% 20%;
+    --muted-foreground: 220 10% 50%;
+    --accent: 28 100% 55%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 228 15% 18%;
-    --input: 228 15% 14%;
-    --ring: 0 80% 55%;
-    --sidebar-background: 228 25% 6%;
+    --border: 232 20% 20%;
+    --input: 232 20% 16%;
+    --ring: 0 75% 55%;
+    --sidebar-background: 232 30% 8%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 0 80% 55%;
+    --sidebar-primary: 0 75% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 228 20% 12%;
+    --sidebar-accent: 232 25% 14%;
     --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 228 15% 15%;
-    --sidebar-ring: 0 80% 55%;
+    --sidebar-border: 232 20% 18%;
+    --sidebar-ring: 0 75% 55%;
   }
 }
 
@@ -86,31 +107,39 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 }
 
 @layer components {
-  .mi-glow {
-    box-shadow: 0 0 20px hsl(var(--mi-red) / 0.4);
+  /* Mi Logo styles */
+  .mi-logo-m {
+    @apply text-primary font-bold;
   }
   
+  .mi-logo-i {
+    @apply text-accent font-bold;
+  }
+  
+  /* Card system */
   .mi-card {
     @apply bg-card rounded-2xl border border-border/30 transition-all duration-200;
   }
   
   .mi-card:hover {
-    @apply bg-card/80;
-    box-shadow: 0 4px 20px hsl(0 0% 0% / 0.3);
+    background: hsl(var(--mi-card-hover));
+    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.4);
   }
 
   .mi-card-selected {
-    @apply border-l-4 border-l-primary bg-card;
+    @apply border-l-4 border-l-accent;
+    background: hsl(var(--mi-card-selected));
   }
   
+  /* Navigation items */
   .mi-nav-item {
-    @apply flex items-center justify-center w-14 h-14 rounded-full transition-all duration-200;
+    @apply flex items-center justify-center w-14 h-14 rounded-full transition-all duration-200 bg-card;
   }
   
   .mi-nav-item:hover {
@@ -118,21 +147,42 @@
   }
   
   .mi-nav-item.active {
-    @apply bg-secondary text-foreground;
+    @apply bg-secondary ring-2 ring-border;
   }
 
+  /* Badge system */
   .mi-badge {
-    @apply px-2 py-0.5 text-xs font-semibold rounded;
+    @apply px-2.5 py-1 text-xs font-semibold rounded;
   }
 
-  .mi-badge-primary {
+  .mi-badge-live {
     @apply bg-primary text-primary-foreground;
   }
 
-  .mi-badge-secondary {
+  .mi-badge-epg {
     @apply bg-muted text-muted-foreground;
   }
 
+  .mi-badge-hd {
+    background: hsl(var(--mi-badge-hd));
+    @apply text-muted-foreground px-2 py-0.5 text-xs font-medium rounded;
+  }
+
+  .mi-badge-new {
+    @apply bg-accent text-accent-foreground;
+  }
+
+  /* Star favorite */
+  .mi-star {
+    color: hsl(var(--mi-star));
+  }
+
+  .mi-star-filled {
+    color: hsl(var(--mi-star));
+    fill: hsl(var(--mi-star));
+  }
+
+  /* Scrollbar */
   .mi-scrollbar::-webkit-scrollbar {
     width: 4px;
   }
@@ -148,4 +198,87 @@
   .mi-scrollbar::-webkit-scrollbar-thumb:hover {
     @apply bg-muted-foreground/50;
   }
+
+  /* Player control button */
+  .mi-player-control {
+    @apply w-12 h-12 rounded-xl bg-card/80 backdrop-blur-sm flex items-center justify-center transition-colors;
+  }
+
+  .mi-player-control:hover {
+    @apply bg-card;
+  }
+
+  /* Selection indicator bar */
+  .mi-selection-bar {
+    @apply w-20 h-1.5 bg-foreground rounded-full;
+  }
+
+  /* Volume slider */
+  .mi-volume-slider {
+    @apply appearance-none w-full h-1 rounded-full bg-primary/30;
+  }
+
+  .mi-volume-slider::-webkit-slider-thumb {
+    @apply appearance-none w-4 h-4 rounded-full bg-foreground cursor-pointer;
+  }
+
+  /* Movie card poster */
+  .mi-poster-card {
+    @apply relative rounded-xl overflow-hidden transition-all duration-200;
+    aspect-ratio: 2/3;
+  }
+
+  .mi-poster-card:hover {
+    @apply scale-105;
+    box-shadow: 0 12px 40px hsl(0 0% 0% / 0.5);
+  }
+
+  /* Channel row */
+  .mi-channel-row {
+    @apply flex items-center gap-4 px-4 py-3 rounded-xl transition-colors;
+  }
+
+  .mi-channel-row:hover {
+    @apply bg-card;
+  }
+
+  .mi-channel-row.selected {
+    @apply bg-card border-l-4 border-l-accent;
+  }
+
+  /* Glass effect */
+  .mi-glass {
+    @apply bg-card/60 backdrop-blur-md;
+  }
+}
+
+/* Custom animations */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
 }

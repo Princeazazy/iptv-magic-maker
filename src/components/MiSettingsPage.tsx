@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, User, Shield, ListVideo, Trash2, Cloud, Check, X } from 'lucide-react';
+import { ChevronLeft, User, Shield, ListVideo, Trash2, Cloud, Check, X, Key, Monitor } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -31,7 +31,6 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
   }, []);
 
   useEffect(() => {
-    // Load saved playlist URL
     const saved = getStoredPlaylistUrl();
     if (saved) {
       setPlaylistUrl(saved);
@@ -50,10 +49,17 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
   };
 
   const handleDeleteCache = () => {
-    // Clear cached data
     localStorage.removeItem('mi-player-favorites');
     localStorage.removeItem('mi-player-last-channel');
     toast.success('Cache cleared successfully');
+  };
+
+  // Mock account data from Figma
+  const accountData = {
+    status: 'Active',
+    macAddress: '8f:f7:2f:95:d1',
+    deviceKey: '170135',
+    expireDate: 'Forever'
   };
 
   return (
@@ -71,13 +77,13 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
           <h1 className="text-xl font-semibold text-foreground">Settings</h1>
         </div>
 
-        {/* Logo */}
-        <div className="flex items-center">
+        {/* Center Logo */}
+        <div className="flex items-center gap-1">
           <span className="text-3xl font-bold">
-            <span className="text-primary">m</span>
-            <span className="text-accent">i</span>
+            <span className="mi-logo-m">m</span>
+            <span className="mi-logo-i">i</span>
           </span>
-          <span className="text-muted-foreground text-lg ml-3">Player Pro</span>
+          <span className="text-muted-foreground text-lg ml-2">Player Pro</span>
         </div>
 
         {/* Time & Weather */}
@@ -89,19 +95,25 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
             <Cloud className="w-5 h-5" />
             <span>24°</span>
           </div>
+          {/* Profile */}
+          <div className="w-12 h-12 rounded-full bg-primary overflow-hidden ring-2 ring-primary/30">
+            <div className="w-full h-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
+              <User className="w-6 h-6 text-primary-foreground" />
+            </div>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="px-10 py-12">
-        <div className="max-w-5xl mx-auto flex gap-8">
-          {/* User Profile Card */}
-          <div className="flex-1 bg-card rounded-2xl p-8 border border-border/30">
+      <main className="px-10 py-8">
+        <div className="max-w-5xl mx-auto flex gap-6">
+          {/* Left - User Profile Card */}
+          <div className="flex-1 mi-card p-8">
             <div className="flex items-center gap-6 mb-8">
               {/* Avatar */}
-              <div className="w-28 h-28 rounded-full bg-primary overflow-hidden ring-4 ring-primary/30">
+              <div className="w-24 h-24 rounded-full bg-primary overflow-hidden ring-4 ring-primary/30">
                 <div className="w-full h-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-                  <User className="w-14 h-14 text-primary-foreground" />
+                  <User className="w-12 h-12 text-primary-foreground" />
                 </div>
               </div>
 
@@ -117,12 +129,32 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
               <User className="w-5 h-5 text-muted-foreground" />
               <span className="text-foreground font-medium">Account</span>
             </button>
+
+            {/* Account Details (from Figma page 5) */}
+            <div className="mt-6 space-y-3 p-4 bg-secondary/50 rounded-xl">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-sm">Account Status</span>
+                <span className="text-accent font-medium text-sm">{accountData.status}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-sm">Mac Address</span>
+                <span className="text-foreground text-sm font-mono">{accountData.macAddress}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-sm">Device Key</span>
+                <span className="text-foreground text-sm font-mono">{accountData.deviceKey}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-sm">Expire Date</span>
+                <span className="text-accent font-medium text-sm">{accountData.expireDate}</span>
+              </div>
+            </div>
           </div>
 
-          {/* Settings Options */}
-          <div className="flex-1 space-y-4">
+          {/* Right - Settings Options */}
+          <div className="flex-1 space-y-3">
             {/* Parent Control */}
-            <button className="w-full flex items-center gap-4 px-6 py-5 bg-card rounded-2xl hover:bg-card/80 transition-colors border border-border/30">
+            <button className="w-full flex items-center gap-4 px-6 py-5 mi-card hover:bg-card">
               <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center">
                 <Shield className="w-6 h-6 text-muted-foreground" />
               </div>
@@ -132,7 +164,7 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
             {/* Change Playlist */}
             <button 
               onClick={() => setShowPlaylistDialog(true)}
-              className="w-full flex items-center gap-4 px-6 py-5 bg-card rounded-2xl hover:bg-card/80 transition-colors border border-border/30"
+              className="w-full flex items-center gap-4 px-6 py-5 mi-card hover:bg-card"
             >
               <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center">
                 <ListVideo className="w-6 h-6 text-muted-foreground" />
@@ -151,7 +183,7 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
             {/* Delete Cache */}
             <button 
               onClick={handleDeleteCache}
-              className="w-full flex items-center gap-4 px-6 py-5 bg-card rounded-2xl hover:bg-card/80 transition-colors border border-border/30"
+              className="w-full flex items-center gap-4 px-6 py-5 mi-card hover:bg-card"
             >
               <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center">
                 <Trash2 className="w-6 h-6 text-muted-foreground" />
@@ -162,7 +194,7 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
         </div>
 
         {/* Version */}
-        <p className="text-center text-muted-foreground text-sm mt-16">Version 1.1.1</p>
+        <p className="text-center text-muted-foreground text-sm mt-12">Version 1.1.1</p>
       </main>
 
       {/* Playlist Dialog */}
