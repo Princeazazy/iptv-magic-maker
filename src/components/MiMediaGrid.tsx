@@ -10,6 +10,61 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+// Get category emoji based on group name
+const getCategoryEmoji = (group: string): string => {
+  const groupLower = group.toLowerCase();
+  
+  // Streaming services / Series platforms
+  if (groupLower.includes('netflix') || group.includes('نتفلكس')) return '🎬';
+  if (groupLower.includes('amazon') || groupLower.includes('prime')) return '📦';
+  if (groupLower.includes('hulu')) return '📺';
+  if (groupLower.includes('disney')) return '🏰';
+  if (groupLower.includes('hbo') || groupLower.includes('max')) return '🎭';
+  if (groupLower.includes('osn')) return '📡';
+  if (groupLower.includes('starz')) return '⭐';
+  if (groupLower.includes('showtime')) return '🎪';
+  if (groupLower.includes('power')) return '⚡';
+  
+  // Wrestling / WWE
+  if (groupLower.includes('wwe') || group.includes('مصارعة')) return '🤼';
+  
+  // 3D Movies
+  if (groupLower.includes('3d')) return '🥽';
+  
+  // Cartoon / Kids
+  if (groupLower.includes('cartoon') || group.includes('كرتون')) return '🎨';
+  
+  // Country-based VOD with flags
+  if (groupLower.includes('albania')) return '🇦🇱';
+  if (groupLower.includes('germany') || groupLower.includes('german') || groupLower.includes('بالالمانية') || groupLower.includes('ger')) return '🇩🇪';
+  if (groupLower.includes('indian') || group.includes('هندية')) return '🇮🇳';
+  if (groupLower.includes('vod fr') || groupLower.includes('france') || groupLower.includes('french')) return '🇫🇷';
+  if (groupLower.includes('turk') || group.includes('تركية') || group.includes('تركي')) return '🇹🇷';
+  if (groupLower.includes('asia')) return '🌏';
+  if (groupLower.includes('vod en') || groupLower.includes('subtitles') || groupLower.includes('english')) return '🇬🇧';
+  if (groupLower.includes('russia')) return '🇷🇺';
+  if (groupLower.includes('egypt') || group.includes('مصر')) return '🇪🇬';
+  
+  // Documentary categories
+  if (groupLower.includes('doc') || group.includes('وثائقية') || groupLower.includes('documentary')) return '📽️';
+  
+  // Movie/VOD categories
+  if (groupLower.includes('vod') || groupLower.includes('mov') || group.includes('أفلام') || group.includes('افلام')) return '🎬';
+  if (groupLower.match(/\b(19|20)\d{2}\b/)) return '🎬'; // Year patterns
+  
+  // Series
+  if (groupLower.includes('series') || group.includes('مسلسل')) return '📺';
+  
+  // Action/Adventure
+  if (groupLower.includes('action') || groupLower.includes('adventure')) return '💥';
+  if (groupLower.includes('comedy')) return '😂';
+  if (groupLower.includes('horror') || groupLower.includes('scary')) return '👻';
+  if (groupLower.includes('crime') || groupLower.includes('mystery')) return '🔍';
+  if (groupLower.includes('sci-fi') || groupLower.includes('fantasy')) return '🚀';
+  
+  return '🎬';
+};
+
 interface MiMediaGridProps {
   items: Channel[];
   favorites: Set<string>;
@@ -102,8 +157,8 @@ export const MiMediaGrid = ({
                   : 'text-muted-foreground hover:bg-card/50 hover:text-foreground'
               }`}
             >
-              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-                <Film className="w-5 h-5 text-muted-foreground" />
+              <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-2xl">
+                {getCategoryEmoji(group.name)}
               </div>
               <div className="flex-1 text-left">
                 <p className={`text-sm truncate ${selectedGroup === group.name ? 'font-semibold text-foreground' : ''}`}>
