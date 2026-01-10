@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Tv, Film, Clapperboard, Trophy, User, RefreshCw, Clock, LogOut, Search, Settings, Mic, Cloud } from 'lucide-react';
 import arabianPalaceBg from '@/assets/arabian-palace-bg.png';
-import arabiaLogo from '@/assets/arabia-logo.png';
+import arabiaLogo from '@/assets/arabia-logo-new.png';
 import { BackgroundMusic } from './BackgroundMusic';
 
 interface MiHomeScreenProps {
