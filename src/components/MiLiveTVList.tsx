@@ -286,6 +286,14 @@ const getCountryFlagUrl = (group: string): string | null => {
 // Fallback emoji for non-country categories
 const getCategoryEmoji = (group: string): string => {
   const groupLower = group.toLowerCase();
+  
+  // Movie categories (including abbreviations and Arabic)
+  // "MOV" abbreviation, "أفلام" (aflam = films in Arabic), year patterns like 2021, 2025
+  if (groupLower.includes('mov ') || groupLower.includes(' mov') || groupLower.match(/\bmov\b/)) return '🎬';
+  if (group.includes('أفلام') || group.includes('فيلم') || group.includes('افلام')) return '🎬';
+  if (groupLower.includes('مترجمة') || group.includes('مترجم')) return '🎬'; // Translated/dubbed
+  if (groupLower.match(/\b(19|20)\d{2}\b/)) return '🎬'; // Year-based categories (1900s-2000s)
+  
   // Sports categories
   if (groupLower.includes('soccer') || groupLower.includes('football')) return '⚽';
   if (groupLower.includes('basketball') || groupLower.includes('nba')) return '🏀';
@@ -297,34 +305,38 @@ const getCategoryEmoji = (group: string): string => {
   if (groupLower.includes('racing') || groupLower.includes('f1') || groupLower.includes('nascar')) return '🏎️';
   if (groupLower.includes('cricket')) return '🏏';
   if (groupLower.includes('rugby')) return '🏉';
-  if (groupLower.includes('sport')) return '🏆';
+  if (groupLower.includes('sport') || groupLower.includes('رياضة')) return '🏆';
+  
   // Entertainment categories
-  if (groupLower.includes('theater') || groupLower.includes('theatre') || groupLower.includes('drama')) return '🎭';
-  if (groupLower.includes('comedy') || groupLower.includes('funny')) return '😂';
-  if (groupLower.includes('horror') || groupLower.includes('scary')) return '👻';
-  if (groupLower.includes('action')) return '💥';
-  if (groupLower.includes('romance') || groupLower.includes('love')) return '❤️';
-  if (groupLower.includes('animation') || groupLower.includes('cartoon') || groupLower.includes('anime')) return '🎨';
-  if (groupLower.includes('entertainment')) return '🎪';
+  if (groupLower.includes('theater') || groupLower.includes('theatre') || groupLower.includes('drama') || group.includes('مسرح')) return '🎭';
+  if (groupLower.includes('comedy') || groupLower.includes('funny') || group.includes('كوميدي')) return '😂';
+  if (groupLower.includes('horror') || groupLower.includes('scary') || group.includes('رعب')) return '👻';
+  if (groupLower.includes('action') || group.includes('اكشن') || group.includes('أكشن')) return '💥';
+  if (groupLower.includes('romance') || groupLower.includes('love') || group.includes('رومانسي')) return '❤️';
+  if (groupLower.includes('animation') || groupLower.includes('cartoon') || groupLower.includes('anime') || group.includes('كرتون') || group.includes('انمي')) return '🎨';
+  if (groupLower.includes('entertainment') || group.includes('ترفيه')) return '🎪';
+  
   // Media categories
-  if (groupLower.includes('news')) return '📰';
-  if (groupLower.includes('documentary') || groupLower.includes('doc')) return '🎬';
-  if (groupLower.includes('music') || groupLower.includes('mtv')) return '🎵';
+  if (groupLower.includes('news') || group.includes('اخبار') || group.includes('أخبار')) return '📰';
+  if (groupLower.includes('documentary') || groupLower.includes('doc') || group.includes('وثائقي')) return '🎬';
+  if (groupLower.includes('music') || groupLower.includes('mtv') || group.includes('موسيقى') || group.includes('اغاني')) return '🎵';
   if (groupLower.includes('movie') || groupLower.includes('film') || groupLower.includes('cinema')) return '🎥';
-  if (groupLower.includes('series') || groupLower.includes('show')) return '📺';
+  if (groupLower.includes('series') || groupLower.includes('show') || group.includes('مسلسل')) return '📺';
+  
   // Other categories
-  if (groupLower.includes('kids') || groupLower.includes('child') || groupLower.includes('junior')) return '🧸';
-  if (groupLower.includes('religious') || groupLower.includes('faith') || groupLower.includes('church')) return '⛪';
-  if (groupLower.includes('cooking') || groupLower.includes('food') || groupLower.includes('chef')) return '🍳';
-  if (groupLower.includes('nature') || groupLower.includes('wildlife') || groupLower.includes('animal')) return '🦁';
-  if (groupLower.includes('travel') || groupLower.includes('adventure')) return '✈️';
-  if (groupLower.includes('science') || groupLower.includes('discovery')) return '🔬';
-  if (groupLower.includes('history')) return '🏛️';
-  if (groupLower.includes('education') || groupLower.includes('learn')) return '📚';
-  if (groupLower.includes('gaming') || groupLower.includes('game')) return '🎮';
-  if (groupLower.includes('fashion') || groupLower.includes('lifestyle')) return '👗';
-  if (groupLower.includes('weather')) return '🌤️';
+  if (groupLower.includes('kids') || groupLower.includes('child') || groupLower.includes('junior') || group.includes('اطفال') || group.includes('أطفال')) return '🧸';
+  if (groupLower.includes('religious') || groupLower.includes('faith') || groupLower.includes('church') || group.includes('ديني') || group.includes('اسلامي')) return '⛪';
+  if (groupLower.includes('cooking') || groupLower.includes('food') || groupLower.includes('chef') || group.includes('طبخ')) return '🍳';
+  if (groupLower.includes('nature') || groupLower.includes('wildlife') || groupLower.includes('animal') || group.includes('طبيعة')) return '🦁';
+  if (groupLower.includes('travel') || groupLower.includes('adventure') || group.includes('سفر')) return '✈️';
+  if (groupLower.includes('science') || groupLower.includes('discovery') || group.includes('علوم')) return '🔬';
+  if (groupLower.includes('history') || group.includes('تاريخ')) return '🏛️';
+  if (groupLower.includes('education') || groupLower.includes('learn') || group.includes('تعليم')) return '📚';
+  if (groupLower.includes('gaming') || groupLower.includes('game') || group.includes('العاب')) return '🎮';
+  if (groupLower.includes('fashion') || groupLower.includes('lifestyle') || group.includes('موضة')) return '👗';
+  if (groupLower.includes('weather') || group.includes('طقس')) return '🌤️';
   if (groupLower.includes('adult') || groupLower.includes('xxx')) return '🔞';
+  if (groupLower.includes('en ') || groupLower.includes('ar ') || groupLower.includes('fr ')) return '🎬'; // Language prefixed categories
   return '🌐';
 };
 
