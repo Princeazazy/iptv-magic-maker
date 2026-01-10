@@ -8,9 +8,8 @@ import {
   SkipForward,
   Star,
   Cloud,
-  ChevronUp,
+  ChevronDown,
   Subtitles,
-  RectangleHorizontal,
   Settings,
 } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
@@ -36,11 +35,11 @@ export const MiFullscreenPlayer = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(70);
   const [showControls, setShowControls] = useState(true);
-  const [currentTime, setCurrentTime] = useState('00:00:00');
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [currentTime, setCurrentTime] = useState('00:42:27');
   const [time, setTime] = useState(new Date());
-  const [showAspectMenu, setShowAspectMenu] = useState(false);
-  const [aspectRatio, setAspectRatio] = useState<'fill' | 'default' | '16:9'>('default');
 
   useEffect(() => {
     if (videoRef.current) {
@@ -58,7 +57,7 @@ export const MiFullscreenPlayer = ({
       clearTimeout(timeout);
       timeout = setTimeout(() => {
         setShowControls(false);
-        setShowAspectMenu(false);
+        setShowVolumeSlider(false);
       }, 4000);
     };
 
@@ -75,11 +74,6 @@ export const MiFullscreenPlayer = ({
   useEffect(() => {
     const interval = setInterval(() => {
       setTime(new Date());
-      const now = new Date();
-      const hours = String(now.getHours()).padStart(2, '0');
-      const mins = String(now.getMinutes()).padStart(2, '0');
-      const secs = String(now.getSeconds()).padStart(2, '0');
-      setCurrentTime(`${hours}:${mins}:${secs}`);
     }, 1000);
     return () => clearInterval(interval);
   }, []);
@@ -102,14 +96,11 @@ export const MiFullscreenPlayer = ({
     }
   };
 
-  const getVideoStyle = () => {
-    switch (aspectRatio) {
-      case 'fill':
-        return 'object-cover';
-      case '16:9':
-        return 'object-contain aspect-video';
-      default:
-        return 'object-contain';
+  const handleVolumeChange = (newVolume: number) => {
+    setVolume(newVolume);
+    if (videoRef.current) {
+      videoRef.current.volume = newVolume / 100;
+      setIsMuted(newVolume === 0);
     }
   };
 
@@ -117,12 +108,11 @@ export const MiFullscreenPlayer = ({
     <div
       ref={containerRef}
       className="fixed inset-0 z-50 bg-black cursor-pointer"
-      onClick={() => setShowControls(true)}
     >
       {/* Video */}
       <video
         ref={videoRef}
-        className={`w-full h-full ${getVideoStyle()}`}
+        className="w-full h-full object-contain"
         autoPlay
         playsInline
       >
@@ -136,56 +126,8 @@ export const MiFullscreenPlayer = ({
           showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
-        {/* Top Center - Collapse Arrow */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose();
-          }}
-          className="absolute top-4 left-1/2 -translate-x-1/2 p-2"
-        >
-          <ChevronUp className="w-8 h-8 text-white/60 hover:text-white transition-colors" />
-        </button>
-
-        {/* Bottom Left - Time */}
-        <div className="absolute bottom-6 left-6 flex items-center gap-4">
-          <span className="text-white font-medium text-lg">
-            {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </span>
-          <div className="flex items-center gap-2 text-white/80">
-            <Cloud className="w-5 h-5" />
-            <span>24°</span>
-          </div>
-        </div>
-
-        {/* Top Right - Channel Info */}
-        <div className="absolute top-6 right-6 text-right">
-          <p className="text-white/60 text-lg">{currentTime}</p>
-          <p className="text-white/80 text-sm mt-1">{channel.group || 'Live TV'}</p>
-          <h1 className="text-white text-2xl font-bold">{channel.name}</h1>
-          
-          {/* Badges */}
-          <div className="flex items-center justify-end gap-2 mt-3">
-            <span className="px-3 py-1 bg-primary text-primary-foreground text-sm font-semibold rounded">
-              Live
-            </span>
-            <span className="px-3 py-1 bg-white/20 text-white text-sm font-semibold rounded">
-              EPG
-            </span>
-          </div>
-
-          {/* Favorite Star */}
-          <button onClick={onToggleFavorite} className="mt-4">
-            <Star
-              className={`w-7 h-7 ${
-                isFavorite ? 'fill-accent text-accent' : 'text-white/60 hover:text-white'
-              }`}
-            />
-          </button>
-        </div>
-
-        {/* Bottom Right - Channel Logo */}
-        <div className="absolute bottom-6 right-6">
+        {/* Top Left - Channel Logo */}
+        <div className="absolute top-6 left-6">
           <div className="w-20 h-16 rounded-lg flex items-center justify-center overflow-hidden">
             {channel.logo ? (
               <img
@@ -197,110 +139,65 @@ export const MiFullscreenPlayer = ({
                 }}
               />
             ) : (
-              <div className="w-16 h-16 rounded-lg border-2 border-accent flex items-center justify-center">
+              <div className="w-16 h-14 rounded-lg border-2 border-accent flex items-center justify-center">
                 <span className="text-accent font-bold text-xl">{channel.name.charAt(0)}</span>
               </div>
             )}
           </div>
         </div>
 
-        {/* Top Left - Controls */}
-        <div className="absolute top-6 left-6 flex items-center gap-3">
-          <button className="w-12 h-12 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-            <span className="text-white text-sm font-bold">1x</span>
-          </button>
-          <button className="w-12 h-12 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-            <Subtitles className="w-6 h-6 text-white" />
-          </button>
-          <button className="w-12 h-12 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-            <Settings className="w-6 h-6 text-white" />
-          </button>
-          <button className="w-12 h-12 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-            <span className="text-white text-sm font-bold">4K</span>
-          </button>
-          
-          {/* Aspect Ratio */}
-          <div className="relative">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowAspectMenu(!showAspectMenu);
-              }}
-              className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
-                showAspectMenu ? 'bg-white/30' : 'bg-white/10 hover:bg-white/20'
-              }`}
-            >
-              <RectangleHorizontal className="w-6 h-6 text-white" />
-            </button>
-
-            {/* Aspect Ratio Menu */}
-            {showAspectMenu && (
-              <div className="absolute top-14 left-0 bg-card rounded-xl overflow-hidden shadow-xl min-w-[120px]">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setAspectRatio('fill');
-                    setShowAspectMenu(false);
-                  }}
-                  className={`w-full px-4 py-3 text-left text-sm hover:bg-muted transition-colors ${
-                    aspectRatio === 'fill' ? 'text-foreground bg-muted' : 'text-muted-foreground'
-                  }`}
-                >
-                  Fill
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setAspectRatio('default');
-                    setShowAspectMenu(false);
-                  }}
-                  className={`w-full px-4 py-3 text-left text-sm hover:bg-muted transition-colors ${
-                    aspectRatio === 'default' ? 'text-foreground bg-muted' : 'text-muted-foreground'
-                  }`}
-                >
-                  Default
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setAspectRatio('16:9');
-                    setShowAspectMenu(false);
-                  }}
-                  className={`w-full px-4 py-3 text-left text-sm hover:bg-muted transition-colors ${
-                    aspectRatio === '16:9' ? 'text-foreground bg-muted' : 'text-muted-foreground'
-                  }`}
-                >
-                  16:9
-                </button>
-              </div>
-            )}
+        {/* Top Right - Time & Weather */}
+        <div className="absolute top-6 right-6 text-right">
+          <div className="flex items-center justify-end gap-3 text-white/80">
+            <span className="text-lg font-medium">
+              {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+            <div className="flex items-center gap-1">
+              <Cloud className="w-5 h-5" />
+              <span>24°</span>
+            </div>
           </div>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleMute();
-            }}
-            className="w-12 h-12 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-          >
-            {isMuted ? (
-              <VolumeX className="w-6 h-6 text-white" />
-            ) : (
-              <Volume2 className="w-6 h-6 text-white" />
-            )}
-          </button>
         </div>
 
-        {/* Center - Playback Controls */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-8">
+        {/* Bottom Left - Channel Info */}
+        <div className="absolute bottom-6 left-6">
+          {/* Favorite Star */}
+          <button onClick={onToggleFavorite} className="mb-3">
+            <Star
+              className={`w-6 h-6 ${
+                isFavorite ? 'mi-star-filled' : 'text-white/60 hover:text-white'
+              }`}
+            />
+          </button>
+
+          {/* Badges */}
+          <div className="flex items-center gap-2 mb-2">
+            <span className="px-3 py-1 bg-primary text-primary-foreground text-sm font-semibold rounded">
+              Live
+            </span>
+            <span className="px-3 py-1 bg-white/20 text-white text-sm font-medium rounded">
+              EPG
+            </span>
+          </div>
+
+          {/* Title */}
+          <h1 className="text-white text-2xl font-bold">{channel.name}</h1>
+          <p className="text-white/70">{channel.group || 'Live TV'}</p>
+
+          {/* Time */}
+          <p className="text-white/60 text-2xl font-light mt-4">{currentTime}</p>
+        </div>
+
+        {/* Bottom Center - Playback Controls */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-6">
           <button
             onClick={(e) => {
               e.stopPropagation();
               onPrevious?.();
             }}
-            className="p-3 rounded-full hover:bg-white/10 transition-colors"
+            className="p-2 rounded-full hover:bg-white/10 transition-colors"
           >
-            <SkipBack className="w-10 h-10 text-white" />
+            <SkipBack className="w-8 h-8 text-white" />
           </button>
 
           <button
@@ -308,12 +205,12 @@ export const MiFullscreenPlayer = ({
               e.stopPropagation();
               togglePlay();
             }}
-            className="w-20 h-20 rounded-full bg-white/30 hover:bg-white/40 transition-colors flex items-center justify-center backdrop-blur-sm"
+            className="w-16 h-16 rounded-full bg-white/20 hover:bg-white/30 transition-colors flex items-center justify-center backdrop-blur-sm"
           >
             {isPlaying ? (
-              <Pause className="w-10 h-10 text-white" />
+              <Pause className="w-8 h-8 text-white" />
             ) : (
-              <Play className="w-10 h-10 text-white ml-1" />
+              <Play className="w-8 h-8 text-white ml-1" />
             )}
           </button>
 
@@ -322,11 +219,85 @@ export const MiFullscreenPlayer = ({
               e.stopPropagation();
               onNext?.();
             }}
-            className="p-3 rounded-full hover:bg-white/10 transition-colors"
+            className="p-2 rounded-full hover:bg-white/10 transition-colors"
           >
-            <SkipForward className="w-10 h-10 text-white" />
+            <SkipForward className="w-8 h-8 text-white" />
           </button>
         </div>
+
+        {/* Bottom Right - Additional Controls */}
+        <div className="absolute bottom-6 right-6 flex items-center gap-3">
+          {/* Volume Control with Slider */}
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowVolumeSlider(!showVolumeSlider);
+              }}
+              onMouseEnter={() => setShowVolumeSlider(true)}
+              className="mi-player-control"
+            >
+              {isMuted || volume === 0 ? (
+                <VolumeX className="w-5 h-5 text-white" />
+              ) : (
+                <Volume2 className="w-5 h-5 text-white" />
+              )}
+            </button>
+
+            {/* Volume Slider */}
+            {showVolumeSlider && (
+              <div 
+                className="absolute bottom-16 left-1/2 -translate-x-1/2 w-12 h-36 bg-card/90 backdrop-blur-sm rounded-full p-3 flex flex-col items-center"
+                onMouseLeave={() => setShowVolumeSlider(false)}
+              >
+                <Volume2 className="w-4 h-4 text-white/80 mb-2" />
+                <div className="flex-1 w-1 bg-muted rounded-full relative">
+                  <div 
+                    className="absolute bottom-0 w-full bg-primary rounded-full"
+                    style={{ height: `${volume}%` }}
+                  />
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={volume}
+                    onChange={(e) => handleVolumeChange(parseInt(e.target.value))}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    style={{ writingMode: 'vertical-lr', direction: 'rtl' }}
+                  />
+                </div>
+                <VolumeX className="w-4 h-4 text-white/60 mt-2" />
+              </div>
+            )}
+          </div>
+
+          <button className="mi-player-control">
+            <span className="text-white text-sm font-bold">4K</span>
+          </button>
+
+          <button className="mi-player-control">
+            <Settings className="w-5 h-5 text-white" />
+          </button>
+
+          <button className="mi-player-control">
+            <Subtitles className="w-5 h-5 text-white" />
+          </button>
+
+          <button className="mi-player-control">
+            <span className="text-white text-sm font-bold">1x</span>
+          </button>
+        </div>
+
+        {/* Top Center - Close Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 translate-y-16 p-2"
+        >
+          <ChevronDown className="w-8 h-8 text-white/60 hover:text-white transition-colors" />
+        </button>
       </div>
     </div>
   );
