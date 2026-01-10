@@ -193,8 +193,10 @@ export const useIPTV = (m3uUrl?: string) => {
           // Web preview - try edge function proxy (streams and parses server-side)
           console.log('Fetching M3U using edge function proxy...');
           
+          // IMPORTANT: Web preview cannot handle tens of thousands of items smoothly.
+          // Ask backend to cap returned items per type; counts still reflect the full playlist.
           const { data, error } = await supabase.functions.invoke('fetch-m3u', {
-            body: { url: effectiveUrl, maxChannels: 50000, maxBytesMB: 80 }
+            body: { url: effectiveUrl, maxChannels: 50000, maxBytesMB: 80, maxReturnPerType: 1500 }
           });
           
           if (error) {
