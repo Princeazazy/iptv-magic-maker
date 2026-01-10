@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
+import { getStoredPlaylistUrl } from '@/lib/playlistStorage';
 
 export interface Channel {
   id: string;
@@ -22,12 +23,6 @@ export interface Channel {
   container_extension?: string;
   backdrop_path?: string[];
 }
-
-const PLAYLIST_STORAGE_KEY = 'mi-player-playlist-url';
-
-export const getStoredPlaylistUrl = (): string => {
-  return localStorage.getItem(PLAYLIST_STORAGE_KEY) || '';
-};
 
 export const useIPTV = (m3uUrl?: string) => {
   // Use provided URL or fall back to stored URL
