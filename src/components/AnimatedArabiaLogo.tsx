@@ -12,12 +12,12 @@ const generateParticles = (count: number) => {
     id: i,
     initialX: Math.random() * 30 - 15,
     initialY: 0,
-    targetX: Math.random() * 60 - 30,
-    targetY: -(50 + Math.random() * 80),
-    duration: 2 + Math.random() * 2,
+    targetX: Math.random() * 80 - 40,
+    targetY: -(60 + Math.random() * 100),
+    duration: 2.5 + Math.random() * 2,
     delay: Math.random() * 2,
-    size: 4 + Math.random() * 12,
-    opacity: 0.3 + Math.random() * 0.4,
+    size: 8 + Math.random() * 18,
+    opacity: 0.5 + Math.random() * 0.4,
   }));
 };
 
@@ -45,8 +45,9 @@ const SmokeParticle = ({
     style={{
       width: size,
       height: size,
-      background: `radial-gradient(circle, hsl(165 50% 45% / ${opacity}) 0%, hsl(165 40% 40% / ${opacity * 0.5}) 50%, transparent 100%)`,
-      filter: 'blur(2px)',
+      background: `radial-gradient(circle, hsl(165 60% 50% / ${opacity}) 0%, hsl(165 50% 45% / ${opacity * 0.7}) 40%, transparent 100%)`,
+      filter: 'blur(1px)',
+      boxShadow: `0 0 ${size}px hsl(165 50% 50% / ${opacity * 0.5})`,
       top: '25%',
       right: '15%',
     }}
@@ -75,10 +76,11 @@ const SmokeWisp = ({ delay, duration }: { delay: number; duration: number }) => 
   <motion.div
     className="absolute pointer-events-none"
     style={{
-      width: 20,
-      height: 40,
-      background: `linear-gradient(to top, hsl(165 50% 45% / 0.4), hsl(165 40% 50% / 0.2), transparent)`,
-      filter: 'blur(4px)',
+      width: 28,
+      height: 55,
+      background: `linear-gradient(to top, hsl(165 60% 50% / 0.6), hsl(165 50% 55% / 0.4), hsl(165 40% 50% / 0.1), transparent)`,
+      filter: 'blur(3px)',
+      boxShadow: '0 0 15px hsl(165 50% 50% / 0.3)',
       borderRadius: '50%',
       top: '20%',
       right: '12%',
@@ -111,10 +113,11 @@ const FloatingSmoke = () => (
   <motion.div
     className="absolute pointer-events-none"
     style={{
-      width: 35,
-      height: 60,
-      background: `radial-gradient(ellipse at center bottom, hsl(165 45% 45% / 0.35) 0%, hsl(165 40% 50% / 0.15) 50%, transparent 80%)`,
-      filter: 'blur(6px)',
+      width: 45,
+      height: 80,
+      background: `radial-gradient(ellipse at center bottom, hsl(165 55% 50% / 0.5) 0%, hsl(165 50% 55% / 0.3) 40%, hsl(165 40% 50% / 0.1) 70%, transparent 100%)`,
+      filter: 'blur(4px)',
+      boxShadow: '0 0 25px hsl(165 50% 50% / 0.4)',
       borderRadius: '50% 50% 30% 30%',
       top: '10%',
       right: '8%',
@@ -136,7 +139,7 @@ const FloatingSmoke = () => (
 );
 
 export const AnimatedArabiaLogo = ({ className = '', size = 'md' }: AnimatedArabiaLogoProps) => {
-  const particles = generateParticles(8);
+  const particles = generateParticles(12);
   
   const sizeClasses = {
     sm: 'h-12',
@@ -146,13 +149,36 @@ export const AnimatedArabiaLogo = ({ className = '', size = 'md' }: AnimatedArab
 
   return (
     <div className={`relative inline-block ${className}`}>
+      {/* Ambient glow behind smoke */}
+      <motion.div
+        className="absolute pointer-events-none"
+        style={{
+          width: 60,
+          height: 100,
+          background: 'radial-gradient(ellipse at center, hsl(165 50% 50% / 0.25) 0%, transparent 70%)',
+          filter: 'blur(15px)',
+          top: '-20%',
+          right: '0%',
+        }}
+        animate={{
+          opacity: [0.4, 0.8, 0.4],
+          scale: [0.9, 1.1, 0.9],
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
+      
       {/* Main floating smoke cloud */}
       <FloatingSmoke />
       
       {/* Secondary smoke wisps */}
       <SmokeWisp delay={0} duration={3.5} />
-      <SmokeWisp delay={1.2} duration={3} />
-      <SmokeWisp delay={2.4} duration={3.2} />
+      <SmokeWisp delay={0.8} duration={3} />
+      <SmokeWisp delay={1.6} duration={3.2} />
+      <SmokeWisp delay={2.2} duration={2.8} />
       
       {/* Small smoke particles */}
       {particles.map((particle) => (
@@ -163,12 +189,12 @@ export const AnimatedArabiaLogo = ({ className = '', size = 'md' }: AnimatedArab
       <motion.div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse at 70% 30%, hsl(165 50% 45% / 0.15) 0%, transparent 50%)',
-          filter: 'blur(10px)',
+          background: 'radial-gradient(ellipse at 70% 30%, hsl(165 55% 50% / 0.25) 0%, transparent 50%)',
+          filter: 'blur(8px)',
         }}
         animate={{
-          opacity: [0.5, 1, 0.5],
-          scale: [1, 1.1, 1],
+          opacity: [0.6, 1, 0.6],
+          scale: [1, 1.15, 1],
         }}
         transition={{
           duration: 2,
@@ -183,13 +209,13 @@ export const AnimatedArabiaLogo = ({ className = '', size = 'md' }: AnimatedArab
         alt="Arabia"
         className={`${sizeClasses[size]} w-auto relative z-10`}
         style={{
-          filter: 'drop-shadow(0 0 10px hsl(165 50% 45% / 0.3))',
+          filter: 'drop-shadow(0 0 12px hsl(165 50% 50% / 0.4)) drop-shadow(0 0 25px hsl(45 80% 50% / 0.2))',
         }}
         animate={{
           filter: [
-            'drop-shadow(0 0 8px hsl(165 50% 45% / 0.3))',
-            'drop-shadow(0 0 15px hsl(165 50% 50% / 0.5))',
-            'drop-shadow(0 0 8px hsl(165 50% 45% / 0.3))',
+            'drop-shadow(0 0 10px hsl(165 50% 50% / 0.4)) drop-shadow(0 0 20px hsl(45 80% 50% / 0.2))',
+            'drop-shadow(0 0 20px hsl(165 55% 55% / 0.6)) drop-shadow(0 0 35px hsl(45 80% 55% / 0.3))',
+            'drop-shadow(0 0 10px hsl(165 50% 50% / 0.4)) drop-shadow(0 0 20px hsl(45 80% 50% / 0.2))',
           ],
         }}
         transition={{
