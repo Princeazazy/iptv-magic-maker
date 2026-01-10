@@ -384,7 +384,7 @@ export const MiLiveTVList = ({
         <div className="flex items-center gap-4 p-5">
           <button
             onClick={onBack}
-            className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
+            className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 active:scale-95 transition-all duration-100"
           >
             <ChevronLeft className="w-6 h-6 text-muted-foreground" />
           </button>
