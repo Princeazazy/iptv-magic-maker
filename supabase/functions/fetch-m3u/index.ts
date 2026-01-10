@@ -251,7 +251,7 @@ serve(async (req) => {
   }
 
   try {
-    const { url, maxChannels = 100000, maxBytesMB = 100 } = await req.json();
+    const { url, maxChannels = 100000, maxBytesMB = 100, maxReturnPerType = 0 } = await req.json();
 
     if (!url) {
       return new Response(
@@ -277,21 +277,32 @@ serve(async (req) => {
       ]);
       
       console.log(`Xtream API results: ${liveChannels.length} live, ${movies.length} movies, ${series.length} series`);
-      
-      const allChannels = [...liveChannels, ...movies, ...series];
-      
+
+      const safeMaxReturnPerType =
+        typeof maxReturnPerType === 'number' && Number.isFinite(maxReturnPerType)
+          ? Math.min(Math.max(maxReturnPerType, 0), 50000)
+          : 0;
+
+      const returnedChannels = safeMaxReturnPerType > 0
+        ? [
+            ...liveChannels.slice(0, safeMaxReturnPerType),
+            ...movies.slice(0, safeMaxReturnPerType),
+            ...series.slice(0, safeMaxReturnPerType),
+          ]
+        : [...liveChannels, ...movies, ...series];
+
       return new Response(
-        JSON.stringify({ 
-          channels: allChannels, 
-          totalParsed: allChannels.length,
+        JSON.stringify({
+          channels: returnedChannels,
+          totalParsed: liveChannels.length + movies.length + series.length,
           isXtream: true,
           counts: {
             live: liveChannels.length,
             movies: movies.length,
             series: series.length,
-          }
+          },
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
@@ -397,17 +408,31 @@ serve(async (req) => {
         
         // Count by type
         const counts = {
-          live: channels.filter(c => c.type === 'live').length,
-          movies: channels.filter(c => c.type === 'movies').length,
-          series: channels.filter(c => c.type === 'series').length,
-          sports: channels.filter(c => c.type === 'sports').length,
+          live: channels.filter((c) => c.type === 'live').length,
+          movies: channels.filter((c) => c.type === 'movies').length,
+          series: channels.filter((c) => c.type === 'series').length,
+          sports: channels.filter((c) => c.type === 'sports').length,
         };
-        
+
         console.log('Channel counts by type:', counts);
-        
+
+        const safeMaxReturnPerType =
+          typeof maxReturnPerType === 'number' && Number.isFinite(maxReturnPerType)
+            ? Math.min(Math.max(maxReturnPerType, 0), 50000)
+            : 0;
+
+        const returnedChannels = safeMaxReturnPerType > 0
+          ? [
+              ...channels.filter((c) => c.type === 'live').slice(0, safeMaxReturnPerType),
+              ...channels.filter((c) => c.type === 'sports').slice(0, safeMaxReturnPerType),
+              ...channels.filter((c) => c.type === 'movies').slice(0, safeMaxReturnPerType),
+              ...channels.filter((c) => c.type === 'series').slice(0, safeMaxReturnPerType),
+            ]
+          : channels;
+
         return new Response(
-          JSON.stringify({ channels, totalParsed: channels.length, isXtream: false, counts }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ channels: returnedChannels, totalParsed: channels.length, isXtream: false, counts }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
       } catch (fetchError) {
         clearTimeout(timeoutId);
