@@ -220,20 +220,42 @@ export const useIPTV = (m3uUrl?: string) => {
           // Edge function now returns pre-parsed channels with type
           if (data?.channels && Array.isArray(data.channels)) {
             console.log(`Received ${data.channels.length} pre-parsed channels from edge function`);
+            console.log('Counts:', data.counts);
+            
+            // For series, we need to allow empty URLs since they need episode expansion
             const parsedChannels = data.channels
-              .filter((ch: any) => ch.url && ch.name)
+              .filter((ch: any) => ch.name && (ch.url || ch.type === 'series'))
               .map((ch: any, idx: number) => ({
                 id: `channel-${idx}`,
                 name: ch.name,
-                url: ch.url,
+                url: ch.url || '',
                 logo: ch.logo || undefined,
                 group: ch.group || 'Live TV',
-                type: ch.type || 'live'
+                type: ch.type || 'live',
+                // Preserve extended metadata
+                stream_id: ch.stream_id,
+                series_id: ch.series_id,
+                rating: ch.rating,
+                year: ch.year,
+                plot: ch.plot,
+                cast: ch.cast,
+                director: ch.director,
+                genre: ch.genre,
+                duration: ch.duration,
+                container_extension: ch.container_extension,
+                backdrop_path: ch.backdrop_path,
               }));
             
             if (parsedChannels.length === 0) {
               throw new Error('No valid channels found in playlist');
             }
+            
+            console.log(`Mapped ${parsedChannels.length} channels with types:`, {
+              live: parsedChannels.filter((c: Channel) => c.type === 'live').length,
+              movies: parsedChannels.filter((c: Channel) => c.type === 'movies').length,
+              series: parsedChannels.filter((c: Channel) => c.type === 'series').length,
+              sports: parsedChannels.filter((c: Channel) => c.type === 'sports').length,
+            });
             
             setChannels(parsedChannels);
             setError(null);
