@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Tv, Film, Clapperboard, Trophy, User, RefreshCw, Clock, LogOut, Search, Settings, Mic, Cloud } from 'lucide-react';
 import arabianPalaceBg from '@/assets/arabian-palace-bg.png';
+import arabiaLogo from '@/assets/arabia-logo.png';
 
 interface MiHomeScreenProps {
   channelCount: number;
@@ -46,12 +47,8 @@ export const MiHomeScreen = ({
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-10 py-6">
         {/* Logo */}
-        <div className="flex items-center gap-1">
-          <span className="text-4xl font-bold">
-            <span className="mi-logo-m">m</span>
-            <span className="mi-logo-i">i</span>
-          </span>
-          <span className="text-muted-foreground text-lg ml-2">Player Pro</span>
+        <div className="flex items-center gap-2">
+          <img src={arabiaLogo} alt="Arabia" className="h-14 w-auto" />
         </div>
 
         {/* Search Bar */}
