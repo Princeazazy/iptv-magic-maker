@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
+import Hls from 'hls.js';
 import {
   Play,
   Pause,
@@ -33,22 +34,105 @@ export const MiFullscreenPlayer = ({
 }: MiFullscreenPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const hlsRef = useRef<Hls | null>(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(70);
   const [showControls, setShowControls] = useState(true);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
-  const [currentTime, setCurrentTime] = useState('00:42:27');
+  const [currentTime, setCurrentTime] = useState('00:00:00');
   const [time, setTime] = useState(new Date());
+  const [error, setError] = useState<string | null>(null);
 
+  // HLS.js initialization for streaming
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.load();
-      videoRef.current.play().catch(() => {
-        setIsPlaying(false);
-      });
+    const video = videoRef.current;
+    if (!video || !channel.url) return;
+
+    setError(null);
+    
+    // Clean up previous HLS instance
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
     }
+
+    const url = channel.url;
+    const isHls = url.includes('.m3u8') || url.includes('m3u8');
+    
+    if (isHls && Hls.isSupported()) {
+      console.log('Using HLS.js for:', url);
+      const hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: true,
+        xhrSetup: (xhr) => {
+          xhr.setRequestHeader('User-Agent', 'IPTV Smarters/1.0');
+        },
+      });
+      
+      hls.loadSource(url);
+      hls.attachMedia(video);
+      
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        console.log('HLS manifest parsed, starting playback');
+        video.play().catch((e) => {
+          console.error('Playback failed:', e);
+          setIsPlaying(false);
+        });
+      });
+      
+      hls.on(Hls.Events.ERROR, (event, data) => {
+        console.error('HLS error:', data);
+        if (data.fatal) {
+          setError(`Playback error: ${data.type}`);
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+            // Try to recover
+            hls.startLoad();
+          } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+            hls.recoverMediaError();
+          }
+        }
+      });
+      
+      hlsRef.current = hls;
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Safari native HLS support
+      console.log('Using native HLS for:', url);
+      video.src = url;
+      video.play().catch(() => setIsPlaying(false));
+    } else {
+      // Try direct playback (for mp4, etc.)
+      console.log('Using direct playback for:', url);
+      video.src = url;
+      video.play().catch(() => setIsPlaying(false));
+    }
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
   }, [channel.url]);
+
+  // Update playback time
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const updateTime = () => {
+      const time = video.currentTime;
+      const hours = Math.floor(time / 3600);
+      const minutes = Math.floor((time % 3600) / 60);
+      const seconds = Math.floor(time % 60);
+      setCurrentTime(
+        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+      );
+    };
+
+    video.addEventListener('timeupdate', updateTime);
+    return () => video.removeEventListener('timeupdate', updateTime);
+  }, []);
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -115,10 +199,17 @@ export const MiFullscreenPlayer = ({
         className="w-full h-full object-contain"
         autoPlay
         playsInline
-      >
-        <source src={channel.url} type="application/x-mpegURL" />
-        <source src={channel.url} type="video/mp4" />
-      </video>
+      />
+
+      {/* Error overlay */}
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+          <div className="text-center">
+            <p className="text-white text-lg mb-4">{error}</p>
+            <p className="text-white/60 text-sm">Stream may be unavailable or requires authentication</p>
+          </div>
+        </div>
+      )}
 
       {/* Overlay */}
       <div
