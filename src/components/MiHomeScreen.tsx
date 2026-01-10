@@ -72,7 +72,7 @@ export const MiHomeScreen = ({
           </button>
           <div className="w-14 h-14 rounded-full bg-primary overflow-hidden ring-4 ring-primary/30">
             <div className="w-full h-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-              <User className="w-7 h-7 text-primary-foreground" />
+              <span className="text-primary-foreground text-xl font-bold">A</span>
             </div>
           </div>
         </div>
