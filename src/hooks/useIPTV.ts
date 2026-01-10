@@ -9,6 +9,18 @@ export interface Channel {
   logo?: string;
   group?: string;
   type?: 'live' | 'movies' | 'series' | 'sports';
+  // Extended metadata for movies/series
+  stream_id?: number;
+  series_id?: number;
+  rating?: string;
+  year?: string;
+  plot?: string;
+  cast?: string;
+  director?: string;
+  genre?: string;
+  duration?: string;
+  container_extension?: string;
+  backdrop_path?: string[];
 }
 
 const PLAYLIST_STORAGE_KEY = 'mi-player-playlist-url';

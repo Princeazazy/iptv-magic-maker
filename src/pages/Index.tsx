@@ -28,6 +28,12 @@ const Index = () => {
     return channels.filter(ch => ch.type === currentScreen);
   }, [channels, currentScreen]);
 
+  // Count channels by type
+  const liveCount = useMemo(() => channels.filter(ch => ch.type === 'live' || !ch.type).length, [channels]);
+  const movieCount = useMemo(() => channels.filter(ch => ch.type === 'movies').length, [channels]);
+  const seriesCount = useMemo(() => channels.filter(ch => ch.type === 'series').length, [channels]);
+  const sportsCount = useMemo(() => channels.filter(ch => ch.type === 'sports').length, [channels]);
+
   const handlePlaylistChange = useCallback(() => {
     // Trigger a re-render to use new playlist URL
     setPlaylistVersion(v => v + 1);
@@ -160,7 +166,10 @@ const Index = () => {
     case 'home':
       return (
         <MiHomeScreen
-          channelCount={channels.length}
+          channelCount={liveCount}
+          movieCount={movieCount}
+          seriesCount={seriesCount}
+          sportsCount={sportsCount}
           onNavigate={handleNavigate}
           onReload={handleReload}
         />
@@ -197,7 +206,10 @@ const Index = () => {
     default:
       return (
         <MiHomeScreen
-          channelCount={channels.length}
+          channelCount={liveCount}
+          movieCount={movieCount}
+          seriesCount={seriesCount}
+          sportsCount={sportsCount}
           onNavigate={handleNavigate}
           onReload={handleReload}
         />
