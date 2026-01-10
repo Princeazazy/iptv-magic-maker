@@ -374,9 +374,9 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const {
       url,
-      maxChannels = 100000,
+      maxChannels = 50000,
       maxBytesMB = 100,
-      maxReturnPerType = 50000, // Increased to load all content
+      maxReturnPerType = 10000, // Reasonable default for web preview
       preferXtreamApi = false,
     } = (body ?? {}) as Record<string, unknown>;
 
