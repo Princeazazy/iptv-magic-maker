@@ -10,7 +10,7 @@ interface MiSidebarProps {
 }
 
 const navItems: { id: NavItem; icon: typeof Tv; label: string }[] = [
-  { id: 'live', icon: Tv, label: "Live TV's" },
+  { id: 'live', icon: Tv, label: 'Live' },
   { id: 'movies', icon: Film, label: 'Movies' },
   { id: 'series', icon: Clapperboard, label: 'Series' },
   { id: 'sports', icon: Trophy, label: 'Sports Guide' },

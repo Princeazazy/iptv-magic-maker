@@ -11,6 +11,8 @@ interface MiHomeScreenProps {
   sportsCount: number;
   onNavigate: (section: 'live' | 'movies' | 'series' | 'sports' | 'settings') => void;
   onReload?: () => void;
+  onSearchClick?: () => void;
+  onVoiceSearchClick?: () => void;
 }
 
 export const MiHomeScreen = ({
@@ -20,6 +22,8 @@ export const MiHomeScreen = ({
   sportsCount,
   onNavigate,
   onReload,
+  onSearchClick,
+  onVoiceSearchClick,
 }: MiHomeScreenProps) => {
   const [time, setTime] = useState(new Date());
 
@@ -63,13 +67,19 @@ export const MiHomeScreen = ({
 
         {/* Search Bar */}
         <div className="flex items-center gap-3">
-          <button className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors">
+          <button 
+            onClick={onVoiceSearchClick}
+            className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
+          >
             <Mic className="w-5 h-5 text-muted-foreground" />
           </button>
-          <div className="flex items-center gap-3 bg-card/60 backdrop-blur-sm rounded-full px-6 py-3.5 min-w-[240px] border border-border/20">
+          <button
+            onClick={onSearchClick}
+            className="flex items-center gap-3 bg-card/60 backdrop-blur-sm rounded-full px-6 py-3.5 min-w-[240px] border border-border/20 hover:bg-card/80 transition-colors"
+          >
             <Search className="w-5 h-5 text-muted-foreground" />
             <span className="text-muted-foreground">Search</span>
-          </div>
+          </button>
         </div>
 
         {/* Right side - Settings & Profile */}
@@ -111,10 +121,9 @@ export const MiHomeScreen = ({
 
             {/* Title & Count */}
             <div className="px-6 pb-6">
-              <h2 className="text-3xl font-bold text-foreground">Live TV's</h2>
+              <h2 className="text-3xl font-bold text-foreground">Live</h2>
               <p className="text-muted-foreground mt-1">+{channelCount.toLocaleString()} Channels</p>
             </div>
-
             {/* Selection indicator */}
             <div className="flex justify-center pb-5">
               <div className="mi-selection-bar" />
@@ -188,9 +197,11 @@ export const MiHomeScreen = ({
             </div>
           </button>
 
-          {/* Right Sidebar - Quick Actions */}
           <div className="flex flex-col gap-2.5 min-w-[180px]">
-            <button className="flex items-center gap-4 px-5 py-4 mi-card hover:bg-card">
+            <button 
+              onClick={() => onNavigate('settings')}
+              className="flex items-center gap-4 px-5 py-4 mi-card hover:bg-card"
+            >
               <User className="w-5 h-5 text-muted-foreground" />
               <span className="text-foreground">Account</span>
             </button>
