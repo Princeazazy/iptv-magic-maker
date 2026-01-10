@@ -98,7 +98,7 @@ export const MiHomeScreen = ({
         <div className="flex items-center gap-4">
           <button 
             onClick={() => onNavigate('settings')}
-            className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
+            className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 active:scale-95 transition-all duration-75"
           >
             <Settings className="w-6 h-6 text-muted-foreground" />
           </button>
@@ -116,7 +116,7 @@ export const MiHomeScreen = ({
           {/* Live TV - Large Card (Left) */}
           <button
             onClick={() => onNavigate('live')}
-            className="relative w-[300px] h-[430px] mi-card group cursor-pointer flex flex-col"
+            className="relative w-[300px] h-[430px] mi-card group cursor-pointer flex flex-col active:scale-[0.98] transition-transform duration-75"
           >
             {/* Last Update Badge */}
             <div className="flex items-center gap-2 text-muted-foreground text-sm px-5 pt-5">
@@ -147,7 +147,7 @@ export const MiHomeScreen = ({
             {/* Movies Card */}
             <button
               onClick={() => onNavigate('movies')}
-              className="relative w-[220px] h-[208px] mi-card group cursor-pointer"
+              className="relative w-[220px] h-[208px] mi-card group cursor-pointer active:scale-[0.98] transition-transform duration-75"
             >
               <div className="absolute top-5 left-5">
                 <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
@@ -163,7 +163,7 @@ export const MiHomeScreen = ({
             {/* Series Card */}
             <button
               onClick={() => onNavigate('series')}
-              className="relative w-[220px] h-[208px] mi-card group cursor-pointer"
+              className="relative w-[220px] h-[208px] mi-card group cursor-pointer active:scale-[0.98] transition-transform duration-75"
             >
               {/* New Badge */}
               <div className="absolute top-5 right-5">
@@ -184,7 +184,7 @@ export const MiHomeScreen = ({
           {/* Sports Guide Card */}
           <button
             onClick={() => onNavigate('sports')}
-            className="relative w-[220px] h-[430px] mi-card group cursor-pointer overflow-hidden"
+            className="relative w-[220px] h-[430px] mi-card group cursor-pointer overflow-hidden active:scale-[0.98] transition-transform duration-75"
           >
             {/* Background image hint for sports */}
             <div 
@@ -212,14 +212,14 @@ export const MiHomeScreen = ({
           <div className="flex flex-col gap-2.5 min-w-[180px]">
             <button 
               onClick={() => onNavigate('settings')}
-              className="flex items-center gap-4 px-5 py-4 mi-card hover:bg-card"
+              className="flex items-center gap-4 px-5 py-4 mi-card hover:bg-card active:scale-[0.98] transition-transform duration-75"
             >
               <User className="w-5 h-5 text-muted-foreground" />
               <span className="text-foreground">Account</span>
             </button>
             <button 
               onClick={onReload}
-              className="flex items-center gap-4 px-5 py-4 mi-card hover:bg-card"
+              className="flex items-center gap-4 px-5 py-4 mi-card hover:bg-card active:scale-[0.98] transition-transform duration-75"
             >
               <RefreshCw className="w-5 h-5 text-muted-foreground" />
               <span className="text-foreground">Reload</span>
@@ -227,12 +227,12 @@ export const MiHomeScreen = ({
             <button 
               onClick={handleCatchUp}
               disabled={isRefreshing}
-              className={`flex items-center gap-4 px-5 py-4 mi-card hover:bg-card ${isRefreshing ? 'opacity-50' : ''}`}
+              className={`flex items-center gap-4 px-5 py-4 mi-card hover:bg-card active:scale-[0.98] transition-transform duration-75 ${isRefreshing ? 'opacity-50' : ''}`}
             >
               <Clock className={`w-5 h-5 text-muted-foreground ${isRefreshing ? 'animate-spin' : ''}`} />
               <span className="text-foreground">{isRefreshing ? 'Updating...' : 'Catch up'}</span>
             </button>
-            <button className="flex items-center gap-4 px-5 py-4 mi-card hover:bg-card">
+            <button className="flex items-center gap-4 px-5 py-4 mi-card hover:bg-card active:scale-[0.98] transition-transform duration-75">
               <LogOut className="w-5 h-5 text-muted-foreground" />
               <span className="text-foreground">Exit</span>
             </button>
