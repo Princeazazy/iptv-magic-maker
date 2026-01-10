@@ -90,7 +90,7 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
           {/* Profile */}
           <div className="w-12 h-12 rounded-full bg-primary overflow-hidden ring-2 ring-primary/30">
             <div className="w-full h-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-              <User className="w-6 h-6 text-primary-foreground" />
+              <span className="text-primary-foreground text-lg font-bold">A</span>
             </div>
           </div>
         </div>
