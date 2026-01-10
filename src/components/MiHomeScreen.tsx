@@ -48,7 +48,7 @@ export const MiHomeScreen = ({
       <header className="relative z-10 flex items-center justify-between px-10 py-6">
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <img src={arabiaLogo} alt="Arabia" className="h-14 w-auto" />
+          <img src={arabiaLogo} alt="Arabia" className="h-20 w-auto" />
         </div>
 
         {/* Search Bar */}
