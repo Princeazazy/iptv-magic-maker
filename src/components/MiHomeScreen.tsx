@@ -37,12 +37,18 @@ export const MiHomeScreen = ({
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Background image with overlay */}
+      {/* Background image with overlay - more visible palace */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40"
-        style={{ backgroundImage: `url(${arabianPalaceBg})` }}
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ 
+          backgroundImage: `url(${arabianPalaceBg})`,
+          opacity: 0.7,
+        }}
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-background/80" />
+      {/* Lighter gradient overlay to show more of the palace */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background/70 via-background/50 to-background/40" />
+      {/* Bottom fade for readability */}
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
       
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-10 py-6">
