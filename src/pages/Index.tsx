@@ -8,6 +8,7 @@ import { MiMovieDetail } from '@/components/MiMovieDetail';
 import { MiSettingsPage } from '@/components/MiSettingsPage';
 import { MiFullscreenPlayer } from '@/components/MiFullscreenPlayer';
 import { useToast } from '@/hooks/use-toast';
+import arabiaLogo from '@/assets/arabia-logo.png';
 
 type Screen = 'home' | 'live' | 'movies' | 'series' | 'sports' | 'settings' | 'detail';
 
@@ -126,11 +127,7 @@ const Index = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="flex items-center justify-center mb-6">
-            <span className="text-5xl font-bold">
-              <span className="mi-logo-m">m</span>
-              <span className="mi-logo-i">i</span>
-            </span>
-            <span className="text-muted-foreground text-xl ml-3">Player Pro</span>
+            <img src={arabiaLogo} alt="Arabia" className="h-20 w-auto" />
           </div>
           <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
           <p className="text-muted-foreground">Loading channels...</p>
@@ -144,10 +141,7 @@ const Index = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md px-4">
           <div className="flex items-center justify-center mb-6">
-            <span className="text-5xl font-bold">
-              <span className="text-destructive">m</span>
-              <span className="text-destructive">i</span>
-            </span>
+            <img src={arabiaLogo} alt="Arabia" className="h-20 w-auto opacity-50" />
           </div>
           <p className="text-destructive mb-2 font-semibold text-lg">Failed to load channels</p>
           <p className="text-muted-foreground text-sm mb-6">{error}</p>

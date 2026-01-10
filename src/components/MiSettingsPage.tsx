@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { getStoredPlaylistUrl, setStoredPlaylistUrl } from '@/lib/playlistStorage';
+import arabiaLogo from '@/assets/arabia-logo.png';
 
 interface MiSettingsPageProps {
   onBack: () => void;
@@ -73,12 +74,8 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
         </div>
 
         {/* Center Logo */}
-        <div className="flex items-center gap-1">
-          <span className="text-3xl font-bold">
-            <span className="mi-logo-m">m</span>
-            <span className="mi-logo-i">i</span>
-          </span>
-          <span className="text-muted-foreground text-lg ml-2">Player Pro</span>
+        <div className="flex items-center gap-2">
+          <img src={arabiaLogo} alt="Arabia" className="h-10 w-auto" />
         </div>
 
         {/* Time & Weather */}
