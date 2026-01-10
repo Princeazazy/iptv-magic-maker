@@ -73,8 +73,8 @@ function isXtreamGetM3UUrl(url: string): boolean {
 }
 type XtreamFetchResult = { items: any[]; total: number; tooLarge?: boolean };
 
-const XTREAM_MAX_JSON_BYTES = 3 * 1024 * 1024; // 3MB safety cap per API response
-const XTREAM_MAX_ITEMS_PER_RESPONSE = 5000; // safety cap if server ignores filters
+const XTREAM_MAX_JSON_BYTES = 10 * 1024 * 1024; // 10MB safety cap per API response
+const XTREAM_MAX_ITEMS_PER_RESPONSE = 50000; // Allow larger responses
 
 function responseTooLarge(res: Response, maxBytes: number): boolean {
   const len = res.headers.get('content-length');
@@ -376,7 +376,7 @@ serve(async (req) => {
       url,
       maxChannels = 100000,
       maxBytesMB = 100,
-      maxReturnPerType = 1500,
+      maxReturnPerType = 50000, // Increased to load all content
       preferXtreamApi = false,
     } = (body ?? {}) as Record<string, unknown>;
 
@@ -389,18 +389,18 @@ serve(async (req) => {
 
     const safeMaxReturnPerType =
       typeof maxReturnPerType === 'number' && Number.isFinite(maxReturnPerType)
-        ? Math.min(Math.max(maxReturnPerType, 0), 2000)
-        : 1500;
+        ? Math.min(Math.max(maxReturnPerType, 0), 100000) // Increased cap to 100k
+        : 50000;
 
     const rawMaxChannels = typeof maxChannels === 'number' ? maxChannels : Number(maxChannels);
     const safeMaxChannels = Number.isFinite(rawMaxChannels)
-      ? Math.min(Math.max(rawMaxChannels, 0), 20000)
-      : 20000;
+      ? Math.min(Math.max(rawMaxChannels, 0), 500000) // Increased to 500k
+      : 100000;
 
     // We only return up to maxReturnPerType per type; parsing far beyond that is wasted compute.
-    // Stop after ~6x to allow uneven distribution across types.
+    // Allow much larger amounts now
     const stopAfterChannels = safeMaxReturnPerType > 0
-      ? Math.min(safeMaxChannels, Math.max(1000, safeMaxReturnPerType * 6))
+      ? Math.min(safeMaxChannels, Math.max(10000, safeMaxReturnPerType * 4))
       : safeMaxChannels;
 
     const rawMaxBytesMB = typeof maxBytesMB === 'number' ? maxBytesMB : Number(maxBytesMB);
@@ -420,7 +420,7 @@ serve(async (req) => {
       console.log('preferXtreamApi=true, fetching via Xtream API (paged)...');
       const { baseUrl, username, password } = xtreamCreds;
 
-      const limit = safeMaxReturnPerType || 1500;
+      const limit = safeMaxReturnPerType || 50000;
       console.log(`Using limit of ${limit} per content type`);
 
       const [liveResult, moviesResult, seriesResult] = await Promise.all([
@@ -508,7 +508,7 @@ serve(async (req) => {
             if (xtreamCreds) {
               console.log(`M3U fetch blocked (${response.status}). Falling back to Xtream API (paged)...`);
               const { baseUrl, username, password } = xtreamCreds;
-              const limit = safeMaxReturnPerType || 1500;
+              const limit = safeMaxReturnPerType || 50000;
 
               const [liveResult, moviesResult, seriesResult] = await Promise.all([
                 fetchXtreamLive(baseUrl, username, password, limit),
