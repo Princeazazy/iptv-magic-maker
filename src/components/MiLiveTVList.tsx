@@ -323,9 +323,18 @@ const getCategoryEmoji = (group: string): string => {
   if (groupLower.includes('movie') || groupLower.includes('film') || groupLower.includes('cinema')) return '🎥';
   if (groupLower.includes('series') || groupLower.includes('show') || group.includes('مسلسل')) return '📺';
   
+  // Regional categories
+  if (groupLower.includes('african') || group.includes('افريقي') || group.includes('الافريقية')) return '🌍';
+  
+  // Package/Bundle categories
+  if (groupLower.includes('package') || groupLower.includes('bundle') || groupLower.includes('yes ')) return '📦';
+  
+  // Foreign/International movies
+  if (group.includes('اجنبية') || group.includes('أجنبية') || groupLower.includes('foreign')) return '🌐';
+  
   // Other categories
   if (groupLower.includes('kids') || groupLower.includes('child') || groupLower.includes('junior') || group.includes('اطفال') || group.includes('أطفال')) return '🧸';
-  if (groupLower.includes('religious') || groupLower.includes('faith') || groupLower.includes('church') || group.includes('ديني') || group.includes('اسلامي')) return '⛪';
+  if (groupLower.includes('religious') || groupLower.includes('faith') || groupLower.includes('church') || group.includes('ديني') || group.includes('اسلامي')) return '🕌';
   if (groupLower.includes('cooking') || groupLower.includes('food') || groupLower.includes('chef') || group.includes('طبخ')) return '🍳';
   if (groupLower.includes('nature') || groupLower.includes('wildlife') || groupLower.includes('animal') || group.includes('طبيعة')) return '🦁';
   if (groupLower.includes('travel') || groupLower.includes('adventure') || group.includes('سفر')) return '✈️';
@@ -337,7 +346,7 @@ const getCategoryEmoji = (group: string): string => {
   if (groupLower.includes('weather') || group.includes('طقس')) return '🌤️';
   if (groupLower.includes('adult') || groupLower.includes('xxx')) return '🔞';
   if (groupLower.includes('en ') || groupLower.includes('ar ') || groupLower.includes('fr ')) return '🎬'; // Language prefixed categories
-  return '🌐';
+  return '📺';
 };
 
 export const MiLiveTVList = ({
