@@ -105,14 +105,14 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
               {/* Avatar */}
               <div className="w-24 h-24 rounded-full bg-primary overflow-hidden ring-4 ring-primary/30">
                 <div className="w-full h-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-                  <User className="w-12 h-12 text-primary-foreground" />
+                  <span className="text-primary-foreground text-4xl font-bold">A</span>
                 </div>
               </div>
 
               {/* User Info */}
               <div>
-                <h2 className="text-2xl font-bold text-foreground">Mohammad Reza</h2>
-                <p className="text-muted-foreground">mrfarahzad@gmail.com</p>
+                <h2 className="text-2xl font-bold text-foreground">Ameer E</h2>
+                <p className="text-muted-foreground">ameer@example.com</p>
               </div>
             </div>
 
