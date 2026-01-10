@@ -11,6 +11,7 @@ interface MiHomeScreenProps {
   sportsCount: number;
   onNavigate: (section: 'live' | 'movies' | 'series' | 'sports' | 'settings') => void;
   onReload?: () => void;
+  onCatchUp?: () => void;
   onSearchClick?: () => void;
   onVoiceSearchClick?: () => void;
 }
@@ -22,10 +23,21 @@ export const MiHomeScreen = ({
   sportsCount,
   onNavigate,
   onReload,
+  onCatchUp,
   onSearchClick,
   onVoiceSearchClick,
 }: MiHomeScreenProps) => {
   const [time, setTime] = useState(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleCatchUp = async () => {
+    if (onCatchUp) {
+      setIsRefreshing(true);
+      onCatchUp();
+      // Show refreshing state briefly
+      setTimeout(() => setIsRefreshing(false), 2000);
+    }
+  };
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -212,9 +224,13 @@ export const MiHomeScreen = ({
               <RefreshCw className="w-5 h-5 text-muted-foreground" />
               <span className="text-foreground">Reload</span>
             </button>
-            <button className="flex items-center gap-4 px-5 py-4 mi-card hover:bg-card">
-              <Clock className="w-5 h-5 text-muted-foreground" />
-              <span className="text-foreground">Catch up</span>
+            <button 
+              onClick={handleCatchUp}
+              disabled={isRefreshing}
+              className={`flex items-center gap-4 px-5 py-4 mi-card hover:bg-card ${isRefreshing ? 'opacity-50' : ''}`}
+            >
+              <Clock className={`w-5 h-5 text-muted-foreground ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span className="text-foreground">{isRefreshing ? 'Updating...' : 'Catch up'}</span>
             </button>
             <button className="flex items-center gap-4 px-5 py-4 mi-card hover:bg-card">
               <LogOut className="w-5 h-5 text-muted-foreground" />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 import { getStoredPlaylistUrl } from '@/lib/playlistStorage';
@@ -32,6 +32,13 @@ export const useIPTV = (m3uUrl?: string) => {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Function to trigger a refresh without reloading the app
+  const refresh = useCallback(() => {
+    console.log('Refreshing channels...');
+    setRefreshKey(prev => prev + 1);
+  }, []);
 
   useEffect(() => {
     console.log('useIPTV useEffect running');
@@ -293,9 +300,9 @@ export const useIPTV = (m3uUrl?: string) => {
     };
 
     fetchM3U();
-  }, [effectiveUrl]);
+  }, [effectiveUrl, refreshKey]);
 
-  return { channels, loading, error };
+  return { channels, loading, error, refresh };
 };
 
 const parseM3U = (content: string): Channel[] => {
