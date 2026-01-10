@@ -37,9 +37,13 @@ export const MiFullscreenPlayer = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+
   const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(false);
+  // Autoplay is typically blocked on the web unless the media is muted.
+  const [isMuted, setIsMuted] = useState(() => !Capacitor.isNativePlatform());
   const [volume, setVolume] = useState(70);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+
   const [showControls, setShowControls] = useState(true);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [currentTime, setCurrentTime] = useState('00:00:00');
@@ -104,13 +108,25 @@ export const MiFullscreenPlayer = ({
         video.play().catch((e) => {
           console.error('Playback failed:', e);
           setIsPlaying(false);
+          if (e?.name === 'NotAllowedError') {
+            setError('Autoplay was blocked — tap Play to start.');
+          }
         });
       });
 
       hls.on(Hls.Events.ERROR, (_event, data) => {
         console.error('HLS error:', data);
         if (data.fatal) {
-          setError(`Playback error: ${data.type}${data?.response?.code ? ` (HTTP ${data.response.code})` : ''}`);
+          const code = data?.response?.code;
+          let msg = `Playback error: ${data.type}${code ? ` (HTTP ${code})` : ''}`;
+          if (code === 401 || code === 403) {
+            msg += ' — stream is blocked or requires authentication.';
+          }
+          if (code === 502) {
+            msg += ' — upstream rejected the request.';
+          }
+          setError(msg);
+
           if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
             hls.startLoad();
           } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
@@ -124,21 +140,84 @@ export const MiFullscreenPlayer = ({
       // Safari native HLS support
       console.log('Using native HLS for:', playableUrl);
       video.src = playableUrl;
-      video.play().catch(() => setIsPlaying(false));
+      video.play().catch((e) => {
+        setIsPlaying(false);
+        if (e?.name === 'NotAllowedError') setError('Autoplay was blocked — tap Play to start.');
+      });
     } else {
       // Try direct playback (for mp4, etc.)
       console.log('Using direct playback for:', playableUrl);
       video.src = playableUrl;
-      video.play().catch(() => setIsPlaying(false));
+      video.play().catch((e) => {
+        setIsPlaying(false);
+        if (e?.name === 'NotAllowedError') setError('Autoplay was blocked — tap Play to start.');
+      });
     }
 
+    // If nothing starts within a few seconds, surface a clear message.
+    const startupTimeout = window.setTimeout(() => {
+      const v = videoRef.current;
+      if (!v) return;
+      if (v.readyState < 2 && v.paused && !error) {
+        setError('Stream did not start. Tap Play, or try another channel.');
+      }
+    }, 8000);
+
     return () => {
+      window.clearTimeout(startupTimeout);
       if (hlsRef.current) {
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channel.url, functionConfig.streamProxyUrl, isMuted, volume]);
+
+  // Keep UI state in sync with the underlying <video> element and capture user interaction.
+  useEffect(() => {
+    const video = videoRef.current;
+    const container = containerRef.current;
+    if (!video) return;
+
+    const onPlaying = () => {
+      setIsPlaying(true);
+      setError(null);
+    };
+    const onPause = () => setIsPlaying(false);
+    const onPointerDown = () => setHasUserInteracted(true);
+    const onVideoError = () => {
+      const mediaError = video.error;
+      if (mediaError) {
+        setError(`Playback error (media): ${mediaError.code}`);
+      } else {
+        setError('Playback error');
+      }
+    };
+
+    video.addEventListener('playing', onPlaying);
+    video.addEventListener('pause', onPause);
+    video.addEventListener('error', onVideoError);
+    container?.addEventListener('pointerdown', onPointerDown);
+
+    return () => {
+      video.removeEventListener('playing', onPlaying);
+      video.removeEventListener('pause', onPause);
+      video.removeEventListener('error', onVideoError);
+      container?.removeEventListener('pointerdown', onPointerDown);
+    };
+  }, []);
+
+  // Once the user interacts, try to start playback again (helps with autoplay restrictions).
+  useEffect(() => {
+    if (!hasUserInteracted) return;
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      video.play().catch(() => {
+        // ignore; error will be surfaced elsewhere
+      });
+    }
+  }, [hasUserInteracted]);
 
   // Update playback time
   useEffect(() => {
@@ -188,14 +267,29 @@ export const MiFullscreenPlayer = ({
   }, []);
 
   const togglePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (!video.paused) {
+      video.pause();
+      setIsPlaying(false);
+      return;
     }
+
+    video.play()
+      .then(() => {
+        setIsPlaying(true);
+        setError(null);
+      })
+      .catch((e) => {
+        console.error('Playback failed:', e);
+        setIsPlaying(false);
+        if (e?.name === 'NotAllowedError') {
+          setError('Autoplay was blocked — tap Play to start.');
+        } else {
+          setError('Playback failed.');
+        }
+      });
   };
 
   const toggleMute = () => {
@@ -216,6 +310,14 @@ export const MiFullscreenPlayer = ({
   return (
     <div
       ref={containerRef}
+      onClick={() => {
+        const v = videoRef.current;
+        if (v && v.paused) {
+          v.play().catch(() => {
+            // ignore; error state will be shown if it fails
+          });
+        }
+      }}
       className="fixed inset-0 z-50 bg-black cursor-pointer"
     >
       {/* Video */}
@@ -224,6 +326,8 @@ export const MiFullscreenPlayer = ({
         className="w-full h-full object-contain"
         autoPlay
         playsInline
+        muted={isMuted}
+        crossOrigin="anonymous"
       />
 
       {/* Error overlay */}
