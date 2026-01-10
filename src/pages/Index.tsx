@@ -11,19 +11,15 @@ import { ArabiaIntro } from '@/components/ArabiaIntro';
 import { useToast } from '@/hooks/use-toast';
 import arabiaLogo from '@/assets/arabia-logo.png';
 
-type Screen = 'intro' | 'home' | 'live' | 'movies' | 'series' | 'sports' | 'settings' | 'detail';
-
-const INTRO_SHOWN_KEY = 'arabia-intro-shown';
+type Screen = 'home' | 'live' | 'movies' | 'series' | 'sports' | 'settings' | 'detail';
 
 const Index = () => {
   const [playlistVersion, setPlaylistVersion] = useState(0);
   const { channels, loading, error } = useIPTV();
-  
-  // Check if intro was already shown this session
-  const [showIntro, setShowIntro] = useState(() => {
-    return !sessionStorage.getItem(INTRO_SHOWN_KEY);
-  });
-  
+
+  // Always show intro before home on each app load
+  const [showIntro, setShowIntro] = useState(true);
+
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [currentChannel, setCurrentChannel] = useState<Channel | null>(null);
   const [selectedItem, setSelectedItem] = useState<Channel | null>(null);
@@ -33,9 +29,8 @@ const Index = () => {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { toast } = useToast();
-  
+
   const handleIntroComplete = useCallback(() => {
-    sessionStorage.setItem(INTRO_SHOWN_KEY, 'true');
     setShowIntro(false);
   }, []);
 
@@ -44,14 +39,23 @@ const Index = () => {
     if (currentScreen === 'home' || currentScreen === 'settings' || currentScreen === 'detail') {
       return channels;
     }
-    return channels.filter(ch => ch.type === currentScreen);
+
+    // "Live" should include all live streams (including sports)
+    if (currentScreen === 'live') {
+      return channels.filter((ch) => ch.type === 'live' || ch.type === 'sports' || !ch.type);
+    }
+
+    return channels.filter((ch) => ch.type === currentScreen);
   }, [channels, currentScreen]);
 
   // Count channels by type
-  const liveCount = useMemo(() => channels.filter(ch => ch.type === 'live' || !ch.type).length, [channels]);
-  const movieCount = useMemo(() => channels.filter(ch => ch.type === 'movies').length, [channels]);
-  const seriesCount = useMemo(() => channels.filter(ch => ch.type === 'series').length, [channels]);
-  const sportsCount = useMemo(() => channels.filter(ch => ch.type === 'sports').length, [channels]);
+  const liveCount = useMemo(
+    () => channels.filter((ch) => ch.type === 'live' || ch.type === 'sports' || !ch.type).length,
+    [channels],
+  );
+  const movieCount = useMemo(() => channels.filter((ch) => ch.type === 'movies').length, [channels]);
+  const seriesCount = useMemo(() => channels.filter((ch) => ch.type === 'series').length, [channels]);
+  const sportsCount = useMemo(() => channels.filter((ch) => ch.type === 'sports').length, [channels]);
 
   const handlePlaylistChange = useCallback(() => {
     setPlaylistVersion(v => v + 1);
