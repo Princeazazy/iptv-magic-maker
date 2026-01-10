@@ -1,5 +1,6 @@
 import { Search, Star, Cloud } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import arabiaLogo from '@/assets/arabia-logo.png';
 
 interface MiHeaderProps {
   title: string;
@@ -32,11 +33,12 @@ export const MiHeader = ({
     <header className="flex items-center justify-between px-6 py-4 bg-background/80 backdrop-blur-sm border-b border-border">
       {/* Logo and Title */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">Mi</span>
-          </div>
-          <span className="text-muted-foreground text-sm hidden sm:block">Player Pro</span>
+        <div className="arabia-logo-container">
+          <img 
+            src={arabiaLogo} 
+            alt="Arabia" 
+            className="h-16 w-auto arabia-logo-animated" 
+          />
         </div>
         <div className="w-px h-6 bg-border mx-2 hidden sm:block" />
         <h1 className="text-xl font-semibold text-foreground">{title}</h1>
