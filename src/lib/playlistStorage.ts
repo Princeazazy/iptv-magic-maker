@@ -20,7 +20,7 @@ const looksLikeUrl = (value: string) => {
 };
 
 // Default IPTV playlist
-const DEFAULT_PLAYLIST_URL = 'http://ui-on.me:2095/get.php?username=Ameer26&password=Azazy&type=m3u_plus&output=ts';
+const DEFAULT_PLAYLIST_URL = 'http://ui-on.me:2095/get.php?username=Ameer26&password=Azazy&type=m3u_plus&output=m3u8';
 
 export const getStoredPlaylistUrl = (): string => {
   try {
