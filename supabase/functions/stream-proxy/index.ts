@@ -43,9 +43,15 @@ function isHttpUrl(input: string) {
 }
 
 function getProxyBase(req: Request) {
-  // In production, req.url is not guaranteed to include /functions/v1
-  // so we rebuild a stable public URL from forwarded headers.
   const url = new URL(req.url);
+
+  // Most reliable when the runtime provides the full public path.
+  // Example: https://<project>.supabase.co/functions/v1/stream-proxy
+  if (url.pathname.includes('/functions/v1/') && url.pathname.includes('/stream-proxy')) {
+    return `${url.origin}${url.pathname}`;
+  }
+
+  // Fallback: rebuild a stable public URL from forwarded headers.
   const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || url.host;
   const proto = req.headers.get("x-forwarded-proto") || "https";
   return `${proto}://${host}/functions/v1/stream-proxy`;
@@ -70,6 +76,7 @@ serve(async (req) => {
   try {
     const requestUrl = new URL(req.url);
     const upstreamUrl = requestUrl.searchParams.get("url") || "";
+    const refererOverride = requestUrl.searchParams.get("ref") || "";
 
     if (!upstreamUrl || !isHttpUrl(upstreamUrl)) {
       return new Response(
@@ -82,34 +89,73 @@ serve(async (req) => {
     }
 
     const upstream = new URL(upstreamUrl);
-    const referer = `${upstream.protocol}//${upstream.host}/`;
+    const referer = refererOverride && isHttpUrl(refererOverride)
+      ? refererOverride
+      : `${upstream.protocol}//${upstream.host}/`;
 
     const proxyBase = getProxyBase(req);
 
     console.log("stream-proxy =>", upstreamUrl);
 
     const range = req.headers.get('range');
-    const upstreamHeaders: Record<string, string> = {
+
+    const baseHeaders: Record<string, string> = {
       // Many IPTV providers are picky about these
-      "User-Agent": "IPTV Smarters/1.0",
       "Referer": referer,
       "Accept": "*/*",
+      "Accept-Encoding": "identity",
       "Connection": "keep-alive",
+      "Cache-Control": "no-cache",
+      "Pragma": "no-cache",
     };
-    if (range) upstreamHeaders["Range"] = range;
+    if (range) baseHeaders["Range"] = range;
 
-    const res = await fetch(upstreamUrl, {
-      redirect: "follow",
-      headers: upstreamHeaders,
-    });
+    const userAgents = [
+      "IPTV Smarters Pro/1.0",
+      "IPTV Smarters/1.0",
+      "okHttp/4.9.0",
+      "Dalvik/2.1.0 (Linux; U; Android 11; SM-G960F Build/R16NW)",
+      "VLC/3.0.18 LibVLC/3.0.18",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    ];
 
-    if (!res.ok) {
-      const preview = await res.text().catch(() => "");
-      console.error("Upstream error:", res.status, res.statusText, upstreamUrl);
+    const fetchWithRetries = async () => {
+      let lastRes: Response | null = null;
+      for (const ua of userAgents) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20000);
+        try {
+          const res = await fetch(upstreamUrl, {
+            redirect: "follow",
+            headers: { ...baseHeaders, "User-Agent": ua },
+            signal: controller.signal,
+          });
+          if (res.ok) return res;
+          lastRes = res;
+          // Retry on common "blocked"/gateway statuses.
+          if (![401, 403, 429, 500, 502, 503, 504].includes(res.status)) {
+            return res;
+          }
+        } catch {
+          // ignore and retry
+        } finally {
+          clearTimeout(timeout);
+        }
+      }
+      return lastRes;
+    };
+
+    const res = await fetchWithRetries();
+
+    if (!res || !res.ok) {
+      const status = res?.status ?? 0;
+      const statusText = res?.statusText ?? 'Fetch failed';
+      const preview = res ? await res.clone().text().catch(() => "") : "";
+      console.error("Upstream error:", status, statusText, upstreamUrl);
       return new Response(
         JSON.stringify({
-          error: `Upstream error: ${res.status} ${res.statusText}`,
-          upstream_status: res.status,
+          error: `Upstream error: ${status} ${statusText}`,
+          upstream_status: status,
           upstream_url: upstreamUrl,
           preview: preview.slice(0, 300),
         }),
@@ -126,6 +172,7 @@ serve(async (req) => {
       const text = await res.text();
 
       // Rewrite every URI line to pass through proxy (handles relative + absolute)
+      // Add `ref` so segment requests can send a correct Referer header (some providers require it).
       const rewritten = text
         .split(/\r?\n/)
         .map((line) => {
@@ -133,7 +180,7 @@ serve(async (req) => {
           if (!trimmed || trimmed.startsWith("#")) return line;
           try {
             const absolute = new URL(trimmed, upstreamUrl).toString();
-            return `${proxyBase}?url=${encodeURIComponent(absolute)}`;
+            return `${proxyBase}?url=${encodeURIComponent(absolute)}&ref=${encodeURIComponent(upstreamUrl)}`;
           } catch {
             return line;
           }
