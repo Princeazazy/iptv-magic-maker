@@ -145,12 +145,6 @@ export const GlobalSearchModal = ({
           >
             {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
           </button>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-full hover:bg-muted text-muted-foreground"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
 
         {/* Search Results */}
