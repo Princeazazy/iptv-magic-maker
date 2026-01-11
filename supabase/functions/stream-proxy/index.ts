@@ -167,6 +167,7 @@ serve(async (req) => {
     const isPlaylist =
       upstream.pathname.toLowerCase().endsWith(".m3u8") ||
       contentType.toLowerCase().includes("mpegurl");
+    const isTsStream = upstream.pathname.toLowerCase().endsWith(".ts");
 
     if (isPlaylist) {
       const text = await res.text();
@@ -197,13 +198,18 @@ serve(async (req) => {
       });
     }
 
-    // Pass-through for segments (ts/m4s/mp4/etc.)
+    // For TS streams (continuous transport stream), set appropriate content type
     const passthroughHeaders = new Headers(corsHeaders);
-    if (contentType) passthroughHeaders.set("Content-Type", contentType);
+    if (isTsStream) {
+      passthroughHeaders.set("Content-Type", "video/mp2t");
+    } else if (contentType) {
+      passthroughHeaders.set("Content-Type", contentType);
+    }
 
-    // Avoid caching for IPTV streams
+    // Allow caching for video segments, but not for live streams
     passthroughHeaders.set("Cache-Control", "no-store");
 
+    // For large streams, pass through the body directly
     return new Response(res.body, {
       status: res.status,
       headers: passthroughHeaders,
