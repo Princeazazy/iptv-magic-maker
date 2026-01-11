@@ -86,13 +86,15 @@ export const MiFullscreenPlayer = ({
 
     const originalUrl = channel.url;
     const playableUrl = getPlayableUrl(originalUrl);
-    const isHls = originalUrl.includes('.m3u8') || originalUrl.includes('m3u8');
+    const isHls = originalUrl.includes('.m3u8');
+    const isTs = originalUrl.endsWith('.ts');
 
     // Make sure volume/mute is applied
     video.muted = isMuted;
     video.volume = volume / 100;
 
     if (isHls && Hls.isSupported()) {
+      // HLS stream - use HLS.js
       console.log('Using HLS.js for:', playableUrl);
 
       const hls = new Hls({
@@ -136,6 +138,19 @@ export const MiFullscreenPlayer = ({
       });
 
       hlsRef.current = hls;
+    } else if (isTs) {
+      // Direct TS stream - play through proxy, browser handles natively
+      console.log('Using direct TS playback for:', playableUrl);
+      video.src = playableUrl;
+      video.play().catch((e) => {
+        console.error('TS playback failed:', e);
+        setIsPlaying(false);
+        if (e?.name === 'NotAllowedError') {
+          setError('Autoplay was blocked — tap Play to start.');
+        } else {
+          setError('Stream failed to load. The provider may be blocking web access.');
+        }
+      });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       // Safari native HLS support
       console.log('Using native HLS for:', playableUrl);

@@ -198,8 +198,8 @@ async function fetchXtreamLive(
 
       for (const stream of streams) {
         if (items.length >= limit) break;
-        // Build stream URL with .m3u8 extension for HLS compatibility
-        const streamUrl = `${baseUrl}/live/${username}/${password}/${stream.stream_id}.m3u8`;
+        // Build stream URL with .ts extension for direct transport stream (more compatible)
+        const streamUrl = `${baseUrl}/live/${username}/${password}/${stream.stream_id}.ts`;
         items.push({
           name: stream.name || 'Unknown Channel',
           url: streamUrl,
