@@ -125,7 +125,7 @@ export const GlobalSearchModal = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl p-0 bg-card/95 backdrop-blur-xl border-border overflow-hidden">
         {/* Search Header */}
-        <div className="flex items-center gap-3 p-4 border-b border-border">
+        <div className="flex items-center gap-3 p-4 pr-12 border-b border-border">
           <Search className="w-5 h-5 text-muted-foreground" />
           <input
             type="text"
