@@ -197,14 +197,15 @@ export const useIPTV = (m3uUrl?: string) => {
           
           content = response.data;
         } else {
-          // Web preview - use edge function proxy with reasonable limits
-          console.log('Fetching M3U using edge function proxy...');
+          // Web preview - use edge function proxy with Xtream API preference
+          console.log('Fetching channels using Xtream API via edge function...');
           const { data, error } = await supabase.functions.invoke('fetch-m3u', {
             body: { 
               url: effectiveUrl, 
               maxChannels: 50000, 
               maxBytesMB: 100, 
-              maxReturnPerType: 10000 // Limit for web preview to prevent timeouts
+              maxReturnPerType: 10000, // Limit for web preview to prevent timeouts
+              preferXtreamApi: true // Use Xtream API directly - more reliable than M3U download
             }
           });
           

@@ -198,9 +198,11 @@ async function fetchXtreamLive(
 
       for (const stream of streams) {
         if (items.length >= limit) break;
+        // Build stream URL with .m3u8 extension for HLS compatibility
+        const streamUrl = `${baseUrl}/live/${username}/${password}/${stream.stream_id}.m3u8`;
         items.push({
           name: stream.name || 'Unknown Channel',
-          url: `${baseUrl}/live/${username}/${password}/${stream.stream_id}.m3u8`,
+          url: streamUrl,
           logo: stream.stream_icon || '',
           group: categoryName,
           type: getContentType(categoryName, stream.name || ''),
@@ -276,16 +278,25 @@ async function fetchXtreamMovies(
 
       for (const stream of streams) {
         if (items.length >= limit) break;
+        // Build movie URL - use container extension from API or default to mp4
+        const ext = stream.container_extension || 'mp4';
+        const movieUrl = `${baseUrl}/movie/${username}/${password}/${stream.stream_id}.${ext}`;
         items.push({
           name: stream.name || 'Unknown Movie',
-          url: `${baseUrl}/movie/${username}/${password}/${stream.stream_id}.${stream.container_extension || 'mp4'}`,
+          url: movieUrl,
           logo: stream.stream_icon || '',
           group: categoryName,
           type: 'movies' as const,
           stream_id: stream.stream_id,
           rating: stream.rating,
           year: stream.year,
-          container_extension: stream.container_extension,
+          plot: stream.plot,
+          cast: stream.cast,
+          director: stream.director,
+          genre: stream.genre,
+          duration: stream.duration,
+          container_extension: ext,
+          backdrop_path: stream.backdrop_path,
         });
       }
     }
@@ -358,13 +369,18 @@ async function fetchXtreamSeries(
         if (items.length >= limit) break;
         items.push({
           name: stream.name || 'Unknown Series',
-          url: '',
+          url: '', // Series need episode expansion via get_series_info API
           logo: stream.cover || '',
           group: categoryName,
           type: 'series' as const,
           series_id: stream.series_id,
           rating: stream.rating,
-          year: stream.year,
+          year: stream.releaseDate || stream.year,
+          plot: stream.plot,
+          cast: stream.cast,
+          director: stream.director,
+          genre: stream.genre,
+          backdrop_path: stream.backdrop_path,
         });
       }
     }
