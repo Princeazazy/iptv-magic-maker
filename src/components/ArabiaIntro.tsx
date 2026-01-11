@@ -90,20 +90,10 @@ export const ArabiaIntro = ({ onComplete }: ArabiaIntroProps) => {
         <source src={introVideo} type="video/mp4" />
       </video>
 
-      {/* Overlay for blocked/loading states */}
-      {(state === 'blocked' || state === 'loading') && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
-          <img 
-            src={arabiaLogo} 
-            alt="Arabia" 
-            className="h-24 w-auto mb-8 animate-pulse" 
-          />
-          <p className="text-white/80 text-lg font-medium mb-2">
-            {state === 'loading' ? 'Loading...' : 'Tap anywhere to start'}
-          </p>
-          <p className="text-white/50 text-sm">
-            Welcome to Mi Player Pro
-          </p>
+      {/* Minimal overlay only when blocked - no loading state overlay */}
+      {state === 'blocked' && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <p className="text-white/60 text-sm">Tap anywhere to start</p>
         </div>
       )}
 
