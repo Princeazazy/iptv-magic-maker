@@ -74,7 +74,7 @@ export const MiHomeScreen = ({
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-10 py-6">
         {/* Animated Logo with transparent background */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 -ml-6">
           <TransparentVideoLogo 
             src={logoAnimation} 
             className="h-36 w-48"
