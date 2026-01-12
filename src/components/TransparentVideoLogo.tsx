@@ -14,6 +14,7 @@ export const TransparentVideoLogo = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
+  const dimensionsSetRef = useRef(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -23,16 +24,18 @@ export const TransparentVideoLogo = ({
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) return;
 
+    const setCanvasDimensions = () => {
+      if (!dimensionsSetRef.current && video.videoWidth > 0 && video.videoHeight > 0) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        dimensionsSetRef.current = true;
+      }
+    };
+
     const processFrame = () => {
-      if (video.paused || video.ended) {
+      if (video.paused || video.ended || !dimensionsSetRef.current) {
         animationRef.current = requestAnimationFrame(processFrame);
         return;
-      }
-
-      // Match canvas size to video
-      if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-        canvas.width = video.videoWidth || 300;
-        canvas.height = video.videoHeight || 200;
       }
 
       // Draw video frame
@@ -64,11 +67,22 @@ export const TransparentVideoLogo = ({
       animationRef.current = requestAnimationFrame(processFrame);
     };
 
+    const handleLoadedMetadata = () => {
+      setCanvasDimensions();
+    };
+
     const handlePlay = () => {
+      setCanvasDimensions();
       processFrame();
     };
 
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
     video.addEventListener('play', handlePlay);
+    
+    // Set dimensions if video is already loaded
+    if (video.readyState >= 1) {
+      setCanvasDimensions();
+    }
     
     // Start processing if video is already playing
     if (!video.paused) {
@@ -76,6 +90,7 @@ export const TransparentVideoLogo = ({
     }
 
     return () => {
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       video.removeEventListener('play', handlePlay);
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
