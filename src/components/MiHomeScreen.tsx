@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Tv, Film, Clapperboard, Trophy, User, RefreshCw, Clock, LogOut, Search, Settings, Mic, Cloud } from 'lucide-react';
 import arabianPalaceBg from '@/assets/arabian-palace-bg.png';
-import arabiaLogo from '@/assets/arabia-logo-new.png';
+import logoAnimation from '@/assets/logo-animation.mp4';
 import { BackgroundMusic } from './BackgroundMusic';
 
 interface MiHomeScreenProps {
@@ -72,9 +72,18 @@ export const MiHomeScreen = ({
       
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-10 py-6">
-        {/* Logo */}
+        {/* Animated Logo */}
         <div className="flex items-center gap-2">
-          <img src={arabiaLogo} alt="Arabia" className="h-36 w-auto" />
+          <div className="h-36 w-48 relative overflow-hidden">
+            <video
+              src={logoAnimation}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="h-full w-full object-contain mix-blend-screen"
+            />
+          </div>
         </div>
 
         {/* Search Bar */}
