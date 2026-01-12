@@ -3,6 +3,7 @@ import { Tv, Film, Clapperboard, Trophy, User, RefreshCw, Clock, LogOut, Search,
 import arabianPalaceBg from '@/assets/arabian-palace-bg.png';
 import logoAnimation from '@/assets/logo-animation.mp4';
 import { BackgroundMusic } from './BackgroundMusic';
+import { TransparentVideoLogo } from './TransparentVideoLogo';
 
 interface MiHomeScreenProps {
   channelCount: number;
@@ -72,18 +73,13 @@ export const MiHomeScreen = ({
       
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-10 py-6">
-        {/* Animated Logo */}
+        {/* Animated Logo with transparent background */}
         <div className="flex items-center gap-2">
-          <div className="h-36 w-48 relative overflow-hidden">
-            <video
-              src={logoAnimation}
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="h-full w-full object-contain mix-blend-screen"
-            />
-          </div>
+          <TransparentVideoLogo 
+            src={logoAnimation} 
+            className="h-36 w-48"
+            threshold={35}
+          />
         </div>
 
         {/* Search Bar */}
