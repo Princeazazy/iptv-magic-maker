@@ -1,6 +1,6 @@
 import { Search, Star, Cloud } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import arabiaLogo from '@/assets/arabia-logo.png';
+import logoAnimation from '@/assets/logo-animation.mp4';
 
 interface MiHeaderProps {
   title: string;
@@ -31,9 +31,18 @@ export const MiHeader = ({
 
   return (
     <header className="flex items-center justify-between px-6 py-4 bg-background/80 backdrop-blur-sm border-b border-border">
-      {/* Logo and Title */}
+      {/* Animated Logo */}
       <div className="flex items-center gap-3">
-        <img src={arabiaLogo} alt="Arabia" className="h-16 w-auto" />
+        <div className="h-16 w-24 relative overflow-hidden">
+          <video
+            src={logoAnimation}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="h-full w-full object-contain mix-blend-screen"
+          />
+        </div>
         <div className="w-px h-6 bg-border mx-2 hidden sm:block" />
         <h1 className="text-xl font-semibold text-foreground">{title}</h1>
       </div>
