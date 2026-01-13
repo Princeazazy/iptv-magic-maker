@@ -282,8 +282,8 @@ const Index = () => {
     }
   };
 
-  // Only play background music when not watching content
-  const shouldPlayMusic = !isFullscreen && !currentChannel;
+  // Only play background music when not in fullscreen player
+  const shouldPlayMusic = !isFullscreen;
 
   return (
     <>
