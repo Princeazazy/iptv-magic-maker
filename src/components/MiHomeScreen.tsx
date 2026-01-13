@@ -120,7 +120,7 @@ const GlowCard = ({
       />
       
       {/* Card content */}
-      <div className={`relative rounded-2xl overflow-hidden transition-all duration-300 group-hover:shadow-2xl ${glowMap[glowColor]}`}
+      <div className={`relative h-full rounded-2xl overflow-hidden transition-all duration-300 group-hover:shadow-2xl ${glowMap[glowColor]}`}
         style={{
           background: 'linear-gradient(145deg, hsl(260 30% 16%) 0%, hsl(260 30% 10%) 100%)',
         }}
