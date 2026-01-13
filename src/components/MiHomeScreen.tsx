@@ -10,6 +10,7 @@ interface MiHomeScreenProps {
   movieCount: number;
   seriesCount: number;
   sportsCount: number;
+  loading?: boolean;
   onNavigate: (section: 'live' | 'movies' | 'series' | 'sports' | 'settings') => void;
   onReload?: () => void;
   onCatchUp?: () => void;
@@ -17,11 +18,25 @@ interface MiHomeScreenProps {
   onVoiceSearchClick?: () => void;
 }
 
+// Animated count display component
+const AnimatedCount = ({ value, loading, suffix }: { value: number; loading?: boolean; suffix: string }) => {
+  if (loading) {
+    return (
+      <span className="inline-flex items-center gap-1">
+        <span className="inline-block w-12 h-4 bg-muted-foreground/20 rounded animate-pulse" />
+        <span>{suffix}</span>
+      </span>
+    );
+  }
+  return <span>+{value.toLocaleString()} {suffix}</span>;
+};
+
 export const MiHomeScreen = ({
   channelCount,
   movieCount,
   seriesCount,
   sportsCount,
+  loading,
   onNavigate,
   onReload,
   onCatchUp,
@@ -139,7 +154,9 @@ export const MiHomeScreen = ({
             {/* Title & Count */}
             <div className="px-6 pb-6">
               <h2 className="text-3xl font-bold text-foreground">Live</h2>
-              <p className="text-muted-foreground mt-1">+{channelCount.toLocaleString()} Channels</p>
+              <p className="text-muted-foreground mt-1">
+                <AnimatedCount value={channelCount} loading={loading} suffix="Channels" />
+              </p>
             </div>
             {/* Selection indicator */}
             <div className="flex justify-center pb-5">
@@ -161,7 +178,9 @@ export const MiHomeScreen = ({
               </div>
               <div className="absolute bottom-5 left-5">
                 <h3 className="text-2xl font-semibold text-foreground">Movies</h3>
-                <p className="text-muted-foreground text-sm mt-0.5">+{movieCount.toLocaleString()} Movies</p>
+                <p className="text-muted-foreground text-sm mt-0.5">
+                  <AnimatedCount value={movieCount} loading={loading} suffix="Movies" />
+                </p>
               </div>
             </button>
 
@@ -181,7 +200,9 @@ export const MiHomeScreen = ({
               </div>
               <div className="absolute bottom-5 left-5">
                 <h3 className="text-2xl font-semibold text-foreground">Series</h3>
-                <p className="text-muted-foreground text-sm mt-0.5">+{seriesCount.toLocaleString()} Series</p>
+                <p className="text-muted-foreground text-sm mt-0.5">
+                  <AnimatedCount value={seriesCount} loading={loading} suffix="Series" />
+                </p>
               </div>
             </button>
           </div>
@@ -210,7 +231,9 @@ export const MiHomeScreen = ({
             {/* Title */}
             <div className="relative px-5 pb-8">
               <h3 className="text-2xl font-semibold text-foreground">Sports Guide</h3>
-              <p className="text-muted-foreground text-sm mt-0.5">+{sportsCount} in playlist</p>
+              <p className="text-muted-foreground text-sm mt-0.5">
+                <AnimatedCount value={sportsCount} loading={loading} suffix="in playlist" />
+              </p>
             </div>
           </button>
 
