@@ -27,16 +27,18 @@ export const BackgroundMusic = ({
     audio.volume = volume;
     audio.loop = true;
 
-    // Try to autoplay (may be blocked by browser)
-    if (autoPlay && hasInteracted) {
+    // Handle autoPlay changes - pause when content is playing, resume when it stops
+    if (!autoPlay && isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+    } else if (autoPlay && hasInteracted && !isPlaying) {
       audio.play().then(() => {
         setIsPlaying(true);
       }).catch(() => {
-        // Autoplay blocked, user needs to interact
         setIsPlaying(false);
       });
     }
-  }, [autoPlay, volume, hasInteracted]);
+  }, [autoPlay, volume, hasInteracted, isPlaying]);
 
   // Listen for first user interaction on the page
   useEffect(() => {
