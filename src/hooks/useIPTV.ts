@@ -202,9 +202,9 @@ export const useIPTV = (m3uUrl?: string) => {
           const { data, error } = await supabase.functions.invoke('fetch-m3u', {
             body: { 
               url: effectiveUrl, 
-              maxChannels: 50000, 
+              maxChannels: 200000, 
               maxBytesMB: 100, 
-              maxReturnPerType: 10000, // Limit for web preview to prevent timeouts
+              maxReturnPerType: 50000, // Higher limit to get all content
               preferXtreamApi: true // Use Xtream API directly - more reliable than M3U download
             }
           });
