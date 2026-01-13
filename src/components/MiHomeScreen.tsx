@@ -84,7 +84,7 @@ export const MiHomeScreen = ({
       <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
       
       {/* Background Music */}
-      <BackgroundMusic src="/audio/arabian-ambient.mp3" autoPlay defaultVolume={0.25} />
+      <BackgroundMusic src="/audio/arabian-ambient.mp3?v=2" autoPlay defaultVolume={0.25} />
       
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-10 py-6">
