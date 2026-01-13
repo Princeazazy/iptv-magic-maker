@@ -324,7 +324,7 @@ export const MiHomeScreen = ({
 
       {/* Main Content Grid */}
       <main className="relative z-20 px-10 pt-4 pb-8">
-        <div className="flex gap-5 items-start justify-center">
+        <div className="flex gap-5 items-stretch justify-center">
           {/* Live TV - Large Card */}
           <GlowCard
             onClick={() => onNavigate('live')}
@@ -369,12 +369,12 @@ export const MiHomeScreen = ({
             </div>
           </GlowCard>
 
-          {/* Middle Column - Movies & Series */}
-          <div className="flex flex-col gap-3 flex-shrink-0">
+          {/* Middle Column - Movies & Series - height matches Live/Sports */}
+          <div className="flex flex-col gap-[14px] flex-shrink-0 h-[430px]">
             {/* Movies Card */}
             <GlowCard
               onClick={() => onNavigate('movies')}
-              className="w-[280px] h-[208px]"
+              className="w-[280px] flex-1"
               glowColor="purple"
               delay={0.1}
             >
@@ -401,7 +401,7 @@ export const MiHomeScreen = ({
             {/* Series Card */}
             <GlowCard
               onClick={() => onNavigate('series')}
-              className="w-[280px] h-[208px]"
+              className="w-[280px] flex-1"
               glowColor="accent"
               delay={0.2}
             >
@@ -452,17 +452,17 @@ export const MiHomeScreen = ({
           </GlowCard>
 
           {/* Action buttons */}
-          <div className="flex flex-col gap-3 flex-shrink-0">
+          <div className="flex flex-col gap-3 flex-shrink-0 h-[430px] justify-center">
             {[
-              { icon: User, label: 'Account', action: () => onNavigate('settings'), color: 'primary' },
-              { icon: RefreshCw, label: 'Reload', action: onReload, color: 'cyan' },
-              { icon: Clock, label: isRefreshing ? 'Updating...' : 'Catch up', action: handleCatchUp, color: 'accent', spinning: isRefreshing },
-              { icon: LogOut, label: 'Exit', action: () => {}, color: 'purple' },
-            ].map(({ icon: Icon, label, action, color, spinning }, index) => (
+              { icon: User, label: 'Account', action: () => onNavigate('settings'), color: 'primary', gradient: 'from-primary to-accent' },
+              { icon: RefreshCw, label: 'Reload', action: onReload, color: 'cyan', gradient: 'from-cyan-400 to-blue-500' },
+              { icon: Clock, label: isRefreshing ? 'Updating...' : 'Catch up', action: handleCatchUp, color: 'accent', gradient: 'from-accent to-primary', spinning: isRefreshing },
+              { icon: LogOut, label: 'Exit', action: () => {}, color: 'purple', gradient: 'from-purple-500 to-pink-500' },
+            ].map(({ icon: Icon, label, action, color, gradient, spinning }, index) => (
               <motion.button
                 key={label}
                 onClick={action}
-                className="flex items-center gap-4 px-5 py-4 rounded-xl border border-white/10 backdrop-blur-sm"
+                className="relative flex items-center gap-4 px-6 py-4 rounded-xl border border-white/10 backdrop-blur-sm overflow-hidden group"
                 style={{
                   background: 'linear-gradient(145deg, hsl(260 30% 16%) 0%, hsl(260 30% 12%) 100%)',
                 }}
@@ -470,15 +470,40 @@ export const MiHomeScreen = ({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 + index * 0.1 }}
                 whileHover={{ 
-                  scale: 1.02, 
-                  x: 5,
-                  boxShadow: `0 8px 30px hsl(var(--${color}) / 0.2)`,
+                  scale: 1.05, 
+                  x: 8,
+                  transition: { duration: 0.2 }
                 }}
-                whileTap={{ scale: 0.98 }}
+                whileTap={{ scale: 0.95 }}
                 disabled={spinning}
               >
-                <Icon className={`w-5 h-5 text-muted-foreground ${spinning ? 'animate-spin' : ''}`} />
-                <span className="text-foreground font-medium">{label}</span>
+                {/* Hover glow background */}
+                <motion.div 
+                  className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-0 group-hover:opacity-20 transition-opacity duration-300`}
+                />
+                {/* Animated border on hover */}
+                <motion.div 
+                  className={`absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-white/20 transition-all duration-300`}
+                />
+                {/* Icon with color on hover */}
+                <motion.div
+                  className="relative z-10"
+                  whileHover={{ rotate: spinning ? 0 : 15, scale: 1.2 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Icon className={`w-5 h-5 text-muted-foreground group-hover:text-white transition-colors duration-300 ${spinning ? 'animate-spin' : ''}`} />
+                </motion.div>
+                <span className="relative z-10 text-foreground font-medium group-hover:text-white transition-colors duration-300">{label}</span>
+                {/* Shine effect */}
+                <motion.div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100"
+                  initial={{ x: '-100%' }}
+                  whileHover={{ x: '100%' }}
+                  transition={{ duration: 0.6 }}
+                  style={{
+                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)',
+                  }}
+                />
               </motion.button>
             ))}
           </div>
