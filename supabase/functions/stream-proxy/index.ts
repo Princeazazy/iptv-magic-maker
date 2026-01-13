@@ -45,15 +45,31 @@ function isHttpUrl(input: string) {
 function getProxyBase(req: Request) {
   const url = new URL(req.url);
 
-  // Most reliable when the runtime provides the full public path.
-  // Example: https://<project>.supabase.co/functions/v1/stream-proxy
-  if (url.pathname.includes('/functions/v1/') && url.pathname.includes('/stream-proxy')) {
-    return `${url.origin}${url.pathname}`;
+  // IMPORTANT:
+  // The edge runtime may expose an internal hostname for req.url (e.g. edge-runtime.*).
+  // If we use that for playlist rewriting, segment URLs will point to the wrong host and
+  // can return 401.
+
+  // 1) Prefer the canonical public project URL from environment (most reliable).
+  const envSupabaseUrl = (globalThis as any).Deno?.env?.get?.("SUPABASE_URL") as string | undefined;
+  if (envSupabaseUrl) {
+    return new URL("functions/v1/stream-proxy", envSupabaseUrl).toString();
   }
 
-  // Fallback: rebuild a stable public URL from forwarded headers.
+  // 2) Fall back to project ref headers (when available).
+  const projectRef =
+    req.headers.get("sb-project-ref") ||
+    req.headers.get("x-sb-project-ref") ||
+    req.headers.get("x-supabase-project-ref");
+
+  if (projectRef) {
+    return `https://${projectRef}.supabase.co/functions/v1/stream-proxy`;
+  }
+
+  // 3) Final fallback: use forwarded/public host headers.
   const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || url.host;
-  const proto = req.headers.get("x-forwarded-proto") || "https";
+  const proto = req.headers.get("x-forwarded-proto") || url.protocol.replace(':', '') || "https";
+
   return `${proto}://${host}/functions/v1/stream-proxy`;
 }
 
@@ -179,7 +195,11 @@ serve(async (req) => {
       const text = await res.text();
 
       // Rewrite every URI line to pass through proxy (handles relative + absolute)
-      // Add `ref` so segment requests can send a correct Referer header (some providers require it).
+      // NOTE: We intentionally return a RELATIVE URL here.
+      // If we emit an absolute origin, some runtimes will use an internal hostname
+      // (e.g. edge-runtime.*) which breaks segment fetching with 401s.
+      // A relative URL ensures the client fetches segments from the same public host
+      // that served this playlist.
       const rewritten = text
         .split(/\r?\n/)
         .map((line) => {
@@ -187,7 +207,7 @@ serve(async (req) => {
           if (!trimmed || trimmed.startsWith("#")) return line;
           try {
             const absolute = new URL(trimmed, upstreamUrl).toString();
-            return `${proxyBase}?url=${encodeURIComponent(absolute)}&ref=${encodeURIComponent(upstreamUrl)}`;
+            return `?url=${encodeURIComponent(absolute)}&ref=${encodeURIComponent(upstreamUrl)}`;
           } catch {
             return line;
           }
