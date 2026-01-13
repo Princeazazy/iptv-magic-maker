@@ -324,11 +324,11 @@ export const MiHomeScreen = ({
 
       {/* Main Content Grid */}
       <main className="relative z-20 px-10 pt-4 pb-8">
-        <div className="flex gap-4 items-start">
+        <div className="grid grid-cols-4 gap-5 max-w-6xl mx-auto">
           {/* Live TV - Large Card */}
           <GlowCard
             onClick={() => onNavigate('live')}
-            className="w-[300px] h-[430px]"
+            className="row-span-2 min-h-[430px]"
             glowColor="primary"
             delay={0}
           >
@@ -369,46 +369,45 @@ export const MiHomeScreen = ({
             </div>
           </GlowCard>
 
-          {/* Middle Column - Movies & Series */}
-          <div className="flex flex-col gap-3">
-            {/* Movies Card */}
-            <GlowCard
-              onClick={() => onNavigate('movies')}
-              className="w-[220px] h-[208px]"
-              glowColor="purple"
-              delay={0.1}
-            >
-              <div className="relative h-full p-5">
-                <div className="absolute top-5 left-5">
-                  <FloatingIcon icon={Film} color="purple" />
-                </div>
-                <div className="absolute bottom-5 left-5 right-5">
-                  <h3 className="text-2xl font-bold text-foreground">Movies</h3>
-                  <div className="mt-1">
-                    <AnimatedCount value={movieCount} loading={loading} suffix="Movies" color="purple" />
-                  </div>
-                </div>
-                {/* Movie icon decorative */}
+          {/* Movies Card */}
+          <GlowCard
+            onClick={() => onNavigate('movies')}
+            className="min-h-[205px]"
+            glowColor="purple"
+            delay={0.1}
+          >
+            <div className="relative h-full p-5 flex flex-col justify-between min-h-[205px]">
+              <div className="flex items-start justify-between">
+                <FloatingIcon icon={Film} color="purple" />
                 <motion.div 
-                  className="absolute top-5 right-5 opacity-20"
+                  className="opacity-30"
                   animate={{ rotate: [0, 360] }}
                   transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
                 >
                   <Zap className="w-8 h-8 text-purple-400" />
                 </motion.div>
               </div>
-            </GlowCard>
+              <div className="mt-auto pt-4">
+                <h3 className="text-2xl font-bold text-foreground">Movies</h3>
+                <div className="mt-1">
+                  <AnimatedCount value={movieCount} loading={loading} suffix="Movies" color="purple" />
+                </div>
+              </div>
+            </div>
+          </GlowCard>
 
-            {/* Series Card */}
-            <GlowCard
-              onClick={() => onNavigate('series')}
-              className="w-[220px] h-[208px]"
-              glowColor="accent"
-              delay={0.2}
-            >
-              <div className="relative h-full p-5">
+          {/* Series Card */}
+          <GlowCard
+            onClick={() => onNavigate('series')}
+            className="min-h-[205px]"
+            glowColor="accent"
+            delay={0.2}
+          >
+            <div className="relative h-full p-5 flex flex-col justify-between min-h-[205px]">
+              <div className="flex items-start justify-between">
+                <FloatingIcon icon={Clapperboard} color="accent" />
                 <motion.div 
-                  className="absolute top-5 right-5 z-10"
+                  className="z-10"
                   animate={{ rotate: [-5, 5, -5], scale: [1, 1.1, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
@@ -416,23 +415,20 @@ export const MiHomeScreen = ({
                     New
                   </span>
                 </motion.div>
-                <div className="absolute top-5 left-5">
-                  <FloatingIcon icon={Clapperboard} color="accent" />
-                </div>
-                <div className="absolute bottom-5 left-5 right-5">
-                  <h3 className="text-2xl font-bold text-foreground">Series</h3>
-                  <div className="mt-1">
-                    <AnimatedCount value={seriesCount} loading={loading} suffix="Series" color="accent" />
-                  </div>
+              </div>
+              <div className="mt-auto pt-4">
+                <h3 className="text-2xl font-bold text-foreground">Series</h3>
+                <div className="mt-1">
+                  <AnimatedCount value={seriesCount} loading={loading} suffix="Series" color="accent" />
                 </div>
               </div>
-            </GlowCard>
-          </div>
+            </div>
+          </GlowCard>
 
           {/* Sports Guide Card */}
           <GlowCard
             onClick={() => onNavigate('sports')}
-            className="w-[220px] h-[430px]"
+            className="row-span-2 min-h-[430px]"
             glowColor="cyan"
             delay={0.3}
           >
