@@ -199,6 +199,7 @@ const Index = () => {
             movieCount={movieCount}
             seriesCount={seriesCount}
             sportsCount={sportsCount}
+            loading={loading}
             onNavigate={handleNavigate}
             onReload={handleReload}
             onCatchUp={refresh}
@@ -269,6 +270,7 @@ const Index = () => {
             movieCount={movieCount}
             seriesCount={seriesCount}
             sportsCount={sportsCount}
+            loading={loading}
             onNavigate={handleNavigate}
             onReload={handleReload}
             onCatchUp={refresh}
