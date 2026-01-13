@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Tv, Film, Clapperboard, Trophy, User, RefreshCw, Clock, LogOut, Search, Settings, Mic, Cloud } from 'lucide-react';
 import arabianPalaceBg from '@/assets/arabian-palace-bg.png';
-import logoAnimation from '@/assets/logo-animation.mp4';
+import logoAnimation from '@/assets/logo-animation-new.mp4';
 import { BackgroundMusic } from './BackgroundMusic';
 import { TransparentVideoLogo } from './TransparentVideoLogo';
 
