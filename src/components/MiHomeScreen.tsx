@@ -324,15 +324,15 @@ export const MiHomeScreen = ({
 
       {/* Main Content Grid */}
       <main className="relative z-20 px-10 pt-4 pb-8">
-        <div className="grid grid-cols-4 gap-5 max-w-6xl mx-auto">
+        <div className="flex gap-5 items-start justify-center">
           {/* Live TV - Large Card */}
           <GlowCard
             onClick={() => onNavigate('live')}
-            className="row-span-2 min-h-[430px]"
+            className="w-[320px] h-[430px] flex-shrink-0"
             glowColor="primary"
             delay={0}
           >
-            <div className="relative h-full flex flex-col p-5">
+            <div className="relative h-full flex flex-col p-6">
               {/* Live badge */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
@@ -369,74 +369,73 @@ export const MiHomeScreen = ({
             </div>
           </GlowCard>
 
-          {/* Movies Card */}
-          <GlowCard
-            onClick={() => onNavigate('movies')}
-            className="min-h-[205px]"
-            glowColor="purple"
-            delay={0.1}
-          >
-            <div className="relative h-full p-5 flex flex-col justify-between min-h-[205px]">
-              <div className="flex items-start justify-between">
-                <FloatingIcon icon={Film} color="purple" />
-                <motion.div 
-                  className="opacity-30"
-                  animate={{ rotate: [0, 360] }}
-                  transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                >
-                  <Zap className="w-8 h-8 text-purple-400" />
-                </motion.div>
-              </div>
-              <div className="mt-auto pt-4">
-                <h3 className="text-2xl font-bold text-foreground">Movies</h3>
-                <div className="mt-1">
-                  <AnimatedCount value={movieCount} loading={loading} suffix="Movies" color="purple" />
+          {/* Middle Column - Movies & Series */}
+          <div className="flex flex-col gap-5 flex-shrink-0">
+            {/* Movies Card */}
+            <GlowCard
+              onClick={() => onNavigate('movies')}
+              className="w-[280px] h-[205px]"
+              glowColor="purple"
+              delay={0.1}
+            >
+              <div className="relative h-full p-5 flex flex-col justify-between">
+                <div className="flex items-start justify-between">
+                  <FloatingIcon icon={Film} color="purple" />
+                  <motion.div 
+                    className="opacity-30"
+                    animate={{ rotate: [0, 360] }}
+                    transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                  >
+                    <Zap className="w-8 h-8 text-purple-400" />
+                  </motion.div>
+                </div>
+                <div className="mt-auto">
+                  <h3 className="text-2xl font-bold text-foreground">Movies</h3>
+                  <div className="mt-1">
+                    <AnimatedCount value={movieCount} loading={loading} suffix="Movies" color="purple" />
+                  </div>
                 </div>
               </div>
-            </div>
-          </GlowCard>
+            </GlowCard>
 
-          {/* Series Card */}
-          <GlowCard
-            onClick={() => onNavigate('series')}
-            className="min-h-[205px]"
-            glowColor="accent"
-            delay={0.2}
-          >
-            <div className="relative h-full p-5 flex flex-col justify-between min-h-[205px]">
-              <div className="flex items-start justify-between">
-                <FloatingIcon icon={Clapperboard} color="accent" />
-                <motion.div 
-                  className="z-10"
-                  animate={{ rotate: [-5, 5, -5], scale: [1, 1.1, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <span className="px-3 py-1 rounded-full bg-gradient-to-r from-accent to-primary text-white text-xs font-bold uppercase">
-                    New
-                  </span>
-                </motion.div>
-              </div>
-              <div className="mt-auto pt-4">
-                <h3 className="text-2xl font-bold text-foreground">Series</h3>
-                <div className="mt-1">
-                  <AnimatedCount value={seriesCount} loading={loading} suffix="Series" color="accent" />
+            {/* Series Card */}
+            <GlowCard
+              onClick={() => onNavigate('series')}
+              className="w-[280px] h-[205px]"
+              glowColor="accent"
+              delay={0.2}
+            >
+              <div className="relative h-full p-5 flex flex-col justify-between">
+                <div className="flex items-start justify-between">
+                  <FloatingIcon icon={Clapperboard} color="accent" />
+                  <motion.div 
+                    className="z-10"
+                    animate={{ rotate: [-5, 5, -5], scale: [1, 1.1, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <span className="px-3 py-1 rounded-full bg-gradient-to-r from-accent to-primary text-white text-xs font-bold uppercase">
+                      New
+                    </span>
+                  </motion.div>
+                </div>
+                <div className="mt-auto">
+                  <h3 className="text-2xl font-bold text-foreground">Series</h3>
+                  <div className="mt-1">
+                    <AnimatedCount value={seriesCount} loading={loading} suffix="Series" color="accent" />
+                  </div>
                 </div>
               </div>
-            </div>
-          </GlowCard>
+            </GlowCard>
+          </div>
 
           {/* Sports Guide Card */}
           <GlowCard
             onClick={() => onNavigate('sports')}
-            className="row-span-2 min-h-[430px]"
+            className="w-[280px] h-[430px] flex-shrink-0"
             glowColor="cyan"
             delay={0.3}
           >
             <div className="relative h-full">
-              <div 
-                className="absolute inset-0 bg-cover bg-center opacity-20"
-                style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1461896836934-gy?w=400")' }}
-              />
               <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
               
               <div className="relative flex items-center justify-center h-2/3">
@@ -453,7 +452,7 @@ export const MiHomeScreen = ({
           </GlowCard>
 
           {/* Action buttons */}
-          <div className="flex flex-col gap-2.5 min-w-[180px]">
+          <div className="flex flex-col gap-3 flex-shrink-0">
             {[
               { icon: User, label: 'Account', action: () => onNavigate('settings'), color: 'primary' },
               { icon: RefreshCw, label: 'Reload', action: onReload, color: 'cyan' },
