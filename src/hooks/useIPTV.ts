@@ -197,15 +197,15 @@ export const useIPTV = (m3uUrl?: string) => {
           
           content = response.data;
         } else {
-          // Web preview - use edge function proxy with Xtream API preference
+          // Web preview - use edge function proxy with Xtream API (IPTV Smarters compatible)
           console.log('Fetching channels using Xtream API via edge function...');
           const { data, error } = await supabase.functions.invoke('fetch-m3u', {
             body: { 
               url: effectiveUrl, 
-              maxChannels: 50000, 
-              maxBytesMB: 50, 
-              maxReturnPerType: 15000, // Reduced to prevent CPU timeout
-              preferXtreamApi: true // Use Xtream API directly - more reliable than M3U download
+              maxChannels: 0, // 0 = no limit (fetch all like IPTV Smarters)
+              maxBytesMB: 100, 
+              maxReturnPerType: 0, // 0 = no limit
+              preferXtreamApi: true // Use Xtream API directly - IPTV Smarters compatible
             }
           });
           
