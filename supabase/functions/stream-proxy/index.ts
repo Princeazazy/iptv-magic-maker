@@ -100,23 +100,29 @@ serve(async (req) => {
     const range = req.headers.get('range');
 
     const baseHeaders: Record<string, string> = {
-      // Many IPTV providers are picky about these
+      // Mimic Android APK requests to bypass web restrictions
       "Referer": referer,
       "Accept": "*/*",
       "Accept-Encoding": "identity",
       "Connection": "keep-alive",
       "Cache-Control": "no-cache",
       "Pragma": "no-cache",
+      "X-Requested-With": "com.nst.iptvsmarterstvbox",
+      "Accept-Language": "en-US,en;q=0.9",
     };
     if (range) baseHeaders["Range"] = range;
 
+    // Prioritize Android APK User-Agents to bypass web restrictions
     const userAgents = [
-      "IPTV Smarters Pro/1.0",
-      "IPTV Smarters/1.0",
-      "okHttp/4.9.0",
-      "Dalvik/2.1.0 (Linux; U; Android 11; SM-G960F Build/R16NW)",
-      "VLC/3.0.18 LibVLC/3.0.18",
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Dalvik/2.1.0 (Linux; U; Android 13; Pixel 7 Pro Build/TQ3A.230805.001)",
+      "okhttp/4.12.0",
+      "IPTV Smarters Pro/3.1.5",
+      "TiviMate/4.7.0 (Linux; Android 12; SM-S908B)",
+      "GSE SMART IPTV/7.4 (Android 11; TV)",
+      "Kodi/20.2 (Linux; Android 12; SHIELD Android TV Build/SQ3A.220705.003.A1)",
+      "ExoPlayer/2.19.1 (Linux; Android 13) ExoPlayerLib/2.19.1",
+      "VLC/3.5.4 LibVLC/3.0.18 (Android 12; armv8l)",
+      "Perfect Player IPTV/1.6.0.1 (Linux; Android 10)",
     ];
 
     const fetchWithRetries = async () => {

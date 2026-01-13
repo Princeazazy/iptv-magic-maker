@@ -33,6 +33,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Android APK headers to bypass web restrictions
+const apkHeaders = {
+  'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 13; Pixel 7 Pro Build/TQ3A.230805.001)',
+  'X-Requested-With': 'com.nst.iptvsmarterstvbox',
+  'Accept': '*/*',
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Connection': 'keep-alive',
+};
+
 // Determine content type from group/name
 function getContentType(group: string, name: string): 'live' | 'movies' | 'series' | 'sports' {
   const groupLower = (group || '').toLowerCase();
@@ -147,7 +156,7 @@ async function fetchXtreamLive(
     console.log('Fetching Xtream live categories...');
     const categoriesRes = await fetch(
       `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_live_categories`,
-      { headers: { 'User-Agent': 'IPTV Smarters/1.0' } }
+      { headers: apkHeaders }
     );
     const categories = await categoriesRes.json();
     console.log(`Found ${categories?.length || 0} live categories`);
@@ -173,7 +182,7 @@ async function fetchXtreamLive(
       const categoryName = categoryMap.get(categoryId) || 'Uncategorized';
 
       const url = `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_live_streams&category_id=${encodeURIComponent(categoryId)}`;
-      const res = await fetch(url, { headers: { 'User-Agent': 'IPTV Smarters/1.0' } });
+      const res = await fetch(url, { headers: apkHeaders });
 
       if (!res.ok) {
         console.error('Failed to fetch live streams for category:', categoryId, res.status, res.statusText);
@@ -231,7 +240,7 @@ async function fetchXtreamMovies(
     console.log('Fetching Xtream VOD categories...');
     const categoriesRes = await fetch(
       `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_vod_categories`,
-      { headers: { 'User-Agent': 'IPTV Smarters/1.0' } }
+      { headers: apkHeaders }
     );
     const categories = await categoriesRes.json();
     console.log(`Found ${categories?.length || 0} VOD categories`);
@@ -256,7 +265,7 @@ async function fetchXtreamMovies(
       const categoryName = categoryMap.get(categoryId) || 'Movies';
       const url = `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_vod_streams&category_id=${encodeURIComponent(categoryId)}`;
 
-      const res = await fetch(url, { headers: { 'User-Agent': 'IPTV Smarters/1.0' } });
+      const res = await fetch(url, { headers: apkHeaders });
       if (!res.ok) {
         console.error('Failed to fetch VOD streams for category:', categoryId, res.status, res.statusText);
         continue;
@@ -320,7 +329,7 @@ async function fetchXtreamSeries(
     console.log('Fetching Xtream series categories...');
     const categoriesRes = await fetch(
       `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_series_categories`,
-      { headers: { 'User-Agent': 'IPTV Smarters/1.0' } }
+      { headers: apkHeaders }
     );
     const categories = await categoriesRes.json();
     console.log(`Found ${categories?.length || 0} series categories`);
@@ -345,7 +354,7 @@ async function fetchXtreamSeries(
       const categoryName = categoryMap.get(categoryId) || 'Series';
       const url = `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_series&category_id=${encodeURIComponent(categoryId)}`;
 
-      const res = await fetch(url, { headers: { 'User-Agent': 'IPTV Smarters/1.0' } });
+      const res = await fetch(url, { headers: apkHeaders });
       if (!res.ok) {
         console.error('Failed to fetch series for category:', categoryId, res.status, res.statusText);
         continue;
@@ -545,11 +554,14 @@ serve(async (req) => {
 
     console.log('Using M3U parsing...');
 
+    // Android APK User-Agents to bypass web restrictions
     const userAgents = [
-      'IPTV Smarters/1.0',
-      'okHttp/4.9.0',
-      'Dalvik/2.1.0 (Linux; U; Android 11; SM-G960F Build/R16NW)',
-      'VLC/3.0.18 LibVLC/3.0.18',
+      'Dalvik/2.1.0 (Linux; U; Android 13; Pixel 7 Pro Build/TQ3A.230805.001)',
+      'okhttp/4.12.0',
+      'IPTV Smarters Pro/3.1.5',
+      'TiviMate/4.7.0 (Linux; Android 12; SM-S908B)',
+      'GSE SMART IPTV/7.4 (Android 11; TV)',
+      'Kodi/20.2 (Linux; Android 12; SHIELD Android TV Build/SQ3A.220705.003.A1)',
     ];
 
     let lastError;
@@ -570,6 +582,8 @@ serve(async (req) => {
             'Accept': '*/*',
             'Accept-Encoding': 'identity',
             'Connection': 'keep-alive',
+            'X-Requested-With': 'com.nst.iptvsmarterstvbox',
+            'Accept-Language': 'en-US,en;q=0.9',
           },
           signal: controller.signal,
           redirect: 'follow'
