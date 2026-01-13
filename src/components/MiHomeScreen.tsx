@@ -370,11 +370,11 @@ export const MiHomeScreen = ({
           </GlowCard>
 
           {/* Middle Column - Movies & Series */}
-          <div className="flex flex-col gap-5 flex-shrink-0">
+          <div className="flex flex-col gap-3 flex-shrink-0">
             {/* Movies Card */}
             <GlowCard
               onClick={() => onNavigate('movies')}
-              className="w-[280px] h-[205px]"
+              className="w-[280px] h-[208px]"
               glowColor="purple"
               delay={0.1}
             >
@@ -401,7 +401,7 @@ export const MiHomeScreen = ({
             {/* Series Card */}
             <GlowCard
               onClick={() => onNavigate('series')}
-              className="w-[280px] h-[205px]"
+              className="w-[280px] h-[208px]"
               glowColor="accent"
               delay={0.2}
             >
@@ -428,10 +428,10 @@ export const MiHomeScreen = ({
             </GlowCard>
           </div>
 
-          {/* Sports Guide Card */}
+          {/* Sports Guide Card - Same height as Live */}
           <GlowCard
             onClick={() => onNavigate('sports')}
-            className="w-[280px] h-[430px] flex-shrink-0"
+            className="w-[320px] h-[430px] flex-shrink-0"
             glowColor="cyan"
             delay={0.3}
           >
