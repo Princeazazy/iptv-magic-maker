@@ -85,88 +85,137 @@ export const MiFullscreenPlayer = ({
     }
 
     const originalUrl = channel.url;
-    const playableUrl = getPlayableUrl(originalUrl);
-    const isHls = originalUrl.includes('.m3u8');
-    const isTs = originalUrl.endsWith('.ts');
 
-    // Make sure volume/mute is applied
-    video.muted = isMuted;
-    video.volume = volume / 100;
+    // IMPORTANT (Web): Many Xtream "live/*.ts" URLs are MPEG-TS and are NOT natively playable in browsers.
+    // If we detect that pattern, try an HLS variant first (same URL but .m3u8), then fall back.
+    const isNative = Capacitor.isNativePlatform();
+    const derivedHlsUrl = !isNative && /\/live\/.+\.ts(\?.*)?$/i.test(originalUrl)
+      ? originalUrl.replace(/\.ts(\?.*)?$/i, '.m3u8$1')
+      : null;
 
-    if (isHls && Hls.isSupported()) {
-      // HLS stream - use HLS.js
-      console.log('Using HLS.js for:', playableUrl);
+    const primaryUrl = derivedHlsUrl ?? originalUrl;
+    const fallbackUrl = derivedHlsUrl ? originalUrl : null;
 
-      const hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: true,
-      });
+    const attemptPlayback = (sourceUrl: string, onFail?: () => void) => {
+      // Clean up any previous HLS instance between attempts
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
 
-      hls.loadSource(playableUrl);
-      hls.attachMedia(video);
+      const playableUrl = getPlayableUrl(sourceUrl);
+      const isHls = sourceUrl.includes('.m3u8');
+      const isTs = sourceUrl.toLowerCase().endsWith('.ts');
 
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        console.log('HLS manifest parsed, starting playback');
+      // Make sure volume/mute is applied
+      video.muted = isMuted;
+      video.volume = volume / 100;
+
+      // Clear any previous src to force a clean load
+      video.removeAttribute('src');
+      video.load();
+
+      // Temporary error handler for this attempt
+      const onVideoErrorOnce = () => {
+        video.removeEventListener('error', onVideoErrorOnce);
+        onFail?.();
+      };
+      video.addEventListener('error', onVideoErrorOnce, { once: true });
+
+      if (isHls && Hls.isSupported()) {
+        console.log('Using HLS.js for:', playableUrl);
+
+        const hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: true,
+        });
+
+        hls.loadSource(playableUrl);
+        hls.attachMedia(video);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          console.log('HLS manifest parsed, starting playback');
+          video.play().catch((e) => {
+            console.error('Playback failed:', e);
+            setIsPlaying(false);
+            if (e?.name === 'NotAllowedError') {
+              setError('Autoplay was blocked — tap Play to start.');
+            } else {
+              onFail?.();
+            }
+          });
+        });
+
+        hls.on(Hls.Events.ERROR, (_event, data) => {
+          console.error('HLS error:', data);
+          if (data.fatal) {
+            const code = data?.response?.code;
+            let msg = `Playback error: ${data.type}${code ? ` (HTTP ${code})` : ''}`;
+            if (code === 401 || code === 403) {
+              msg += ' — stream is blocked or requires authentication.';
+            }
+            if (code === 502) {
+              msg += ' — upstream rejected the request.';
+            }
+            // Only show the message if we have no fallback; otherwise we attempt fallback first.
+            if (!onFail) setError(msg);
+
+            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+              hls.startLoad();
+            } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+              hls.recoverMediaError();
+            }
+
+            onFail?.();
+          }
+        });
+
+        hlsRef.current = hls;
+        return;
+      }
+
+      // Safari (and some WebViews) support HLS natively without HLS.js
+      if (isHls && video.canPlayType('application/vnd.apple.mpegurl')) {
+        console.log('Using native HLS for:', playableUrl);
+        video.src = playableUrl;
         video.play().catch((e) => {
-          console.error('Playback failed:', e);
+          console.error('Native HLS playback failed:', e);
           setIsPlaying(false);
           if (e?.name === 'NotAllowedError') {
             setError('Autoplay was blocked — tap Play to start.');
+          } else {
+            onFail?.();
+            if (!onFail) setError('Stream failed to load.');
           }
         });
-      });
+        return;
+      }
 
-      hls.on(Hls.Events.ERROR, (_event, data) => {
-        console.error('HLS error:', data);
-        if (data.fatal) {
-          const code = data?.response?.code;
-          let msg = `Playback error: ${data.type}${code ? ` (HTTP ${code})` : ''}`;
-          if (code === 401 || code === 403) {
-            msg += ' — stream is blocked or requires authentication.';
-          }
-          if (code === 502) {
-            msg += ' — upstream rejected the request.';
-          }
-          setError(msg);
+      // Direct TS (or other) playback
+      if (isTs) {
+        console.log('Using direct TS playback for:', playableUrl);
+      } else {
+        console.log('Using direct playback for:', playableUrl);
+      }
 
-          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-            hls.startLoad();
-          } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-            hls.recoverMediaError();
-          }
-        }
-      });
-
-      hlsRef.current = hls;
-    } else if (isTs) {
-      // Direct TS stream - play through proxy, browser handles natively
-      console.log('Using direct TS playback for:', playableUrl);
       video.src = playableUrl;
       video.play().catch((e) => {
-        console.error('TS playback failed:', e);
+        console.error('Playback failed:', e);
         setIsPlaying(false);
         if (e?.name === 'NotAllowedError') {
           setError('Autoplay was blocked — tap Play to start.');
         } else {
-          setError('Stream failed to load. The provider may be blocking web access.');
+          onFail?.();
+          if (!onFail) setError('Stream failed to load. The provider may be blocking web access.');
         }
       });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Safari native HLS support
-      console.log('Using native HLS for:', playableUrl);
-      video.src = playableUrl;
-      video.play().catch((e) => {
-        setIsPlaying(false);
-        if (e?.name === 'NotAllowedError') setError('Autoplay was blocked — tap Play to start.');
-      });
+    };
+
+    // Try HLS variant first (web), then fallback to original URL.
+    if (fallbackUrl) {
+      attemptPlayback(primaryUrl, () => attemptPlayback(fallbackUrl));
     } else {
-      // Try direct playback (for mp4, etc.)
-      console.log('Using direct playback for:', playableUrl);
-      video.src = playableUrl;
-      video.play().catch((e) => {
-        setIsPlaying(false);
-        if (e?.name === 'NotAllowedError') setError('Autoplay was blocked — tap Play to start.');
-      });
+      attemptPlayback(primaryUrl);
     }
 
     // If nothing starts within a few seconds, surface a clear message.
