@@ -177,80 +177,10 @@ async function fetchXtreamLive(
       }
     }
 
-    // Fetch ALL live streams at once (like IPTV Smarters does)
-    console.log('Fetching all live streams...');
-    const allStreamsRes = await fetch(
-      `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_live_streams`,
-      { headers: apkHeaders }
-    );
-    
-    if (!allStreamsRes.ok) {
-      console.error('Failed to fetch all live streams:', allStreamsRes.status);
-      return { items: [], total: 0 };
-    }
-
-    if (responseTooLarge(allStreamsRes, XTREAM_MAX_JSON_BYTES)) {
-      console.warn('Live streams response too large, will try category-by-category');
-      return await fetchXtreamLiveByCategory(baseUrl, username, password, categoryMap, limit);
-    }
-
-    const allStreams = await allStreamsRes.json().catch(() => null);
-    if (!Array.isArray(allStreams)) {
-      console.error('Invalid live streams response');
-      return { items: [], total: 0 };
-    }
-
-    console.log(`Received ${allStreams.length} total live streams`);
-
-    const items: any[] = [];
-    const seenStreamIds = new Set<string>();
-    const effectiveLimit = limit > 0 ? limit : allStreams.length;
-
-    for (const stream of allStreams) {
-      if (items.length >= effectiveLimit) break;
-
-      const streamId = String(stream.stream_id);
-      if (seenStreamIds.has(streamId)) continue;
-      seenStreamIds.add(streamId);
-
-      // Get category name from our map, or use the first category_id
-      const catId = String(stream.category_id);
-      const categoryName = categoryMap.get(catId) || 'Uncategorized';
-      
-      // Build stream URL - IPTV Smarters uses .ts for live, but .m3u8 also works
-      const streamUrl = `${baseUrl}/live/${username}/${password}/${stream.stream_id}.m3u8`;
-
-      // Detect sports based on category name (more reliable)
-      const categoryLower = categoryName.toLowerCase();
-      const isSports = categoryLower.includes('sport') ||
-        categoryLower.includes('football') ||
-        categoryLower.includes('bein') ||
-        categoryLower.includes('espn') ||
-        categoryLower.includes('soccer') ||
-        categoryLower.includes('nfl') ||
-        categoryLower.includes('nba');
-
-      items.push({
-        name: stream.name || 'Unknown Channel',
-        url: streamUrl,
-        logo: stream.stream_icon || '',
-        group: categoryName,
-        type: isSports ? 'sports' : 'live',
-        stream_id: streamId,
-        epg_channel_id: stream.epg_channel_id || '',
-        num: stream.num,
-        tv_archive: stream.tv_archive || 0,
-        tv_archive_duration: stream.tv_archive_duration || 0,
-        category_id: catId,
-        // Additional fields from Xtream API
-        added: stream.added,
-        custom_sid: stream.custom_sid || '',
-        direct_source: stream.direct_source || '',
-      });
-    }
-
-    console.log(`Collected ${items.length} live items from ${allStreams.length} total`);
-    return { items, total: allStreams.length };
+    // Memory-safe: avoid fetching the full get_live_streams payload (can be huge)
+    const effectiveLimit = limit > 0 ? limit : 10000;
+    console.log('Fetching live streams by category (memory-safe)...');
+    return await fetchXtreamLiveByCategory(baseUrl, username, password, categoryMap, effectiveLimit);
   } catch (err) {
     console.error('Error fetching Xtream live streams:', err);
     return { items: [], total: 0 };
@@ -346,72 +276,12 @@ async function fetchXtreamMovies(
       }
     }
 
-    // Fetch ALL VOD streams at once
-    console.log('Fetching all VOD streams...');
-    const allVodRes = await fetch(
-      `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_vod_streams`,
-      { headers: apkHeaders }
-    );
-
-    if (!allVodRes.ok) {
-      console.error('Failed to fetch all VOD streams:', allVodRes.status);
-      return { items: [], total: 0 };
-    }
-
-    if (responseTooLarge(allVodRes, XTREAM_MAX_JSON_BYTES)) {
-      console.warn('VOD response too large, falling back to category-by-category');
-      return await fetchXtreamVodByCategory(baseUrl, username, password, categoryMap, limit);
-    }
-
-    const allVod = await allVodRes.json().catch(() => null);
-    if (!Array.isArray(allVod)) {
-      console.error('Invalid VOD response');
-      return { items: [], total: 0 };
-    }
-
-    console.log(`Received ${allVod.length} total VOD items`);
-
-    const items: any[] = [];
-    const seenStreamIds = new Set<string>();
-    const effectiveLimit = limit > 0 ? limit : allVod.length;
-
-    for (const stream of allVod) {
-      if (items.length >= effectiveLimit) break;
-
-      const streamId = String(stream.stream_id);
-      if (seenStreamIds.has(streamId)) continue;
-      seenStreamIds.add(streamId);
-
-      const catId = String(stream.category_id);
-      const categoryName = categoryMap.get(catId) || 'Movies';
-      const ext = stream.container_extension || 'mp4';
-      const movieUrl = `${baseUrl}/movie/${username}/${password}/${stream.stream_id}.${ext}`;
-
-      items.push({
-        name: stream.name || 'Unknown Movie',
-        url: movieUrl,
-        logo: stream.stream_icon || '',
-        group: categoryName,
-        type: 'movies' as const,
-        stream_id: streamId,
-        category_id: catId,
-        rating: stream.rating || '',
-        rating_5based: stream.rating_5based || 0,
-        year: stream.year || stream.releaseDate || '',
-        plot: stream.plot || '',
-        cast: stream.cast || '',
-        director: stream.director || '',
-        genre: stream.genre || '',
-        duration: stream.duration || '',
-        container_extension: ext,
-        backdrop_path: stream.backdrop_path || [],
-        tmdb_id: stream.tmdb_id || '',
-        added: stream.added,
-      });
-    }
-
-    console.log(`Collected ${items.length} movie items from ${allVod.length} total`);
-    return { items, total: allVod.length };
+    // Memory-safe: avoid fetching the full get_vod_streams payload (can be huge)
+    const effectiveLimit = limit > 0 ? limit : 10000;
+    console.log('Fetching VOD streams by category (memory-safe)...');
+    const result = await fetchXtreamVodByCategory(baseUrl, username, password, categoryMap, effectiveLimit);
+    console.log(`Collected ${result.items.length} movie items (limit ${effectiveLimit})`);
+    return result;
   } catch (err) {
     console.error('Error fetching Xtream VOD:', err);
     return { items: [], total: 0 };
@@ -506,72 +376,12 @@ async function fetchXtreamSeries(
       }
     }
 
-    // Fetch ALL series at once
-    console.log('Fetching all series...');
-    const allSeriesRes = await fetch(
-      `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_series`,
-      { headers: apkHeaders }
-    );
-
-    if (!allSeriesRes.ok) {
-      console.error('Failed to fetch all series:', allSeriesRes.status);
-      return { items: [], total: 0 };
-    }
-
-    if (responseTooLarge(allSeriesRes, XTREAM_MAX_JSON_BYTES)) {
-      console.warn('Series response too large, falling back to category-by-category');
-      return await fetchXtreamSeriesByCategory(baseUrl, username, password, categoryMap, limit);
-    }
-
-    const allSeries = await allSeriesRes.json().catch(() => null);
-    if (!Array.isArray(allSeries)) {
-      console.error('Invalid series response');
-      return { items: [], total: 0 };
-    }
-
-    console.log(`Received ${allSeries.length} total series`);
-
-    const items: any[] = [];
-    const seenSeriesIds = new Set<string>();
-    const effectiveLimit = limit > 0 ? limit : allSeries.length;
-
-    for (const stream of allSeries) {
-      if (items.length >= effectiveLimit) break;
-
-      const seriesId = String(stream.series_id);
-      if (seenSeriesIds.has(seriesId)) continue;
-      seenSeriesIds.add(seriesId);
-
-      const catId = String(stream.category_id);
-      const categoryName = categoryMap.get(catId) || 'Series';
-
-      items.push({
-        name: stream.name || 'Unknown Series',
-        url: '', // Series need episode expansion via get_series_info
-        logo: stream.cover || '',
-        group: categoryName,
-        type: 'series' as const,
-        series_id: seriesId,
-        category_id: catId,
-        rating: stream.rating || '',
-        rating_5based: stream.rating_5based || 0,
-        year: stream.releaseDate || stream.year || '',
-        plot: stream.plot || '',
-        cast: stream.cast || '',
-        director: stream.director || '',
-        genre: stream.genre || '',
-        backdrop_path: stream.backdrop_path || [],
-        tmdb_id: stream.tmdb_id || '',
-        last_modified: stream.last_modified || '',
-        // Store base URL and credentials for episode fetching
-        _baseUrl: baseUrl,
-        _username: username,
-        _password: password,
-      });
-    }
-
-    console.log(`Collected ${items.length} series items from ${allSeries.length} total`);
-    return { items, total: allSeries.length };
+    // Memory-safe: avoid fetching the full get_series payload (can be huge)
+    const effectiveLimit = limit > 0 ? limit : 10000;
+    console.log('Fetching series by category (memory-safe)...');
+    const result = await fetchXtreamSeriesByCategory(baseUrl, username, password, categoryMap, effectiveLimit);
+    console.log(`Collected ${result.items.length} series items (limit ${effectiveLimit})`);
+    return result;
   } catch (err) {
     console.error('Error fetching Xtream series:', err);
     return { items: [], total: 0 };
@@ -614,16 +424,26 @@ async function fetchXtreamSeriesByCategory(
 
         items.push({
           name: stream.name || 'Unknown Series',
-          url: '',
+          url: '', // Series need episode expansion via get_series_info
           logo: stream.cover || '',
           group: categoryName,
           type: 'series' as const,
           series_id: seriesId,
           category_id: categoryId,
           rating: stream.rating || '',
+          rating_5based: stream.rating_5based || 0,
           year: stream.releaseDate || stream.year || '',
           plot: stream.plot || '',
+          cast: stream.cast || '',
+          director: stream.director || '',
           genre: stream.genre || '',
+          backdrop_path: stream.backdrop_path || [],
+          tmdb_id: stream.tmdb_id || '',
+          last_modified: stream.last_modified || '',
+          // Store base URL and credentials for episode fetching
+          _baseUrl: baseUrl,
+          _username: username,
+          _password: password,
         });
       }
     } catch (err) {
@@ -736,13 +556,18 @@ serve(async (req) => {
     const xtreamCreds = parseXtreamCredentials(url);
     const isGetM3U = isXtreamGetM3UUrl(url);
 
-    // If preferXtreamApi is enabled, use Xtream JSON APIs with pagination params to keep memory usage low.
-    // This is useful when providers block downloading the M3U from our backend.
-    if (xtreamCreds && preferXtreamApi) {
+    // If preferXtreamApi is enabled, use Xtream JSON APIs when it's safe.
+    // For Xtream get.php M3U URLs, prefer streaming M3U parsing to avoid huge JSON payloads that exceed runtime limits.
+    const canUseXtreamApi = !!xtreamCreds && preferXtreamApi && !isGetM3U;
+
+    if (xtreamCreds && preferXtreamApi && isGetM3U) {
+      console.log('Xtream get.php detected; forcing streaming M3U parsing (override preferXtreamApi)');
+    }
+
+    if (canUseXtreamApi) {
       console.log('preferXtreamApi=true, fetching via Xtream API (IPTV Smarters compatible)...');
       const { baseUrl, username, password } = xtreamCreds;
 
-      // 0 = no limit (fetch ALL like IPTV Smarters)
       const limit = safeMaxReturnPerType;
       console.log(`Using limit: ${limit} per content type (to prevent memory overflow)`);
 
@@ -799,10 +624,54 @@ serve(async (req) => {
       'Kodi/20.2 (Linux; Android 12; SHIELD Android TV Build/SQ3A.220705.003.A1)',
     ];
 
+    const tryXtreamFallback = async (upstreamStatus?: number): Promise<Response | null> => {
+      if (!xtreamCreds) return null;
+
+      console.log('Falling back to Xtream API (category-by-category)...');
+      const { baseUrl, username, password } = xtreamCreds;
+      const limit = safeMaxReturnPerType;
+
+      const [liveResult, moviesResult, seriesResult] = await Promise.all([
+        fetchXtreamLive(baseUrl, username, password, limit),
+        fetchXtreamMovies(baseUrl, username, password, limit),
+        fetchXtreamSeries(baseUrl, username, password, limit),
+      ]);
+
+      const returnedChannels = [
+        ...liveResult.items,
+        ...moviesResult.items,
+        ...seriesResult.items,
+      ];
+
+      if (returnedChannels.length === 0) return null;
+
+      return new Response(
+        JSON.stringify({
+          channels: returnedChannels,
+          totalParsed: returnedChannels.length,
+          totalAvailable: liveResult.total + moviesResult.total + seriesResult.total,
+          isXtream: true,
+          m3u_blocked: true,
+          upstream_status: upstreamStatus ?? null,
+          counts: {
+            live: liveResult.items.length,
+            movies: moviesResult.items.length,
+            series: seriesResult.items.length,
+          },
+          totals: {
+            live: liveResult.total,
+            movies: moviesResult.total,
+            series: seriesResult.total,
+          },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    };
+
     let lastError;
-    for (let attempt = 1; attempt <= 4; attempt++) {
+    for (let attempt = 1; attempt <= 2; attempt++) {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000);
+      const timeoutId = setTimeout(() => controller.abort(), 45000);
 
       try {
         console.log(`Attempt ${attempt} with user agent: ${userAgents[attempt - 1] || userAgents[0]}`);
@@ -830,51 +699,13 @@ serve(async (req) => {
 
         if (!response.ok) {
           console.error(`Failed to fetch m3u on attempt ${attempt}:`, response.status, response.statusText);
-          if (attempt === 4) {
-            // If this looks like an Xtream-style URL, fall back to the Xtream API (paged) instead of giving up.
-            // Many providers block datacenter fetching of get.php M3U, but allow player_api.php.
-            if (xtreamCreds) {
-              console.log(`M3U fetch blocked (${response.status}). Falling back to Xtream API (paged)...`);
-              const { baseUrl, username, password } = xtreamCreds;
-              const limit = safeMaxReturnPerType || 50000;
 
-              const [liveResult, moviesResult, seriesResult] = await Promise.all([
-                fetchXtreamLive(baseUrl, username, password, limit),
-                fetchXtreamMovies(baseUrl, username, password, limit),
-                fetchXtreamSeries(baseUrl, username, password, limit),
-              ]);
+          // If this looks like an Xtream-style URL, fall back quickly to the Xtream API.
+          // Many providers block datacenter fetching of get.php M3U, but allow player_api.php.
+          const fallback = await tryXtreamFallback(response.status);
+          if (fallback) return fallback;
 
-              const returnedChannels = [
-                ...liveResult.items,
-                ...moviesResult.items,
-                ...seriesResult.items,
-              ];
-
-              if (returnedChannels.length > 0) {
-                return new Response(
-                  JSON.stringify({
-                    channels: returnedChannels,
-                    totalParsed: returnedChannels.length,
-                    totalAvailable: liveResult.total + moviesResult.total + seriesResult.total,
-                    isXtream: true,
-                    m3u_blocked: true,
-                    upstream_status: response.status,
-                    counts: {
-                      live: liveResult.items.length,
-                      movies: moviesResult.items.length,
-                      series: seriesResult.items.length,
-                    },
-                    totals: {
-                      live: liveResult.total,
-                      movies: moviesResult.total,
-                      series: seriesResult.total,
-                    },
-                  }),
-                  { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-                );
-              }
-            }
-
+          if (attempt === 2) {
             return new Response(
               JSON.stringify({
                 blocked: true,
@@ -884,7 +715,8 @@ serve(async (req) => {
               { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
             );
           }
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+
+          await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
           continue;
         }
 
@@ -957,9 +789,12 @@ serve(async (req) => {
         clearTimeout(timeoutId);
         console.error(`Fetch error on attempt ${attempt}:`, fetchError);
         lastError = fetchError;
-        
-        if (attempt < 4) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+
+        const fallback = await tryXtreamFallback(undefined);
+        if (fallback) return fallback;
+
+        if (attempt < 2) {
+          await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
         }
       }
     }
