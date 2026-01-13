@@ -135,8 +135,8 @@ function isXtreamGetM3UUrl(url: string): boolean {
 }
 type XtreamFetchResult = { items: any[]; total: number; tooLarge?: boolean };
 
-const XTREAM_MAX_JSON_BYTES = 50 * 1024 * 1024; // 50MB safety cap per API response
-const XTREAM_MAX_ITEMS_PER_RESPONSE = 500000; // Allow much larger responses - match IPTV Smarters behavior
+const XTREAM_MAX_JSON_BYTES = 30 * 1024 * 1024; // 30MB safety cap per API response to prevent memory overflow
+const XTREAM_MAX_ITEMS_PER_RESPONSE = 15000; // Cap items to prevent memory issues in edge functions
 
 function responseTooLarge(res: Response, maxBytes: number): boolean {
   const len = res.headers.get('content-length');
@@ -694,9 +694,9 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const {
       url,
-      maxChannels = 100000, // Increased for IPTV Smarters compatibility
-      maxBytesMB = 100,
-      maxReturnPerType = 0, // 0 = no limit (fetch all like IPTV Smarters)
+      maxChannels = 50000, // Default to 50k total for safety
+      maxBytesMB = 40,
+      maxReturnPerType = 10000, // Default to 10k per type to prevent memory overflow
       preferXtreamApi = true, // Default to Xtream API for better reliability
     } = (body ?? {}) as Record<string, unknown>;
 
@@ -707,16 +707,17 @@ serve(async (req) => {
       );
     }
 
-    // 0 = no limit (fetch all), otherwise cap at 200k per type
+    // Enforce a reasonable limit per type to avoid memory issues (edge functions have ~150MB limit)
+    // Default to 10000 per type if not specified or 0
     const safeMaxReturnPerType =
-      typeof maxReturnPerType === 'number' && Number.isFinite(maxReturnPerType)
-        ? (maxReturnPerType === 0 ? 0 : Math.min(Math.max(maxReturnPerType, 0), 200000))
-        : 0; // Default: no limit
+      typeof maxReturnPerType === 'number' && Number.isFinite(maxReturnPerType) && maxReturnPerType > 0
+        ? Math.min(maxReturnPerType, 15000) // Cap at 15k per type max
+        : 10000; // Default: 10k per type for safety
 
     const rawMaxChannels = typeof maxChannels === 'number' ? maxChannels : Number(maxChannels);
     const safeMaxChannels = Number.isFinite(rawMaxChannels)
-      ? Math.min(Math.max(rawMaxChannels, 0), 1000000) // Cap at 1M total
-      : 200000;
+      ? Math.min(Math.max(rawMaxChannels, 0), 50000) // Cap at 50k total to prevent memory issues
+      : 50000;
 
     // We only return up to maxReturnPerType per type; parsing far beyond that is wasted compute.
     // Allow much larger amounts now
@@ -726,7 +727,7 @@ serve(async (req) => {
 
     const rawMaxBytesMB = typeof maxBytesMB === 'number' ? maxBytesMB : Number(maxBytesMB);
     const safeMaxBytesMB = Number.isFinite(rawMaxBytesMB)
-      ? Math.min(Math.max(rawMaxBytesMB, 1), 40)
+      ? Math.min(Math.max(rawMaxBytesMB, 1), 30) // Cap at 30MB to prevent memory issues
       : 20;
 
     console.log('Processing URL:', url);
@@ -743,7 +744,7 @@ serve(async (req) => {
 
       // 0 = no limit (fetch ALL like IPTV Smarters)
       const limit = safeMaxReturnPerType;
-      console.log(`Using limit: ${limit === 0 ? 'unlimited' : limit} per content type`);
+      console.log(`Using limit: ${limit} per content type (to prevent memory overflow)`);
 
       const [liveResult, moviesResult, seriesResult] = await Promise.all([
         fetchXtreamLive(baseUrl, username, password, limit),
