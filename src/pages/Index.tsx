@@ -8,6 +8,7 @@ import { MiSettingsPage } from '@/components/MiSettingsPage';
 import { MiFullscreenPlayer } from '@/components/MiFullscreenPlayer';
 import { ArabiaIntro } from '@/components/ArabiaIntro';
 import { GlobalSearchModal } from '@/components/GlobalSearchModal';
+import { BackgroundMusic } from '@/components/BackgroundMusic';
 import { useToast } from '@/hooks/use-toast';
 import arabiaLogo from '@/assets/arabia-logo.png';
 
@@ -281,8 +282,17 @@ const Index = () => {
     }
   };
 
+  // Only play background music when not watching content
+  const shouldPlayMusic = !isFullscreen && !currentChannel;
+
   return (
     <>
+      {/* Background music - plays until user starts watching something */}
+      <BackgroundMusic 
+        src="/audio/arabian-ambient.mp3?v=2" 
+        autoPlay={shouldPlayMusic} 
+        defaultVolume={0.25} 
+      />
       {renderScreen()}
       <GlobalSearchModal
         isOpen={isSearchOpen}
