@@ -6,98 +6,101 @@
 
 @layer base {
   :root {
-    /* Core background - deep navy/purple */
-    --background: 232 30% 10%;
-    --foreground: 0 0% 95%;
+    /* Core background - richer deep purple */
+    --background: 260 35% 8%;
+    --foreground: 0 0% 98%;
     
-    /* Card backgrounds */
-    --card: 232 25% 14%;
-    --card-foreground: 0 0% 95%;
+    /* Card backgrounds - more saturated */
+    --card: 260 30% 14%;
+    --card-foreground: 0 0% 98%;
     
     /* Popover */
-    --popover: 232 25% 12%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 260 30% 12%;
+    --popover-foreground: 0 0% 98%;
     
-    /* Primary - Red/Coral for Mi logo and accents */
-    --primary: 0 75% 55%;
+    /* Primary - Vibrant coral red */
+    --primary: 8 90% 58%;
     --primary-foreground: 0 0% 100%;
     
-    /* Secondary - Darker card variant */
-    --secondary: 232 20% 18%;
-    --secondary-foreground: 0 0% 95%;
+    /* Secondary */
+    --secondary: 260 25% 20%;
+    --secondary-foreground: 0 0% 98%;
     
     /* Muted */
-    --muted: 232 20% 20%;
-    --muted-foreground: 220 10% 50%;
+    --muted: 260 20% 22%;
+    --muted-foreground: 220 15% 65%;
     
-    /* Accent - Orange for Mi 'i' and highlights */
-    --accent: 28 100% 55%;
+    /* Accent - Bright orange */
+    --accent: 32 100% 55%;
     --accent-foreground: 0 0% 100%;
     
     /* Destructive */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     
-    /* Borders */
-    --border: 232 20% 20%;
-    --input: 232 20% 16%;
-    --ring: 0 75% 55%;
+    /* Borders - more visible */
+    --border: 260 25% 25%;
+    --input: 260 25% 18%;
+    --ring: 8 90% 58%;
     --radius: 1rem;
     
     /* Sidebar */
-    --sidebar-background: 232 30% 8%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 0 75% 55%;
+    --sidebar-background: 260 35% 6%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 8 90% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 232 25% 14%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 232 20% 18%;
-    --sidebar-ring: 0 75% 55%;
+    --sidebar-accent: 260 30% 16%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 260 25% 22%;
+    --sidebar-ring: 8 90% 58%;
     
-    /* Custom tokens for Mi Player */
-    --mi-bg-dark: 232 30% 10%;
-    --mi-bg-darker: 232 30% 6%;
-    --mi-card: 232 25% 14%;
-    --mi-card-hover: 232 25% 18%;
-    --mi-card-selected: 232 25% 16%;
-    --mi-red: 0 75% 55%;
-    --mi-orange: 28 100% 55%;
-    --mi-text: 0 0% 95%;
-    --mi-text-muted: 220 10% 50%;
-    --mi-badge-hd: 232 20% 25%;
-    --mi-badge-live: 0 75% 55%;
-    --mi-badge-epg: 232 20% 30%;
-    --mi-star: 35 100% 55%;
+    /* Custom tokens for Mi Player - MORE VIBRANT */
+    --mi-bg-dark: 260 35% 8%;
+    --mi-bg-darker: 260 35% 5%;
+    --mi-card: 260 30% 14%;
+    --mi-card-hover: 260 30% 20%;
+    --mi-card-selected: 260 30% 18%;
+    --mi-red: 8 90% 58%;
+    --mi-orange: 32 100% 55%;
+    --mi-purple: 280 80% 60%;
+    --mi-cyan: 190 90% 50%;
+    --mi-green: 160 80% 45%;
+    --mi-text: 0 0% 98%;
+    --mi-text-muted: 220 15% 65%;
+    --mi-badge-hd: 260 25% 30%;
+    --mi-badge-live: 8 90% 58%;
+    --mi-badge-epg: 260 25% 35%;
+    --mi-star: 45 100% 55%;
   }
 
   .dark {
-    --background: 232 30% 10%;
-    --foreground: 0 0% 95%;
-    --card: 232 25% 14%;
-    --card-foreground: 0 0% 95%;
-    --popover: 232 25% 12%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 0 75% 55%;
+    --background: 260 35% 8%;
+    --foreground: 0 0% 98%;
+    --card: 260 30% 14%;
+    --card-foreground: 0 0% 98%;
+    --popover: 260 30% 12%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 8 90% 58%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 232 20% 18%;
-    --secondary-foreground: 0 0% 95%;
-    --muted: 232 20% 20%;
-    --muted-foreground: 220 10% 50%;
-    --accent: 28 100% 55%;
+    --secondary: 260 25% 20%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 260 20% 22%;
+    --muted-foreground: 220 15% 65%;
+    --accent: 32 100% 55%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 232 20% 20%;
-    --input: 232 20% 16%;
-    --ring: 0 75% 55%;
-    --sidebar-background: 232 30% 8%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 0 75% 55%;
+    --border: 260 25% 25%;
+    --input: 260 25% 18%;
+    --ring: 8 90% 58%;
+    --sidebar-background: 260 35% 6%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 8 90% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 232 25% 14%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 232 20% 18%;
-    --sidebar-ring: 0 75% 55%;
+    --sidebar-accent: 260 30% 16%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 260 25% 22%;
+    --sidebar-ring: 8 90% 58%;
   }
 }
 
@@ -122,14 +125,26 @@
     @apply text-accent font-bold;
   }
   
-  /* Card system */
+  /* Card system - ENHANCED with gradients */
   .mi-card {
-    @apply bg-card rounded-2xl border border-border/30 transition-all duration-200;
+    @apply bg-card rounded-2xl border border-border/40 transition-all duration-300;
+    background: linear-gradient(
+      145deg,
+      hsl(var(--card)) 0%,
+      hsl(260 30% 12%) 100%
+    );
   }
   
   .mi-card:hover {
-    background: hsl(var(--mi-card-hover));
-    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.4);
+    background: linear-gradient(
+      145deg,
+      hsl(var(--mi-card-hover)) 0%,
+      hsl(260 30% 16%) 100%
+    );
+    box-shadow: 
+      0 8px 32px hsl(0 0% 0% / 0.4),
+      0 0 0 1px hsl(var(--primary) / 0.1),
+      inset 0 1px 0 hsl(0 0% 100% / 0.05);
   }
 
   .mi-card-selected {
@@ -150,13 +165,14 @@
     @apply bg-secondary ring-2 ring-border;
   }
 
-  /* Badge system */
+  /* Badge system - MORE VIBRANT */
   .mi-badge {
-    @apply px-2.5 py-1 text-xs font-semibold rounded;
+    @apply px-2.5 py-1 text-xs font-bold rounded uppercase tracking-wide;
   }
 
   .mi-badge-live {
-    @apply bg-primary text-primary-foreground;
+    @apply bg-gradient-to-r from-primary to-accent text-white shadow-lg;
+    box-shadow: 0 4px 15px hsl(var(--primary) / 0.4);
   }
 
   .mi-badge-epg {
@@ -164,12 +180,13 @@
   }
 
   .mi-badge-hd {
-    background: hsl(var(--mi-badge-hd));
-    @apply text-muted-foreground px-2 py-0.5 text-xs font-medium rounded;
+    background: linear-gradient(135deg, hsl(280 80% 60%), hsl(320 80% 60%));
+    @apply text-white px-2 py-0.5 text-xs font-bold rounded;
   }
 
   .mi-badge-new {
-    @apply bg-accent text-accent-foreground;
+    @apply bg-gradient-to-r from-accent to-primary text-white;
+    box-shadow: 0 4px 15px hsl(var(--accent) / 0.4);
   }
 
   /* Star favorite */
@@ -210,7 +227,8 @@
 
   /* Selection indicator bar */
   .mi-selection-bar {
-    @apply w-20 h-1.5 bg-foreground rounded-full;
+    @apply w-20 h-1.5 rounded-full;
+    background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
   }
 
   /* Volume slider */
@@ -246,9 +264,14 @@
     @apply bg-card border-l-4 border-l-accent;
   }
 
-  /* Glass effect */
+  /* Glass effect - ENHANCED */
   .mi-glass {
-    @apply bg-card/60 backdrop-blur-md;
+    @apply backdrop-blur-xl;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card) / 0.7) 0%,
+      hsl(var(--card) / 0.4) 100%
+    );
   }
 }
 
