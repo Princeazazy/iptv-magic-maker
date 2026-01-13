@@ -173,6 +173,7 @@ async function fetchXtreamLive(
     }
 
     const items: any[] = [];
+    const seenStreamIds = new Set<string>(); // Prevent duplicates
     let total = 0;
 
     // Iterate categories until we have enough results.
@@ -207,21 +208,38 @@ async function fetchXtreamLive(
 
       for (const stream of streams) {
         if (items.length >= limit) break;
-        // Build stream URL with .ts extension for direct transport stream (more compatible)
-        const streamUrl = `${baseUrl}/live/${username}/${password}/${stream.stream_id}.ts`;
+        
+        const streamId = String(stream.stream_id);
+        // Skip duplicates - same stream can appear in multiple categories
+        if (seenStreamIds.has(streamId)) continue;
+        seenStreamIds.add(streamId);
+        
+        // Build stream URL - prefer m3u8 for HLS compatibility, fallback to ts
+        const streamUrl = `${baseUrl}/live/${username}/${password}/${stream.stream_id}.m3u8`;
+        
+        // Determine if this is a sports channel based on category name only (more reliable)
+        const categoryLower = categoryName.toLowerCase();
+        const isSports = categoryLower.includes('sport') || 
+                         categoryLower.includes('football') ||
+                         categoryLower.includes('bein') ||
+                         categoryLower.includes('espn');
+        
         items.push({
           name: stream.name || 'Unknown Channel',
           url: streamUrl,
           logo: stream.stream_icon || '',
           group: categoryName,
-          type: getContentType(categoryName, stream.name || ''),
-          stream_id: stream.stream_id,
-          epg_channel_id: stream.epg_channel_id,
+          type: isSports ? 'sports' : 'live',
+          stream_id: streamId,
+          epg_channel_id: stream.epg_channel_id || '',
+          num: stream.num, // Channel number from API
+          tv_archive: stream.tv_archive || 0,
+          tv_archive_duration: stream.tv_archive_duration || 0,
         });
       }
     }
 
-    console.log(`Collected ${items.length} live items (limit=${limit})`);
+    console.log(`Collected ${items.length} live items (limit=${limit}), skipped ${total - items.length - (total - seenStreamIds.size)} duplicates`);
     return { items, total };
   } catch (err) {
     console.error('Error fetching Xtream live streams:', err);
@@ -257,6 +275,7 @@ async function fetchXtreamMovies(
     }
 
     const items: any[] = [];
+    const seenStreamIds = new Set<string>(); // Prevent duplicates
     let total = 0;
 
     for (const categoryId of categoryIds) {
@@ -287,6 +306,12 @@ async function fetchXtreamMovies(
 
       for (const stream of streams) {
         if (items.length >= limit) break;
+        
+        const streamId = String(stream.stream_id);
+        // Skip duplicates - same movie can appear in multiple categories
+        if (seenStreamIds.has(streamId)) continue;
+        seenStreamIds.add(streamId);
+        
         // Build movie URL - use container extension from API or default to mp4
         const ext = stream.container_extension || 'mp4';
         const movieUrl = `${baseUrl}/movie/${username}/${password}/${stream.stream_id}.${ext}`;
@@ -295,22 +320,24 @@ async function fetchXtreamMovies(
           url: movieUrl,
           logo: stream.stream_icon || '',
           group: categoryName,
-          type: 'movies' as const,
-          stream_id: stream.stream_id,
-          rating: stream.rating,
-          year: stream.year,
-          plot: stream.plot,
-          cast: stream.cast,
-          director: stream.director,
-          genre: stream.genre,
-          duration: stream.duration,
+          type: 'movies' as const, // Always movies - this comes from VOD API
+          stream_id: streamId,
+          rating: stream.rating || '',
+          rating_5based: stream.rating_5based || 0,
+          year: stream.year || '',
+          plot: stream.plot || '',
+          cast: stream.cast || '',
+          director: stream.director || '',
+          genre: stream.genre || '',
+          duration: stream.duration || '',
           container_extension: ext,
-          backdrop_path: stream.backdrop_path,
+          backdrop_path: stream.backdrop_path || [],
+          tmdb_id: stream.tmdb_id || '',
         });
       }
     }
 
-    console.log(`Collected ${items.length} movie items (limit=${limit})`);
+    console.log(`Collected ${items.length} movie items (limit=${limit}), skipped duplicates`);
     return { items, total };
   } catch (err) {
     console.error('Error fetching Xtream VOD:', err);
@@ -346,6 +373,7 @@ async function fetchXtreamSeries(
     }
 
     const items: any[] = [];
+    const seenSeriesIds = new Set<string>(); // Prevent duplicates
     let total = 0;
 
     for (const categoryId of categoryIds) {
@@ -376,25 +404,34 @@ async function fetchXtreamSeries(
 
       for (const stream of streams) {
         if (items.length >= limit) break;
+        
+        const seriesId = String(stream.series_id);
+        // Skip duplicates - same series can appear in multiple categories
+        if (seenSeriesIds.has(seriesId)) continue;
+        seenSeriesIds.add(seriesId);
+        
         items.push({
           name: stream.name || 'Unknown Series',
           url: '', // Series need episode expansion via get_series_info API
           logo: stream.cover || '',
           group: categoryName,
-          type: 'series' as const,
-          series_id: stream.series_id,
-          rating: stream.rating,
-          year: stream.releaseDate || stream.year,
-          plot: stream.plot,
-          cast: stream.cast,
-          director: stream.director,
-          genre: stream.genre,
-          backdrop_path: stream.backdrop_path,
+          type: 'series' as const, // Always series - this comes from Series API
+          series_id: seriesId,
+          rating: stream.rating || '',
+          rating_5based: stream.rating_5based || 0,
+          year: stream.releaseDate || stream.year || '',
+          plot: stream.plot || '',
+          cast: stream.cast || '',
+          director: stream.director || '',
+          genre: stream.genre || '',
+          backdrop_path: stream.backdrop_path || [],
+          tmdb_id: stream.tmdb_id || '',
+          last_modified: stream.last_modified || '',
         });
       }
     }
 
-    console.log(`Collected ${items.length} series items (limit=${limit})`);
+    console.log(`Collected ${items.length} series items (limit=${limit}), skipped duplicates`);
     return { items, total };
   } catch (err) {
     console.error('Error fetching Xtream series:', err);
