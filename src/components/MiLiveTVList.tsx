@@ -758,8 +758,8 @@ export const MiLiveTVList = ({
                   {/* Channel Info */}
                   <div className="flex-1 flex flex-col justify-between py-1 min-w-0">
                     <div className="min-w-0">
-                      <h3 className="text-foreground font-semibold text-left text-lg truncate">{channel.name}</h3>
-                      <p className="text-muted-foreground text-sm text-left truncate">{channel.group || 'Live TV'}</p>
+                      <h3 className="text-foreground font-semibold text-left text-lg truncate">{channel.name.replace(/_/g, ' ')}</h3>
+                      <p className="text-muted-foreground text-sm text-left truncate">{(channel.group || 'Live TV').replace(/_/g, ' ')}</p>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex gap-1">
