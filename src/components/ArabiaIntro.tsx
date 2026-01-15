@@ -112,34 +112,14 @@ export const ArabiaIntro = ({ onComplete }: ArabiaIntroProps) => {
       onClick={handleTap}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 1.1 }}
-      transition={{ duration: 0.5 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
     >
-      {/* Animated corner accents */}
-      <motion.div
-        className="absolute top-0 left-0 w-32 h-32 border-l-2 border-t-2 border-primary/30"
-        initial={{ opacity: 0, scale: 0.5 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.5, duration: 0.8 }}
-      />
-      <motion.div
-        className="absolute top-0 right-0 w-32 h-32 border-r-2 border-t-2 border-accent/30"
-        initial={{ opacity: 0, scale: 0.5 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.6, duration: 0.8 }}
-      />
-      <motion.div
-        className="absolute bottom-0 left-0 w-32 h-32 border-l-2 border-b-2 border-accent/30"
-        initial={{ opacity: 0, scale: 0.5 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.7, duration: 0.8 }}
-      />
-      <motion.div
-        className="absolute bottom-0 right-0 w-32 h-32 border-r-2 border-b-2 border-primary/30"
-        initial={{ opacity: 0, scale: 0.5 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.8, duration: 0.8 }}
-      />
+      {/* Simple corner accents - no animation */}
+      <div className="absolute top-0 left-0 w-32 h-32 border-l-2 border-t-2 border-primary/30" />
+      <div className="absolute top-0 right-0 w-32 h-32 border-r-2 border-t-2 border-accent/30" />
+      <div className="absolute bottom-0 left-0 w-32 h-32 border-l-2 border-b-2 border-accent/30" />
+      <div className="absolute bottom-0 right-0 w-32 h-32 border-r-2 border-b-2 border-primary/30" />
 
       {/* Subtle gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
@@ -155,7 +135,7 @@ export const ArabiaIntro = ({ onComplete }: ArabiaIntroProps) => {
         <source src={introVideo} type="video/mp4" />
       </video>
 
-      {/* Animated loading state */}
+      {/* Loading state - simple spinner */}
       <AnimatePresence>
         {state === 'loading' && (
           <motion.div 
@@ -164,16 +144,12 @@ export const ArabiaIntro = ({ onComplete }: ArabiaIntroProps) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <motion.div
-              className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-            />
+            <div className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Tap to start overlay */}
+      {/* Tap to start overlay - simplified */}
       <AnimatePresence>
         {state === 'blocked' && (
           <motion.div 
@@ -182,106 +158,33 @@ export const ArabiaIntro = ({ onComplete }: ArabiaIntroProps) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <motion.div
-              className="flex flex-col items-center gap-4"
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <motion.div
-                className="w-20 h-20 rounded-full border-2 border-primary/50 flex items-center justify-center"
-                animate={{ 
-                  scale: [1, 1.1, 1],
-                  borderColor: ['hsl(var(--primary) / 0.5)', 'hsl(var(--accent) / 0.5)', 'hsl(var(--primary) / 0.5)'],
-                }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <motion.div
-                  className="w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-l-12 border-l-primary ml-1"
-                  style={{ borderLeftWidth: 12 }}
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-20 h-20 rounded-full border-2 border-primary/50 flex items-center justify-center">
+                <div
+                  className="w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-l-[12px] border-l-primary ml-1"
                 />
-              </motion.div>
+              </div>
               <p className="text-white/60 text-sm">Tap anywhere to start</p>
-            </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Progress bar at bottom */}
-      <motion.div 
-        className="absolute bottom-0 left-0 right-0 h-1 bg-white/10"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1 }}
-      >
-        <motion.div
-          className="h-full bg-gradient-to-r from-primary to-accent"
+      {/* Progress bar at bottom - simple CSS transition */}
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
+        <div
+          className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-100"
           style={{ width: `${progress}%` }}
-          transition={{ duration: 0.1 }}
         />
-      </motion.div>
+      </div>
 
-      {/* Enhanced skip button */}
-      <motion.button
+      {/* Skip button - simple hover */}
+      <button
         onClick={handleSkip}
-        className="absolute bottom-8 right-8 group"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1, duration: 0.5 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        className="absolute bottom-8 right-8 px-6 py-2.5 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 text-white/80 text-sm font-medium hover:bg-white/10 hover:text-white transition-colors duration-200"
       >
-        <div className="relative px-6 py-2.5 rounded-full overflow-hidden">
-          {/* Animated gradient background */}
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20"
-            animate={{ 
-              backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-            }}
-            transition={{ duration: 3, repeat: Infinity }}
-            style={{ backgroundSize: '200% 200%' }}
-          />
-          
-          {/* Glass effect */}
-          <div className="absolute inset-0 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full" />
-          
-          {/* Hover glow */}
-          <motion.div
-            className="absolute inset-0 bg-primary/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-          />
-          
-          <span className="relative z-10 text-white/80 group-hover:text-white text-sm font-medium transition-colors">
-            Skip
-          </span>
-        </div>
-      </motion.button>
-
-      {/* Floating particles effect */}
-      {state === 'playing' && (
-        <>
-          {[...Array(6)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-primary/40 rounded-full"
-              initial={{ 
-                x: Math.random() * window.innerWidth,
-                y: window.innerHeight + 10,
-                opacity: 0,
-              }}
-              animate={{ 
-                y: -10,
-                opacity: [0, 0.8, 0],
-              }}
-              transition={{
-                duration: 4 + Math.random() * 3,
-                repeat: Infinity,
-                delay: i * 0.8,
-                ease: 'linear',
-              }}
-            />
-          ))}
-        </>
-      )}
+        Skip
+      </button>
     </motion.div>
   );
 };
