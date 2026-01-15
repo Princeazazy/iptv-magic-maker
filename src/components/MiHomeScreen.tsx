@@ -103,31 +103,64 @@ const GlowCard = ({
     green: 'from-green-400 via-emerald-500 to-green-400',
   };
 
-  const glowMap = {
-    primary: 'shadow-primary/30',
-    accent: 'shadow-accent/30',
-    purple: 'shadow-purple-500/30',
-    cyan: 'shadow-cyan-400/30',
-    green: 'shadow-green-400/30',
+  const glowColorMap = {
+    primary: 'hsl(8, 90%, 58%)',
+    accent: 'hsl(32, 100%, 55%)',
+    purple: 'hsl(280, 80%, 60%)',
+    cyan: 'hsl(190, 90%, 50%)',
+    green: 'hsl(140, 70%, 50%)',
+  };
+
+  const borderGradientMap = {
+    primary: 'linear-gradient(135deg, hsl(8, 90%, 58%) 0%, hsl(32, 100%, 55%) 50%, hsl(8, 90%, 58%) 100%)',
+    accent: 'linear-gradient(135deg, hsl(32, 100%, 55%) 0%, hsl(8, 90%, 58%) 50%, hsl(32, 100%, 55%) 100%)',
+    purple: 'linear-gradient(135deg, hsl(280, 80%, 60%) 0%, hsl(320, 80%, 55%) 50%, hsl(280, 80%, 60%) 100%)',
+    cyan: 'linear-gradient(135deg, hsl(190, 90%, 50%) 0%, hsl(220, 80%, 60%) 50%, hsl(190, 90%, 50%) 100%)',
+    green: 'linear-gradient(135deg, hsl(140, 70%, 50%) 0%, hsl(160, 80%, 45%) 50%, hsl(140, 70%, 50%) 100%)',
   };
 
   return (
-    <div
+    <motion.div
       className={`relative group cursor-pointer ${className}`}
       onClick={onClick}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: delay * 0.1, duration: 0.4 }}
+      whileHover={{ scale: 1.03, y: -4 }}
+      whileTap={{ scale: 0.98 }}
     >
-      {/* Card content - simple hover effect via CSS */}
+      {/* Animated glow effect behind card */}
       <div 
-        className="relative h-full rounded-2xl overflow-hidden transition-transform duration-200 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-xl"
+        className="absolute -inset-0.5 rounded-2xl opacity-0 group-hover:opacity-75 blur-xl transition-all duration-500"
+        style={{ background: borderGradientMap[glowColor] }}
+      />
+      
+      {/* Card content with gradient border on hover */}
+      <div 
+        className="relative h-full rounded-2xl overflow-hidden"
         style={{
-          background: 'linear-gradient(145deg, hsl(260 30% 16%) 0%, hsl(260 30% 10%) 100%)',
+          background: 'linear-gradient(145deg, hsl(260 30% 18%) 0%, hsl(260 30% 10%) 100%)',
+          boxShadow: `0 4px 30px -10px ${glowColorMap[glowColor]}40`,
         }}
       >
-        {/* Border highlight on hover */}
-        <div className={`absolute inset-0 rounded-2xl border border-transparent group-hover:border-white/20 transition-colors duration-200`} />
+        {/* Animated border gradient */}
+        <div 
+          className="absolute inset-0 rounded-2xl opacity-30 group-hover:opacity-100 transition-opacity duration-300"
+          style={{ 
+            background: borderGradientMap[glowColor],
+            padding: '1px',
+            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+            WebkitMaskComposite: 'xor',
+            maskComposite: 'exclude',
+          }}
+        />
+        
+        {/* Inner shine effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+        
         {children}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -295,96 +328,128 @@ export const MiHomeScreen = ({
       {/* Main Content Grid */}
       <main className="relative z-20 px-4 md:px-10 pt-4 pb-8 overflow-y-auto" style={{ maxHeight: isMobile ? 'calc(100vh - 100px)' : 'auto' }}>
         {isMobile ? (
-          /* Mobile Layout - Vertical stack */
-          <div className="flex flex-col gap-4 pb-20">
-            {/* Live TV Card */}
-            <GlowCard onClick={() => onNavigate('live')} glowColor="primary">
-              <div className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-4">
-                  <FloatingIcon icon={Tv} color="primary" />
-                  <div>
-                    <h2 className="text-xl font-bold text-foreground">Live TV</h2>
-                    <AnimatedCount value={channelCount} loading={loading} suffix="Channels" color="primary" />
+          /* Mobile Layout - Premium vertical cards */
+          <div className="flex flex-col gap-3 pb-24">
+            {/* Live TV Card - Featured */}
+            <GlowCard onClick={() => onNavigate('live')} glowColor="primary" delay={0}>
+              <div className="relative p-5 overflow-hidden">
+                {/* Decorative background pattern */}
+                <div className="absolute top-0 right-0 w-32 h-32 opacity-10">
+                  <Tv className="w-full h-full" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <FloatingIcon icon={Tv} color="primary" />
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-foreground">Live TV</h2>
+                      <AnimatedCount value={channelCount} loading={loading} suffix="Channels" color="primary" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <span className="px-3 py-1.5 rounded-full bg-gradient-to-r from-primary to-accent text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-primary/30">
+                      Live Now
+                    </span>
                   </div>
                 </div>
-                <span className="px-3 py-1 rounded-full bg-gradient-to-r from-primary to-accent text-white text-xs font-bold uppercase">
-                  Live
-                </span>
               </div>
             </GlowCard>
 
-            {/* Movies Card */}
-            <GlowCard onClick={() => onNavigate('movies')} glowColor="purple">
-              <div className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-4">
+            {/* Movies & Series Row */}
+            <div className="grid grid-cols-2 gap-3">
+              <GlowCard onClick={() => onNavigate('movies')} glowColor="purple" delay={1}>
+                <div className="p-4 h-32 flex flex-col justify-between relative overflow-hidden">
+                  <div className="absolute -bottom-4 -right-4 w-20 h-20 opacity-10">
+                    <Film className="w-full h-full" />
+                  </div>
                   <FloatingIcon icon={Film} color="purple" />
                   <div>
-                    <h3 className="text-xl font-bold text-foreground">Movies</h3>
-                    <AnimatedCount value={movieCount} loading={loading} suffix="Movies" color="purple" />
+                    <h3 className="text-lg font-bold text-foreground">Movies</h3>
+                    <AnimatedCount value={movieCount} loading={loading} suffix="" color="purple" />
                   </div>
                 </div>
-              </div>
-            </GlowCard>
+              </GlowCard>
 
-            {/* Series Card */}
-            <GlowCard onClick={() => onNavigate('series')} glowColor="accent">
-              <div className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-4">
-                  <FloatingIcon icon={Clapperboard} color="accent" />
+              <GlowCard onClick={() => onNavigate('series')} glowColor="accent" delay={2}>
+                <div className="p-4 h-32 flex flex-col justify-between relative overflow-hidden">
+                  <div className="absolute -bottom-4 -right-4 w-20 h-20 opacity-10">
+                    <Clapperboard className="w-full h-full" />
+                  </div>
+                  <div className="flex items-start justify-between">
+                    <FloatingIcon icon={Clapperboard} color="accent" />
+                    <span className="px-2 py-0.5 rounded-full bg-accent/20 text-accent text-[10px] font-bold uppercase">
+                      New
+                    </span>
+                  </div>
                   <div>
-                    <h3 className="text-xl font-bold text-foreground">Series</h3>
-                    <AnimatedCount value={seriesCount} loading={loading} suffix="Series" color="accent" />
+                    <h3 className="text-lg font-bold text-foreground">Series</h3>
+                    <AnimatedCount value={seriesCount} loading={loading} suffix="" color="accent" />
                   </div>
                 </div>
-                <span className="px-3 py-1 rounded-full bg-gradient-to-r from-accent to-primary text-white text-xs font-bold uppercase">
-                  New
-                </span>
-              </div>
-            </GlowCard>
+              </GlowCard>
+            </div>
 
             {/* Sports Card */}
-            <GlowCard onClick={() => onNavigate('sports')} glowColor="cyan">
-              <div className="flex items-center justify-between p-4">
+            <GlowCard onClick={() => onNavigate('sports')} glowColor="cyan" delay={3}>
+              <div className="p-4 flex items-center justify-between relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 opacity-10">
+                  <Trophy className="w-full h-full" />
+                </div>
                 <div className="flex items-center gap-4">
                   <FloatingIcon icon={Trophy} color="cyan" />
                   <div>
-                    <h3 className="text-xl font-bold text-foreground">Sports Guide</h3>
-                    <AnimatedCount value={sportsCount} loading={loading} suffix="in playlist" color="accent" />
+                    <h3 className="text-lg font-bold text-foreground">Sports Guide</h3>
+                    <AnimatedCount value={sportsCount} loading={loading} suffix="Events" color="accent" />
                   </div>
                 </div>
               </div>
             </GlowCard>
 
-            {/* Quick Actions Row */}
-            <div className="grid grid-cols-4 gap-3 mt-2">
+            {/* Quick Actions - Sleek grid */}
+            <div className="grid grid-cols-4 gap-2 mt-1">
               {[
-                { icon: User, label: 'Account', action: () => onNavigate('settings') },
-                { icon: RefreshCw, label: 'Reload', action: onReload },
-                { icon: Clock, label: 'Catch up', action: handleCatchUp, spinning: isRefreshing },
-                { icon: LogOut, label: 'Exit', action: () => {} },
-              ].map(({ icon: Icon, label, action, spinning }) => (
-                <button
+                { icon: User, label: 'Account', action: () => onNavigate('settings'), color: 'from-blue-500/20 to-blue-600/10' },
+                { icon: RefreshCw, label: 'Reload', action: onReload, color: 'from-green-500/20 to-green-600/10' },
+                { icon: Clock, label: 'Catch up', action: handleCatchUp, spinning: isRefreshing, color: 'from-amber-500/20 to-amber-600/10' },
+                { icon: LogOut, label: 'Exit', action: () => {}, color: 'from-red-500/20 to-red-600/10' },
+              ].map(({ icon: Icon, label, action, spinning, color }, idx) => (
+                <motion.button
                   key={label}
                   onClick={action}
-                  className="flex flex-col items-center gap-2 p-3 rounded-xl border border-white/10 backdrop-blur-sm"
-                  style={{ background: 'linear-gradient(145deg, hsl(260 30% 16%) 0%, hsl(260 30% 12%) 100%)' }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 + idx * 0.05 }}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border border-white/10 bg-gradient-to-br ${color} backdrop-blur-sm active:scale-95 transition-transform`}
                   disabled={spinning}
                 >
-                  <Icon className={`w-5 h-5 text-muted-foreground ${spinning ? 'animate-spin' : ''}`} />
-                  <span className="text-xs text-muted-foreground">{label}</span>
-                </button>
+                  <Icon className={`w-5 h-5 text-foreground ${spinning ? 'animate-spin' : ''}`} />
+                  <span className="text-[10px] text-muted-foreground font-medium">{label}</span>
+                </motion.button>
               ))}
             </div>
 
-            {/* Time & Weather */}
-            <div className="text-center mt-4">
-              <div className="flex items-center justify-center gap-2 text-muted-foreground mb-2">
-                <WeatherIcon icon={weather.icon} />
-                <span className="text-lg font-medium">{weather.loading ? '...' : weather.displayTemp}</span>
+            {/* Time & Weather - Compact footer */}
+            <motion.div 
+              className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background/95 to-transparent px-4 py-4 backdrop-blur-sm"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <WeatherIcon icon={weather.icon} />
+                    <span className="text-sm font-medium">{weather.loading ? '...' : weather.displayTemp}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-light text-foreground tracking-tight">{formatTime()}</p>
+                  <p className="text-muted-foreground text-xs">{formatDate()}</p>
+                </div>
               </div>
-              <p className="text-4xl font-light text-foreground tracking-tight">{formatTime()}</p>
-              <p className="text-muted-foreground text-sm mt-1">{formatDate()}</p>
-            </div>
+            </motion.div>
           </div>
         ) : (
           /* Desktop Layout - Horizontal cards */
