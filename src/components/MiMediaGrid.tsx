@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
-import { ChevronLeft, Search, Star, Tv, Film, User, Cloud, Grid, List } from 'lucide-react';
+import { ChevronLeft, Search, Star, Tv, Film, User, Cloud, Sun, CloudRain, Snowflake, CloudLightning, Grid, List } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
 import { useProgressiveList } from '@/hooks/useProgressiveList';
+import { useWeather } from '@/hooks/useWeather';
 import {
   Select,
   SelectContent,
@@ -9,6 +10,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+
+const WeatherIcon = ({ icon }: { icon: string }) => {
+  switch (icon) {
+    case 'sun': return <Sun className="w-5 h-5" />;
+    case 'rain': return <CloudRain className="w-5 h-5" />;
+    case 'snow': return <Snowflake className="w-5 h-5" />;
+    case 'storm': return <CloudLightning className="w-5 h-5" />;
+    default: return <Cloud className="w-5 h-5" />;
+  }
+};
 
 // Get category emoji based on group name
 const getCategoryEmoji = (group: string): string => {
@@ -85,6 +96,7 @@ export const MiMediaGrid = ({
   const [selectedGroup, setSelectedGroup] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('number');
   const [time] = useState(new Date());
+  const weather = useWeather();
 
   const groups = useMemo(() => {
     const groupCounts = new Map<string, number>();
@@ -213,8 +225,8 @@ export const MiMediaGrid = ({
               {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Cloud className="w-5 h-5" />
-              <span>24°</span>
+              <WeatherIcon icon={weather.icon} />
+              <span>{weather.displayTemp}</span>
             </div>
           </div>
 

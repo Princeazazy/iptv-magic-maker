@@ -10,12 +10,27 @@ import {
   SkipForward,
   Star,
   Cloud,
+  Sun,
+  CloudRain,
+  Snowflake,
+  CloudLightning,
   ChevronDown,
   Subtitles,
   Settings,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Channel } from '@/hooks/useIPTV';
+import { useWeather } from '@/hooks/useWeather';
+
+const WeatherIcon = ({ icon }: { icon: string }) => {
+  switch (icon) {
+    case 'sun': return <Sun className="w-5 h-5" />;
+    case 'rain': return <CloudRain className="w-5 h-5" />;
+    case 'snow': return <Snowflake className="w-5 h-5" />;
+    case 'storm': return <CloudLightning className="w-5 h-5" />;
+    default: return <Cloud className="w-5 h-5" />;
+  }
+};
 
 interface MiFullscreenPlayerProps {
   channel: Channel;
@@ -48,6 +63,7 @@ export const MiFullscreenPlayer = ({
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [currentTime, setCurrentTime] = useState('00:00:00');
   const [time, setTime] = useState(new Date());
+  const weather = useWeather();
   const [error, setError] = useState<string | null>(null);
 
   const functionConfig = useMemo(() => {
@@ -437,8 +453,8 @@ export const MiFullscreenPlayer = ({
               {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
             <div className="flex items-center gap-1">
-              <Cloud className="w-5 h-5" />
-              <span>24°</span>
+              <WeatherIcon icon={weather.icon} />
+              <span>{weather.displayTemp}</span>
             </div>
           </div>
         </div>
