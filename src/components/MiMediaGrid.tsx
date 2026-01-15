@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
-import { ChevronLeft, Search, Star, Tv, Film, User, Cloud, Sun, CloudRain, Snowflake, CloudLightning, Grid, List } from 'lucide-react';
+import { ChevronLeft, Search, Star, Tv, Film, User, Cloud, Sun, CloudRain, Snowflake, CloudLightning, Menu, X } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
 import { useProgressiveList } from '@/hooks/useProgressiveList';
 import { useWeather } from '@/hooks/useWeather';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Select,
   SelectContent,
@@ -25,7 +26,6 @@ const WeatherIcon = ({ icon }: { icon: string }) => {
 const getCategoryEmoji = (group: string): string => {
   const groupLower = group.toLowerCase();
   
-  // Streaming services / Series platforms
   if (groupLower.includes('netflix') || group.includes('نتفلكس')) return '🎬';
   if (groupLower.includes('amazon') || groupLower.includes('prime')) return '📦';
   if (groupLower.includes('hulu')) return '📺';
@@ -35,19 +35,11 @@ const getCategoryEmoji = (group: string): string => {
   if (groupLower.includes('starz')) return '⭐';
   if (groupLower.includes('showtime')) return '🎪';
   if (groupLower.includes('power')) return '⚡';
-  
-  // Wrestling / WWE
   if (groupLower.includes('wwe') || group.includes('مصارعة')) return '🤼';
-  
-  // 3D Movies
   if (groupLower.includes('3d')) return '🥽';
-  
-  // Cartoon / Kids
   if (groupLower.includes('cartoon') || group.includes('كرتون')) return '🎨';
-  
-  // Country-based VOD with flags
   if (groupLower.includes('albania')) return '🇦🇱';
-  if (groupLower.includes('germany') || groupLower.includes('german') || groupLower.includes('بالالمانية') || groupLower.includes('ger')) return '🇩🇪';
+  if (groupLower.includes('germany') || groupLower.includes('german') || groupLower.includes('ger')) return '🇩🇪';
   if (groupLower.includes('indian') || group.includes('هندية')) return '🇮🇳';
   if (groupLower.includes('vod fr') || groupLower.includes('france') || groupLower.includes('french')) return '🇫🇷';
   if (groupLower.includes('turk') || group.includes('تركية') || group.includes('تركي')) return '🇹🇷';
@@ -55,18 +47,10 @@ const getCategoryEmoji = (group: string): string => {
   if (groupLower.includes('vod en') || groupLower.includes('subtitles') || groupLower.includes('english')) return '🇬🇧';
   if (groupLower.includes('russia')) return '🇷🇺';
   if (groupLower.includes('egypt') || group.includes('مصر')) return '🇪🇬';
-  
-  // Documentary categories
   if (groupLower.includes('doc') || group.includes('وثائقية') || groupLower.includes('documentary')) return '📽️';
-  
-  // Movie/VOD categories
   if (groupLower.includes('vod') || groupLower.includes('mov') || group.includes('أفلام') || group.includes('افلام')) return '🎬';
-  if (groupLower.match(/\b(19|20)\d{2}\b/)) return '🎬'; // Year patterns
-  
-  // Series
+  if (groupLower.match(/\b(19|20)\d{2}\b/)) return '🎬';
   if (groupLower.includes('series') || group.includes('مسلسل')) return '📺';
-  
-  // Action/Adventure
   if (groupLower.includes('action') || groupLower.includes('adventure')) return '💥';
   if (groupLower.includes('comedy')) return '😂';
   if (groupLower.includes('horror') || groupLower.includes('scary')) return '👻';
@@ -96,7 +80,9 @@ export const MiMediaGrid = ({
   const [selectedGroup, setSelectedGroup] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('number');
   const [time] = useState(new Date());
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const weather = useWeather();
+  const isMobile = useIsMobile();
 
   const groups = useMemo(() => {
     const groupCounts = new Map<string, number>();
@@ -136,18 +122,46 @@ export const MiMediaGrid = ({
 
   const title = category === 'movies' ? 'Movies' : 'Series';
 
+  const handleGroupSelect = (groupName: string) => {
+    setSelectedGroup(groupName);
+    if (isMobile) setSidebarOpen(false);
+  };
+
   return (
-    <div className="h-full flex bg-background">
+    <div className="h-full flex bg-background relative">
+      {/* Mobile Sidebar Overlay */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Left Sidebar - Categories */}
-      <div className="w-64 flex flex-col border-r border-border/30">
+      <div className={`
+        ${isMobile 
+          ? `fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`
+          : 'w-64 flex-shrink-0'
+        } 
+        flex flex-col border-r border-border/30 bg-background
+      `}>
         {/* Back Button & Title */}
-        <div className="flex items-center gap-4 p-5">
-          <button
-            onClick={onBack}
-            className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 active:scale-95 transition-all duration-100"
-          >
-            <ChevronLeft className="w-6 h-6 text-muted-foreground" />
-          </button>
+        <div className="flex items-center gap-4 p-4 md:p-5">
+          {isMobile ? (
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center"
+            >
+              <X className="w-5 h-5 text-muted-foreground" />
+            </button>
+          ) : (
+            <button
+              onClick={onBack}
+              className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 active:scale-95 transition-all duration-100"
+            >
+              <ChevronLeft className="w-6 h-6 text-muted-foreground" />
+            </button>
+          )}
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-semibold text-foreground">{title}</h1>
             <div className="flex gap-0.5">
@@ -162,7 +176,7 @@ export const MiMediaGrid = ({
           {groups.map((group) => (
             <button
               key={group.name}
-              onClick={() => setSelectedGroup(group.name)}
+              onClick={() => handleGroupSelect(group.name)}
               className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors ${
                 selectedGroup === group.name
                   ? 'bg-card ring-2 ring-accent/50'
@@ -187,7 +201,7 @@ export const MiMediaGrid = ({
         {/* Bottom Nav Icons */}
         <div className="p-4 flex flex-col gap-2">
           <button
-            onClick={() => setSelectedGroup('all')}
+            onClick={() => handleGroupSelect('all')}
             className={`mi-nav-item ${selectedGroup === 'all' ? 'active' : ''}`}
           >
             <Tv className="w-6 h-6" />
@@ -202,13 +216,31 @@ export const MiMediaGrid = ({
       </div>
 
       {/* Main Content - Grid */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border/30">
+        <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b border-border/30 gap-2">
+          {/* Mobile Menu Button & Back */}
+          {isMobile && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onBack}
+                className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center"
+              >
+                <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+              </button>
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="w-10 h-10 rounded-full bg-card flex items-center justify-center"
+              >
+                <Menu className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </div>
+          )}
+
           {/* Sort Dropdown */}
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-60 bg-card border-border/50 rounded-xl h-12">
-              <SelectValue placeholder="Order By Number" />
+            <SelectTrigger className={`${isMobile ? 'w-32' : 'w-60'} bg-card border-border/50 rounded-xl h-10 md:h-12`}>
+              <SelectValue placeholder="Order By" />
             </SelectTrigger>
             <SelectContent className="bg-card border-border/50">
               <SelectItem value="number">Order By Number</SelectItem>
@@ -219,34 +251,44 @@ export const MiMediaGrid = ({
             </SelectContent>
           </Select>
 
-          {/* Time & Weather */}
-          <div className="flex items-center gap-6">
-            <span className="text-foreground font-medium text-lg">
-              {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </span>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <WeatherIcon icon={weather.icon} />
-              <span>{weather.displayTemp}</span>
+          {/* Time & Weather - Hidden on mobile */}
+          {!isMobile && (
+            <div className="flex items-center gap-6">
+              <span className="text-foreground font-medium text-lg">
+                {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <WeatherIcon icon={weather.icon} />
+                <span>{weather.displayTemp}</span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Right Actions */}
-          <div className="flex items-center gap-3">
-            <button className="w-11 h-11 rounded-full bg-card flex items-center justify-center hover:bg-card/80 transition-colors">
-              <Search className="w-5 h-5 text-muted-foreground" />
+          <div className="flex items-center gap-2 md:gap-3">
+            <button className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-card flex items-center justify-center hover:bg-card/80 transition-colors">
+              <Search className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
             </button>
-            <button className="w-11 h-11 rounded-full bg-card flex items-center justify-center hover:bg-card/80 transition-colors">
-              <Star className="w-5 h-5 mi-star-filled" />
-            </button>
-            <div className="w-11 h-11 rounded-full bg-primary overflow-hidden flex items-center justify-center ring-2 ring-primary/30">
-              <User className="w-5 h-5 text-primary-foreground" />
-            </div>
+            {!isMobile && (
+              <>
+                <button className="w-11 h-11 rounded-full bg-card flex items-center justify-center hover:bg-card/80 transition-colors">
+                  <Star className="w-5 h-5 mi-star-filled" />
+                </button>
+                <div className="w-11 h-11 rounded-full bg-primary overflow-hidden flex items-center justify-center ring-2 ring-primary/30">
+                  <User className="w-5 h-5 text-primary-foreground" />
+                </div>
+              </>
+            )}
           </div>
         </div>
 
         {/* Media Grid */}
-        <div className="flex-1 overflow-y-auto p-6 mi-scrollbar" onScroll={onScroll}>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 mi-scrollbar" onScroll={onScroll}>
+          <div className={`grid gap-3 md:gap-4 ${
+            isMobile 
+              ? 'grid-cols-2' 
+              : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
+          }`}>
             {visibleItems.map((item) => (
               <div
                 key={item.id}
@@ -261,7 +303,7 @@ export const MiMediaGrid = ({
                 }}
               >
                 {/* Poster */}
-                <div className="mi-poster-card bg-card">
+                <div className="mi-poster-card bg-card aspect-[2/3] relative rounded-lg overflow-hidden">
                   {item.logo || item.backdrop_path?.[0] ? (
                     <img
                       src={item.backdrop_path?.[0] || item.logo}
@@ -274,30 +316,28 @@ export const MiMediaGrid = ({
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-secondary">
-                      <Film className="w-12 h-12 text-muted-foreground" />
+                      <Film className="w-8 h-8 md:w-12 md:h-12 text-muted-foreground" />
                     </div>
                   )}
-
-                  {/* Selection indicator on hover */}
                   <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-transparent group-hover:bg-foreground transition-colors" />
                 </div>
 
                 {/* Title & Info */}
-                <div className="mt-3">
-                  <h3 className="text-foreground font-medium truncate">{item.name}</h3>
-                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <div className="mt-2 md:mt-3">
+                  <h3 className="text-foreground font-medium truncate text-sm md:text-base">{item.name}</h3>
+                  <div className="flex items-center gap-1 md:gap-2 text-muted-foreground text-xs md:text-sm">
                     {item.year && <span>{item.year}</span>}
                     {item.duration && <span>• {item.duration}</span>}
                     {item.rating && <span>• ⭐ {item.rating}</span>}
-                    {!item.year && !item.duration && !item.rating && <span>{item.group}</span>}
+                    {!item.year && !item.duration && !item.rating && <span className="truncate">{item.group}</span>}
                   </div>
                 </div>
 
                 {/* Badges & Favorite */}
-                <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center justify-between mt-1.5 md:mt-2">
                   <div className="flex gap-1">
-                    <span className="mi-badge-hd">HD</span>
-                    {item.genre && <span className="mi-badge-hd">{item.genre.split(',')[0]}</span>}
+                    <span className="mi-badge-hd text-xs">HD</span>
+                    {item.genre && !isMobile && <span className="mi-badge-hd text-xs">{item.genre.split(',')[0]}</span>}
                   </div>
                   <div
                     onClick={(e) => {
