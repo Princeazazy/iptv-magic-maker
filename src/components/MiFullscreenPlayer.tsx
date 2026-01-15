@@ -164,8 +164,20 @@ export const MiFullscreenPlayer = ({
 
         hls.on(Hls.Events.ERROR, (_event, data) => {
           console.error('HLS error:', data);
+
+          const code = data?.response?.code as number | undefined;
+          if (code === 401 || code === 403 || code === 502) {
+            setIsPlaying(false);
+            hls.stopLoad();
+            setError(
+              code === 502
+                ? 'This stream was rejected by the provider (upstream blocked web playback).'
+                : 'This stream is blocked or requires authentication (provider blocks web playback).'
+            );
+            return;
+          }
+
           if (data.fatal) {
-            const code = data?.response?.code;
             let msg = `Playback error: ${data.type}${code ? ` (HTTP ${code})` : ''}`;
             if (code === 401 || code === 403) {
               msg += ' — stream is blocked or requires authentication.';
@@ -173,8 +185,7 @@ export const MiFullscreenPlayer = ({
             if (code === 502) {
               msg += ' — upstream rejected the request.';
             }
-            // Only show the message if we have no fallback; otherwise we attempt fallback first.
-            if (!onFail) setError(msg);
+            setError(msg);
 
             if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
               hls.startLoad();
@@ -413,9 +424,17 @@ export const MiFullscreenPlayer = ({
       {/* Error overlay */}
       {error && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-          <div className="text-center">
-            <p className="text-white text-lg mb-4">{error}</p>
-            <p className="text-white/60 text-sm">Stream may be unavailable or requires authentication</p>
+          <div className="text-center max-w-md px-6">
+            <p className="text-white text-lg mb-3">{error}</p>
+            <p className="text-white/60 text-sm mb-5">
+              If this channel works in mobile apps but not here, your provider is likely blocking web/proxy playback.
+            </p>
+            <button
+              onClick={onClose}
+              className="px-6 py-3 rounded-xl bg-white/10 text-white hover:bg-white/15 transition-colors"
+            >
+              Back
+            </button>
           </div>
         </div>
       )}
