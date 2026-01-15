@@ -20,12 +20,28 @@ const looksLikeUrl = (value: string) => {
 };
 
 // Default IPTV playlist
-const DEFAULT_PLAYLIST_URL = 'http://btkq72.net/get.php?username=Test24445&password=9QSHPVU&type=m3u_plus&output=m3u8';
+// NOTE: This contains provider credentials; prefer setting via Settings → Change Playlist instead of hardcoding.
+const DEFAULT_PLAYLIST_URL = 'http://ui-on.me:2095/get.php?username=Ameer26&password=Azazy&type=m3u_plus&output=ts';
 
 export const getStoredPlaylistUrl = (): string => {
   try {
     const current = localStorage.getItem(PLAYLIST_STORAGE_KEY) || '';
-    if (current.trim()) return current;
+
+    // If a URL is already stored, use it (but migrate away from known broken/old defaults).
+    if (current.trim()) {
+      const trimmed = current.trim();
+      const isOldDemo =
+        trimmed.includes('btkq72.net') ||
+        trimmed.includes('Test24445') ||
+        trimmed.includes('9QSHPVU');
+
+      if (isOldDemo) {
+        localStorage.setItem(PLAYLIST_STORAGE_KEY, DEFAULT_PLAYLIST_URL);
+        return DEFAULT_PLAYLIST_URL;
+      }
+
+      return trimmed;
+    }
 
     // Migrate from legacy keys if present
     for (const key of LEGACY_KEYS) {
