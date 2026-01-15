@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
-import { ChevronLeft, Search, Star, Tv, Cloud, Sun, CloudRain, Snowflake, CloudLightning, User, Grid, List } from 'lucide-react';
+import { ChevronLeft, Search, Star, Tv, Cloud, Sun, CloudRain, Snowflake, CloudLightning, User, Grid, List, Menu, X } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
 import { useProgressiveList } from '@/hooks/useProgressiveList';
 import { useWeather } from '@/hooks/useWeather';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Select,
   SelectContent,
@@ -459,7 +460,9 @@ export const MiLiveTVList = ({
   const [viewMode, setViewMode] = useState<'list' | 'card'>('card');
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [time, setTime] = useState(new Date());
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const weather = useWeather();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -538,19 +541,38 @@ export const MiLiveTVList = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [filteredChannels, focusedIndex, onChannelSelect, ensureIndexVisible]);
 
+  const handleGroupSelect = (groupName: string) => {
+    setSelectedGroup(groupName);
+    if (isMobile) setSidebarOpen(false);
+  };
+
   return (
-    <div className="h-full flex bg-background">
+    <div className="h-full flex bg-background relative">
+      {/* Mobile Sidebar Overlay */}
+      {isMobile && sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* Left Sidebar - Categories with Flags */}
-      <div className="w-72 flex flex-col border-r border-border/30">
+      <div className={`
+        ${isMobile 
+          ? `fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`
+          : 'w-72 flex-shrink-0'
+        } 
+        flex flex-col border-r border-border/30 bg-background
+      `}>
         {/* Back Button & Title */}
-        <div className="flex items-center gap-4 p-5">
-          <button
-            onClick={onBack}
-            className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 active:scale-95 transition-all duration-100"
-          >
-            <ChevronLeft className="w-6 h-6 text-muted-foreground" />
-          </button>
-          <h1 className="text-xl font-semibold text-foreground">
+        <div className="flex items-center gap-4 p-4 md:p-5">
+          {isMobile ? (
+            <button onClick={() => setSidebarOpen(false)} className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
+              <X className="w-5 h-5 text-muted-foreground" />
+            </button>
+          ) : (
+            <button onClick={onBack} className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 active:scale-95 transition-all duration-100">
+              <ChevronLeft className="w-6 h-6 text-muted-foreground" />
+            </button>
+          )}
+          <h1 className="text-lg md:text-xl font-semibold text-foreground">
             {showFavoritesOnly ? (
               <>
                 <span className="font-bold">Favorites</span>{' '}

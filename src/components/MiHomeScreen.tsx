@@ -7,6 +7,7 @@ import { TransparentVideoLogo } from './TransparentVideoLogo';
 import { ParticleBackground } from './ParticleBackground';
 import { AnimatedGradientOrb } from './AnimatedGradientOrb';
 import { useWeather } from '@/hooks/useWeather';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const WeatherIcon = ({ icon }: { icon: string }) => {
   switch (icon) {
@@ -174,6 +175,7 @@ export const MiHomeScreen = ({
   const [time, setTime] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const weather = useWeather();
+  const isMobile = useIsMobile();
 
   const handleCatchUp = async () => {
     if (onCatchUp) {
@@ -201,23 +203,25 @@ export const MiHomeScreen = ({
         className="top-[-200px] left-[-100px]" 
         color1="hsl(8, 90%, 58%)" 
         color2="hsl(32, 100%, 55%)" 
-        size={700}
+        size={isMobile ? 400 : 700}
         delay={0}
       />
       <AnimatedGradientOrb 
         className="bottom-[-300px] right-[-200px]" 
         color1="hsl(280, 80%, 60%)" 
         color2="hsl(320, 80%, 55%)" 
-        size={600}
+        size={isMobile ? 350 : 600}
         delay={2}
       />
-      <AnimatedGradientOrb 
-        className="top-[30%] right-[20%]" 
-        color1="hsl(190, 90%, 50%)" 
-        color2="hsl(220, 80%, 60%)" 
-        size={400}
-        delay={4}
-      />
+      {!isMobile && (
+        <AnimatedGradientOrb 
+          className="top-[30%] right-[20%]" 
+          color1="hsl(190, 90%, 50%)" 
+          color2="hsl(220, 80%, 60%)" 
+          size={400}
+          delay={4}
+        />
+      )}
 
       {/* Background image */}
       <div 
@@ -228,101 +232,94 @@ export const MiHomeScreen = ({
       <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
       
       {/* Header */}
-      <header className="relative z-20 flex items-center justify-between px-10 py-6">
-        <div className="flex items-center gap-2 -ml-6 hover:scale-105 transition-transform duration-200">
-          <TransparentVideoLogo src={logoAnimation} className="h-36 w-48" threshold={35} />
+      <header className="relative z-20 flex items-center justify-between px-4 md:px-10 py-4 md:py-6">
+        <div className="flex items-center gap-2 hover:scale-105 transition-transform duration-200">
+          <TransparentVideoLogo src={logoAnimation} className="h-16 w-24 md:h-36 md:w-48" threshold={35} />
         </div>
 
-        {/* Search Bar */}
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={onVoiceSearchClick}
-            className="w-14 h-14 rounded-full bg-gradient-to-br from-secondary to-secondary/50 border border-white/10 flex items-center justify-center hover:scale-105 transition-transform duration-200"
-          >
-            <Mic className="w-5 h-5 text-muted-foreground" />
-          </button>
-          <button
-            onClick={onSearchClick}
-            className="flex items-center gap-3 bg-gradient-to-r from-secondary/80 to-secondary/40 backdrop-blur-xl rounded-full px-6 py-3.5 min-w-[260px] border border-white/10 hover:scale-[1.02] transition-transform duration-200"
-          >
-            <Search className="w-5 h-5 text-muted-foreground" />
-            <span className="text-muted-foreground">Search anything...</span>
-            <Sparkles className="w-4 h-4 text-accent ml-auto" />
-          </button>
-        </div>
-
-        {/* Right side */}
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => onNavigate('settings')}
-            className="w-14 h-14 rounded-full bg-gradient-to-br from-secondary to-secondary/50 border border-white/10 flex items-center justify-center hover:scale-105 hover:rotate-90 transition-all duration-200"
-          >
-            <Settings className="w-6 h-6 text-muted-foreground" />
-          </button>
-          <div 
-            className="w-14 h-14 rounded-full bg-gradient-to-br from-primary via-accent to-primary overflow-hidden ring-4 ring-primary/30 hover:scale-105 transition-transform duration-200"
-          >
-            <div className="w-full h-full flex items-center justify-center">
-              <span className="text-white text-xl font-bold">A</span>
-            </div>
+        {/* Search Bar - Hidden on mobile, show icon only */}
+        {isMobile ? (
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={onSearchClick}
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-secondary/50 border border-white/10 flex items-center justify-center"
+            >
+              <Search className="w-5 h-5 text-muted-foreground" />
+            </button>
+            <button 
+              onClick={() => onNavigate('settings')}
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-secondary/50 border border-white/10 flex items-center justify-center"
+            >
+              <Settings className="w-5 h-5 text-muted-foreground" />
+            </button>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={onVoiceSearchClick}
+                className="w-14 h-14 rounded-full bg-gradient-to-br from-secondary to-secondary/50 border border-white/10 flex items-center justify-center hover:scale-105 transition-transform duration-200"
+              >
+                <Mic className="w-5 h-5 text-muted-foreground" />
+              </button>
+              <button
+                onClick={onSearchClick}
+                className="flex items-center gap-3 bg-gradient-to-r from-secondary/80 to-secondary/40 backdrop-blur-xl rounded-full px-6 py-3.5 min-w-[260px] border border-white/10 hover:scale-[1.02] transition-transform duration-200"
+              >
+                <Search className="w-5 h-5 text-muted-foreground" />
+                <span className="text-muted-foreground">Search anything...</span>
+                <Sparkles className="w-4 h-4 text-accent ml-auto" />
+              </button>
+            </div>
+
+            {/* Right side */}
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => onNavigate('settings')}
+                className="w-14 h-14 rounded-full bg-gradient-to-br from-secondary to-secondary/50 border border-white/10 flex items-center justify-center hover:scale-105 hover:rotate-90 transition-all duration-200"
+              >
+                <Settings className="w-6 h-6 text-muted-foreground" />
+              </button>
+              <div 
+                className="w-14 h-14 rounded-full bg-gradient-to-br from-primary via-accent to-primary overflow-hidden ring-4 ring-primary/30 hover:scale-105 transition-transform duration-200"
+              >
+                <div className="w-full h-full flex items-center justify-center">
+                  <span className="text-white text-xl font-bold">A</span>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </header>
 
       {/* Main Content Grid */}
-      <main className="relative z-20 px-10 pt-4 pb-8">
-        <div className="flex gap-5 items-stretch justify-center">
-          {/* Live TV - Large Card */}
-          <GlowCard
-            onClick={() => onNavigate('live')}
-            className="w-[320px] h-[430px] flex-shrink-0"
-            glowColor="primary"
-            delay={0}
-          >
-            <div className="relative h-full flex flex-col p-6">
-              {/* Live badge */}
-              <div className="flex items-center justify-end">
-                <span className="px-3 py-1 rounded-full bg-gradient-to-r from-primary to-accent text-white text-xs font-bold uppercase tracking-wider">
+      <main className="relative z-20 px-4 md:px-10 pt-4 pb-8 overflow-y-auto" style={{ maxHeight: isMobile ? 'calc(100vh - 100px)' : 'auto' }}>
+        {isMobile ? (
+          /* Mobile Layout - Vertical stack */
+          <div className="flex flex-col gap-4 pb-20">
+            {/* Live TV Card */}
+            <GlowCard onClick={() => onNavigate('live')} glowColor="primary">
+              <div className="flex items-center justify-between p-4">
+                <div className="flex items-center gap-4">
+                  <FloatingIcon icon={Tv} color="primary" />
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground">Live TV</h2>
+                    <AnimatedCount value={channelCount} loading={loading} suffix="Channels" color="primary" />
+                  </div>
+                </div>
+                <span className="px-3 py-1 rounded-full bg-gradient-to-r from-primary to-accent text-white text-xs font-bold uppercase">
                   Live
                 </span>
               </div>
+            </GlowCard>
 
-              <div className="flex-1 flex items-center justify-center">
-                <FloatingIcon icon={Tv} color="primary" size="large" />
-              </div>
-
-              <div>
-                <h2 className="text-3xl font-bold text-foreground">Live</h2>
-                <div className="mt-2">
-                  <AnimatedCount value={channelCount} loading={loading} suffix="Channels" color="primary" />
-                </div>
-              </div>
-
-              <div className="flex justify-center pt-4">
-                <div className="w-24 h-1.5 rounded-full bg-gradient-to-r from-primary to-accent opacity-80" />
-              </div>
-            </div>
-          </GlowCard>
-
-          {/* Middle Column - Movies & Series - height matches Live/Sports */}
-          <div className="flex flex-col gap-[14px] flex-shrink-0 h-[430px]">
             {/* Movies Card */}
-            <GlowCard
-              onClick={() => onNavigate('movies')}
-              className="w-[280px] flex-1"
-              glowColor="purple"
-              delay={0.1}
-            >
-              <div className="relative h-full p-5 flex flex-col justify-between">
-                <div className="flex items-start justify-between">
+            <GlowCard onClick={() => onNavigate('movies')} glowColor="purple">
+              <div className="flex items-center justify-between p-4">
+                <div className="flex items-center gap-4">
                   <FloatingIcon icon={Film} color="purple" />
-                  <div className="opacity-30">
-                    <Zap className="w-8 h-8 text-purple-400" />
-                  </div>
-                </div>
-                <div className="mt-auto">
-                  <h3 className="text-2xl font-bold text-foreground">Movies</h3>
-                  <div className="mt-1">
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground">Movies</h3>
                     <AnimatedCount value={movieCount} loading={loading} suffix="Movies" color="purple" />
                   </div>
                 </div>
@@ -330,97 +327,220 @@ export const MiHomeScreen = ({
             </GlowCard>
 
             {/* Series Card */}
-            <GlowCard
-              onClick={() => onNavigate('series')}
-              className="w-[280px] flex-1"
-              glowColor="accent"
-              delay={0.2}
-            >
-              <div className="relative h-full p-5 flex flex-col justify-between">
-                <div className="flex items-start justify-between">
+            <GlowCard onClick={() => onNavigate('series')} glowColor="accent">
+              <div className="flex items-center justify-between p-4">
+                <div className="flex items-center gap-4">
                   <FloatingIcon icon={Clapperboard} color="accent" />
-                  <div className="z-10">
-                    <span className="px-3 py-1 rounded-full bg-gradient-to-r from-accent to-primary text-white text-xs font-bold uppercase">
-                      New
-                    </span>
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground">Series</h3>
+                    <AnimatedCount value={seriesCount} loading={loading} suffix="Series" color="accent" />
                   </div>
                 </div>
-                <div className="mt-auto">
-                  <h3 className="text-2xl font-bold text-foreground">Series</h3>
-                  <div className="mt-1">
-                    <AnimatedCount value={seriesCount} loading={loading} suffix="Series" color="accent" />
+                <span className="px-3 py-1 rounded-full bg-gradient-to-r from-accent to-primary text-white text-xs font-bold uppercase">
+                  New
+                </span>
+              </div>
+            </GlowCard>
+
+            {/* Sports Card */}
+            <GlowCard onClick={() => onNavigate('sports')} glowColor="cyan">
+              <div className="flex items-center justify-between p-4">
+                <div className="flex items-center gap-4">
+                  <FloatingIcon icon={Trophy} color="cyan" />
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground">Sports Guide</h3>
+                    <AnimatedCount value={sportsCount} loading={loading} suffix="in playlist" color="accent" />
                   </div>
                 </div>
               </div>
             </GlowCard>
-          </div>
 
-          {/* Sports Guide Card - Same height as Live */}
-          <GlowCard
-            onClick={() => onNavigate('sports')}
-            className="w-[320px] h-[430px] flex-shrink-0"
-            glowColor="cyan"
-            delay={0.3}
-          >
-            <div className="relative h-full">
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
-              
-              <div className="relative flex items-center justify-center h-2/3">
-                <FloatingIcon icon={Trophy} color="cyan" size="large" />
+            {/* Quick Actions Row */}
+            <div className="grid grid-cols-4 gap-3 mt-2">
+              {[
+                { icon: User, label: 'Account', action: () => onNavigate('settings') },
+                { icon: RefreshCw, label: 'Reload', action: onReload },
+                { icon: Clock, label: 'Catch up', action: handleCatchUp, spinning: isRefreshing },
+                { icon: LogOut, label: 'Exit', action: () => {} },
+              ].map(({ icon: Icon, label, action, spinning }) => (
+                <button
+                  key={label}
+                  onClick={action}
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl border border-white/10 backdrop-blur-sm"
+                  style={{ background: 'linear-gradient(145deg, hsl(260 30% 16%) 0%, hsl(260 30% 12%) 100%)' }}
+                  disabled={spinning}
+                >
+                  <Icon className={`w-5 h-5 text-muted-foreground ${spinning ? 'animate-spin' : ''}`} />
+                  <span className="text-xs text-muted-foreground">{label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Time & Weather */}
+            <div className="text-center mt-4">
+              <div className="flex items-center justify-center gap-2 text-muted-foreground mb-2">
+                <WeatherIcon icon={weather.icon} />
+                <span className="text-lg font-medium">{weather.loading ? '...' : weather.displayTemp}</span>
               </div>
-              
-              <div className="relative px-5 pb-8">
-                <h3 className="text-2xl font-bold text-foreground">Sports Guide</h3>
-                <div className="mt-1">
-                  <AnimatedCount value={sportsCount} loading={loading} suffix="in playlist" color="accent" />
+              <p className="text-4xl font-light text-foreground tracking-tight">{formatTime()}</p>
+              <p className="text-muted-foreground text-sm mt-1">{formatDate()}</p>
+            </div>
+          </div>
+        ) : (
+          /* Desktop Layout - Horizontal cards */
+          <div className="flex gap-5 items-stretch justify-center">
+            {/* Live TV - Large Card */}
+            <GlowCard
+              onClick={() => onNavigate('live')}
+              className="w-[320px] h-[430px] flex-shrink-0"
+              glowColor="primary"
+              delay={0}
+            >
+              <div className="relative h-full flex flex-col p-6">
+                {/* Live badge */}
+                <div className="flex items-center justify-end">
+                  <span className="px-3 py-1 rounded-full bg-gradient-to-r from-primary to-accent text-white text-xs font-bold uppercase tracking-wider">
+                    Live
+                  </span>
+                </div>
+
+                <div className="flex-1 flex items-center justify-center">
+                  <FloatingIcon icon={Tv} color="primary" size="large" />
+                </div>
+
+                <div>
+                  <h2 className="text-3xl font-bold text-foreground">Live</h2>
+                  <div className="mt-2">
+                    <AnimatedCount value={channelCount} loading={loading} suffix="Channels" color="primary" />
+                  </div>
+                </div>
+
+                <div className="flex justify-center pt-4">
+                  <div className="w-24 h-1.5 rounded-full bg-gradient-to-r from-primary to-accent opacity-80" />
                 </div>
               </div>
-            </div>
-          </GlowCard>
+            </GlowCard>
 
-          {/* Action buttons - simplified with CSS transitions only */}
-          <div className="flex flex-col gap-3 flex-shrink-0 h-[430px] justify-center">
-            {[
-              { icon: User, label: 'Account', action: () => onNavigate('settings') },
-              { icon: RefreshCw, label: 'Reload', action: onReload },
-              { icon: Clock, label: isRefreshing ? 'Updating...' : 'Catch up', action: handleCatchUp, spinning: isRefreshing },
-              { icon: LogOut, label: 'Exit', action: () => {} },
-            ].map(({ icon: Icon, label, action, spinning }) => (
-              <button
-                key={label}
-                onClick={action}
-                className="relative flex items-center gap-4 px-6 py-4 rounded-xl border border-white/10 backdrop-blur-sm overflow-hidden group hover:scale-105 hover:translate-x-2 transition-all duration-200"
-                style={{
-                  background: 'linear-gradient(145deg, hsl(260 30% 16%) 0%, hsl(260 30% 12%) 100%)',
-                }}
-                disabled={spinning}
+            {/* Middle Column - Movies & Series - height matches Live/Sports */}
+            <div className="flex flex-col gap-[14px] flex-shrink-0 h-[430px]">
+              {/* Movies Card */}
+              <GlowCard
+                onClick={() => onNavigate('movies')}
+                className="w-[280px] flex-1"
+                glowColor="purple"
+                delay={0.1}
               >
-                <Icon className={`w-5 h-5 text-muted-foreground group-hover:text-white transition-colors duration-200 ${spinning ? 'animate-spin' : ''}`} />
-                <span className="text-foreground font-medium group-hover:text-white transition-colors duration-200">{label}</span>
-              </button>
-            ))}
+                <div className="relative h-full p-5 flex flex-col justify-between">
+                  <div className="flex items-start justify-between">
+                    <FloatingIcon icon={Film} color="purple" />
+                    <div className="opacity-30">
+                      <Zap className="w-8 h-8 text-purple-400" />
+                    </div>
+                  </div>
+                  <div className="mt-auto">
+                    <h3 className="text-2xl font-bold text-foreground">Movies</h3>
+                    <div className="mt-1">
+                      <AnimatedCount value={movieCount} loading={loading} suffix="Movies" color="purple" />
+                    </div>
+                  </div>
+                </div>
+              </GlowCard>
+
+              {/* Series Card */}
+              <GlowCard
+                onClick={() => onNavigate('series')}
+                className="w-[280px] flex-1"
+                glowColor="accent"
+                delay={0.2}
+              >
+                <div className="relative h-full p-5 flex flex-col justify-between">
+                  <div className="flex items-start justify-between">
+                    <FloatingIcon icon={Clapperboard} color="accent" />
+                    <div className="z-10">
+                      <span className="px-3 py-1 rounded-full bg-gradient-to-r from-accent to-primary text-white text-xs font-bold uppercase">
+                        New
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-auto">
+                    <h3 className="text-2xl font-bold text-foreground">Series</h3>
+                    <div className="mt-1">
+                      <AnimatedCount value={seriesCount} loading={loading} suffix="Series" color="accent" />
+                    </div>
+                  </div>
+                </div>
+              </GlowCard>
+            </div>
+
+            {/* Sports Guide Card - Same height as Live */}
+            <GlowCard
+              onClick={() => onNavigate('sports')}
+              className="w-[320px] h-[430px] flex-shrink-0"
+              glowColor="cyan"
+              delay={0.3}
+            >
+              <div className="relative h-full">
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
+                
+                <div className="relative flex items-center justify-center h-2/3">
+                  <FloatingIcon icon={Trophy} color="cyan" size="large" />
+                </div>
+                
+                <div className="relative px-5 pb-8">
+                  <h3 className="text-2xl font-bold text-foreground">Sports Guide</h3>
+                  <div className="mt-1">
+                    <AnimatedCount value={sportsCount} loading={loading} suffix="in playlist" color="accent" />
+                  </div>
+                </div>
+              </div>
+            </GlowCard>
+
+            {/* Action buttons - simplified with CSS transitions only */}
+            <div className="flex flex-col gap-3 flex-shrink-0 h-[430px] justify-center">
+              {[
+                { icon: User, label: 'Account', action: () => onNavigate('settings') },
+                { icon: RefreshCw, label: 'Reload', action: onReload },
+                { icon: Clock, label: isRefreshing ? 'Updating...' : 'Catch up', action: handleCatchUp, spinning: isRefreshing },
+                { icon: LogOut, label: 'Exit', action: () => {} },
+              ].map(({ icon: Icon, label, action, spinning }) => (
+                <button
+                  key={label}
+                  onClick={action}
+                  className="relative flex items-center gap-4 px-6 py-4 rounded-xl border border-white/10 backdrop-blur-sm overflow-hidden group hover:scale-105 hover:translate-x-2 transition-all duration-200"
+                  style={{
+                    background: 'linear-gradient(145deg, hsl(260 30% 16%) 0%, hsl(260 30% 12%) 100%)',
+                  }}
+                  disabled={spinning}
+                >
+                  <Icon className={`w-5 h-5 text-muted-foreground group-hover:text-white transition-colors duration-200 ${spinning ? 'animate-spin' : ''}`} />
+                  <span className="text-foreground font-medium group-hover:text-white transition-colors duration-200">{label}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </main>
 
-      {/* Bottom Right - Time & Weather - simplified */}
-      <div className="absolute bottom-8 right-12 text-right z-20">
-        <div className="flex items-center justify-end gap-2 text-muted-foreground mb-2">
-          <button 
-            onClick={() => weather.refresh()} 
-            className="p-1 hover:bg-white/10 rounded-full transition-colors"
-            title="Refresh weather"
-          >
-            <RotateCw className={`w-4 h-4 ${weather.loading ? 'animate-spin' : ''}`} />
-          </button>
-          <WeatherIcon icon={weather.icon} />
-          <span className="text-lg font-medium">{weather.loading ? '...' : weather.displayTemp}</span>
+      {/* Bottom Right - Time & Weather - simplified (desktop only) */}
+      {!isMobile && (
+        <div className="absolute bottom-8 right-12 text-right z-20">
+          <div className="flex items-center justify-end gap-2 text-muted-foreground mb-2">
+            <button 
+              onClick={() => weather.refresh()} 
+              className="p-1 hover:bg-white/10 rounded-full transition-colors"
+              title="Refresh weather"
+            >
+              <RotateCw className={`w-4 h-4 ${weather.loading ? 'animate-spin' : ''}`} />
+            </button>
+            <WeatherIcon icon={weather.icon} />
+            <span className="text-lg font-medium">{weather.loading ? '...' : weather.displayTemp}</span>
+          </div>
+          <p className="text-6xl font-light text-foreground tracking-tight">
+            {formatTime()}
+          </p>
+          <p className="text-muted-foreground text-lg mt-1">{formatDate()}</p>
         </div>
-        <p className="text-6xl font-light text-foreground tracking-tight">
-          {formatTime()}
-        </p>
-        <p className="text-muted-foreground text-lg mt-1">{formatDate()}</p>
-      </div>
+      )}
     </div>
   );
 };
