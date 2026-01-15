@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Tv, Film, Clapperboard, Trophy, User, RefreshCw, Clock, LogOut, Search, Settings, Mic, Cloud, Sun, CloudRain, Snowflake, CloudLightning, Sparkles, Zap } from 'lucide-react';
+import { Tv, Film, Clapperboard, Trophy, User, RefreshCw, Clock, LogOut, Search, Settings, Mic, Cloud, Sun, CloudRain, Snowflake, CloudLightning, Sparkles, Zap, RotateCw } from 'lucide-react';
 import arabianPalaceBg from '@/assets/arabian-palace-bg.png';
 import logoAnimation from '@/assets/logo-animation-new.mp4';
 import { TransparentVideoLogo } from './TransparentVideoLogo';
@@ -406,8 +406,15 @@ export const MiHomeScreen = ({
       {/* Bottom Right - Time & Weather - simplified */}
       <div className="absolute bottom-8 right-12 text-right z-20">
         <div className="flex items-center justify-end gap-2 text-muted-foreground mb-2">
+          <button 
+            onClick={() => weather.refresh()} 
+            className="p-1 hover:bg-white/10 rounded-full transition-colors"
+            title="Refresh weather"
+          >
+            <RotateCw className={`w-4 h-4 ${weather.loading ? 'animate-spin' : ''}`} />
+          </button>
           <WeatherIcon icon={weather.icon} />
-          <span className="text-lg font-medium">{weather.displayTemp}</span>
+          <span className="text-lg font-medium">{weather.loading ? '...' : weather.displayTemp}</span>
         </div>
         <p className="text-6xl font-light text-foreground tracking-tight">
           {formatTime()}
