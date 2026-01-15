@@ -1,6 +1,17 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, Play, Star, Clock, Globe, Calendar, User, Cloud, Search, Film } from 'lucide-react';
+import { ChevronLeft, Play, Star, Clock, Globe, Calendar, User, Cloud, Sun, CloudRain, Snowflake, CloudLightning, Search, Film } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
+import { useWeather } from '@/hooks/useWeather';
+
+const WeatherIcon = ({ icon }: { icon: string }) => {
+  switch (icon) {
+    case 'sun': return <Sun className="w-5 h-5" />;
+    case 'rain': return <CloudRain className="w-5 h-5" />;
+    case 'snow': return <Snowflake className="w-5 h-5" />;
+    case 'storm': return <CloudLightning className="w-5 h-5" />;
+    default: return <Cloud className="w-5 h-5" />;
+  }
+};
 
 interface MiMovieDetailProps {
   item: Channel;
@@ -18,6 +29,7 @@ export const MiMovieDetail = ({
   isFavorite,
 }: MiMovieDetailProps) => {
   const [time, setTime] = useState(new Date());
+  const weather = useWeather();
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -66,8 +78,8 @@ export const MiMovieDetail = ({
             {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
           <div className="flex items-center gap-2 text-muted-foreground">
-            <Cloud className="w-5 h-5" />
-            <span>24°</span>
+            <WeatherIcon icon={weather.icon} />
+            <span>{weather.displayTemp}</span>
           </div>
           <button className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors">
             <Search className="w-5 h-5 text-muted-foreground" />

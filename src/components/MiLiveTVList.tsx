@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
-import { ChevronLeft, Search, Star, Tv, Cloud, User, Grid, List } from 'lucide-react';
+import { ChevronLeft, Search, Star, Tv, Cloud, Sun, CloudRain, Snowflake, CloudLightning, User, Grid, List } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
 import { useProgressiveList } from '@/hooks/useProgressiveList';
+import { useWeather } from '@/hooks/useWeather';
 import {
   Select,
   SelectContent,
@@ -9,6 +10,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+
+const WeatherIcon = ({ icon }: { icon: string }) => {
+  switch (icon) {
+    case 'sun': return <Sun className="w-5 h-5" />;
+    case 'rain': return <CloudRain className="w-5 h-5" />;
+    case 'snow': return <Snowflake className="w-5 h-5" />;
+    case 'storm': return <CloudLightning className="w-5 h-5" />;
+    default: return <Cloud className="w-5 h-5" />;
+  }
+};
 
 interface MiLiveTVListProps {
   channels: Channel[];
@@ -448,6 +459,7 @@ export const MiLiveTVList = ({
   const [viewMode, setViewMode] = useState<'list' | 'card'>('card');
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [time, setTime] = useState(new Date());
+  const weather = useWeather();
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -629,8 +641,8 @@ export const MiLiveTVList = ({
               {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Cloud className="w-5 h-5" />
-              <span>24°</span>
+              <WeatherIcon icon={weather.icon} />
+              <span>{weather.displayTemp}</span>
             </div>
           </div>
 

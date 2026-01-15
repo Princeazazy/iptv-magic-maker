@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, User, Shield, ListVideo, Trash2, Cloud, Check, X } from 'lucide-react';
+import { ChevronLeft, User, Shield, ListVideo, Trash2, Cloud, Sun, CloudRain, Snowflake, CloudLightning, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -10,6 +10,17 @@ import {
 import { Input } from '@/components/ui/input';
 import { getStoredPlaylistUrl, setStoredPlaylistUrl } from '@/lib/playlistStorage';
 import arabiaLogo from '@/assets/arabia-logo-new.png';
+import { useWeather } from '@/hooks/useWeather';
+
+const WeatherIcon = ({ icon }: { icon: string }) => {
+  switch (icon) {
+    case 'sun': return <Sun className="w-5 h-5" />;
+    case 'rain': return <CloudRain className="w-5 h-5" />;
+    case 'snow': return <Snowflake className="w-5 h-5" />;
+    case 'storm': return <CloudLightning className="w-5 h-5" />;
+    default: return <Cloud className="w-5 h-5" />;
+  }
+};
 
 interface MiSettingsPageProps {
   onBack: () => void;
@@ -20,6 +31,7 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
   const [time, setTime] = useState(new Date());
   const [showPlaylistDialog, setShowPlaylistDialog] = useState(false);
   const [playlistUrl, setPlaylistUrl] = useState('');
+  const weather = useWeather();
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -88,8 +100,8 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
             {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
           <div className="flex items-center gap-2 text-muted-foreground">
-            <Cloud className="w-5 h-5" />
-            <span>24°</span>
+            <WeatherIcon icon={weather.icon} />
+            <span>{weather.displayTemp}</span>
           </div>
           {/* Profile */}
           <div className="w-12 h-12 rounded-full bg-primary overflow-hidden ring-2 ring-primary/30">
