@@ -100,56 +100,26 @@ const GlowCard = ({
   };
 
   return (
-    <motion.div
+    <div
       className={`relative group cursor-pointer ${className}`}
       onClick={onClick}
-      initial={{ opacity: 0, y: 30, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.6, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
-      whileHover={{ scale: 1.02, y: -5 }}
-      whileTap={{ scale: 0.98 }}
     >
-      {/* Animated gradient border */}
-      <motion.div
-        className={`absolute -inset-[2px] rounded-2xl bg-gradient-to-r ${gradientMap[glowColor]} opacity-0 group-hover:opacity-100 blur-sm transition-opacity duration-500`}
-        animate={{
-          backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-        }}
-        transition={{ duration: 3, repeat: Infinity }}
-        style={{ backgroundSize: '200% 200%' }}
-      />
-      
-      {/* Card content */}
-      <div className={`relative h-full rounded-2xl overflow-hidden transition-all duration-300 group-hover:shadow-2xl ${glowMap[glowColor]}`}
+      {/* Card content - simple hover effect via CSS */}
+      <div 
+        className="relative h-full rounded-2xl overflow-hidden transition-transform duration-200 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-xl"
         style={{
           background: 'linear-gradient(145deg, hsl(260 30% 16%) 0%, hsl(260 30% 10%) 100%)',
         }}
       >
-        {/* Inner glow on hover */}
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-          style={{
-            background: `radial-gradient(circle at 50% 0%, hsl(var(--${glowColor}) / 0.15) 0%, transparent 60%)`,
-          }}
-        />
-        
-        {/* Shine effect on hover */}
-        <motion.div
-          className="absolute inset-0 opacity-0 group-hover:opacity-100"
-          initial={{ x: '-100%' }}
-          whileHover={{ x: '100%' }}
-          transition={{ duration: 0.8 }}
-          style={{
-            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
-          }}
-        />
-        
+        {/* Border highlight on hover */}
+        <div className={`absolute inset-0 rounded-2xl border border-transparent group-hover:border-white/20 transition-colors duration-200`} />
         {children}
       </div>
-    </motion.div>
+    </div>
   );
 };
 
-// Floating icon with glow
+// Static icon with simple styling - no animations
 const FloatingIcon = ({ 
   icon: Icon, 
   color = 'primary',
@@ -170,19 +140,11 @@ const FloatingIcon = ({
   const iconSize = size === 'large' ? 'w-10 h-10' : 'w-7 h-7';
 
   return (
-    <motion.div
+    <div
       className={`${sizeClass} rounded-2xl bg-gradient-to-br ${colorMap[color]} backdrop-blur-sm border border-white/10 flex items-center justify-center`}
-      animate={{ 
-        y: [0, -8, 0],
-        rotate: [0, 2, 0, -2, 0],
-      }}
-      transition={{
-        y: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
-        rotate: { duration: 5, repeat: Infinity, ease: 'easeInOut' },
-      }}
     >
       <Icon className={`${iconSize}`} />
-    </motion.div>
+    </div>
   );
 };
 
@@ -254,73 +216,46 @@ export const MiHomeScreen = ({
       <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
       
       {/* Header */}
-      <motion.header 
-        className="relative z-20 flex items-center justify-between px-10 py-6"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <motion.div 
-          className="flex items-center gap-2 -ml-6"
-          whileHover={{ scale: 1.05 }}
-        >
+      <header className="relative z-20 flex items-center justify-between px-10 py-6">
+        <div className="flex items-center gap-2 -ml-6 hover:scale-105 transition-transform duration-200">
           <TransparentVideoLogo src={logoAnimation} className="h-36 w-48" threshold={35} />
-        </motion.div>
+        </div>
 
         {/* Search Bar */}
-        <motion.div 
-          className="flex items-center gap-3"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          <motion.button 
+        <div className="flex items-center gap-3">
+          <button 
             onClick={onVoiceSearchClick}
-            className="w-14 h-14 rounded-full bg-gradient-to-br from-secondary to-secondary/50 border border-white/10 flex items-center justify-center"
-            whileHover={{ scale: 1.1, boxShadow: '0 0 30px hsl(var(--primary) / 0.3)' }}
-            whileTap={{ scale: 0.95 }}
+            className="w-14 h-14 rounded-full bg-gradient-to-br from-secondary to-secondary/50 border border-white/10 flex items-center justify-center hover:scale-105 transition-transform duration-200"
           >
             <Mic className="w-5 h-5 text-muted-foreground" />
-          </motion.button>
-          <motion.button
+          </button>
+          <button
             onClick={onSearchClick}
-            className="flex items-center gap-3 bg-gradient-to-r from-secondary/80 to-secondary/40 backdrop-blur-xl rounded-full px-6 py-3.5 min-w-[260px] border border-white/10"
-            whileHover={{ scale: 1.02, boxShadow: '0 8px 32px hsl(var(--primary) / 0.2)' }}
-            whileTap={{ scale: 0.98 }}
+            className="flex items-center gap-3 bg-gradient-to-r from-secondary/80 to-secondary/40 backdrop-blur-xl rounded-full px-6 py-3.5 min-w-[260px] border border-white/10 hover:scale-[1.02] transition-transform duration-200"
           >
             <Search className="w-5 h-5 text-muted-foreground" />
             <span className="text-muted-foreground">Search anything...</span>
             <Sparkles className="w-4 h-4 text-accent ml-auto" />
-          </motion.button>
-        </motion.div>
+          </button>
+        </div>
 
         {/* Right side */}
-        <motion.div 
-          className="flex items-center gap-4"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          <motion.button 
+        <div className="flex items-center gap-4">
+          <button 
             onClick={() => onNavigate('settings')}
-            className="w-14 h-14 rounded-full bg-gradient-to-br from-secondary to-secondary/50 border border-white/10 flex items-center justify-center"
-            whileHover={{ scale: 1.1, rotate: 90 }}
-            whileTap={{ scale: 0.95 }}
+            className="w-14 h-14 rounded-full bg-gradient-to-br from-secondary to-secondary/50 border border-white/10 flex items-center justify-center hover:scale-105 hover:rotate-90 transition-all duration-200"
           >
             <Settings className="w-6 h-6 text-muted-foreground" />
-          </motion.button>
-          <motion.div 
-            className="w-14 h-14 rounded-full bg-gradient-to-br from-primary via-accent to-primary overflow-hidden ring-4 ring-primary/30"
-            whileHover={{ scale: 1.1 }}
-            animate={{ boxShadow: ['0 0 20px hsl(var(--primary) / 0.4)', '0 0 40px hsl(var(--primary) / 0.6)', '0 0 20px hsl(var(--primary) / 0.4)'] }}
-            transition={{ duration: 2, repeat: Infinity }}
+          </button>
+          <div 
+            className="w-14 h-14 rounded-full bg-gradient-to-br from-primary via-accent to-primary overflow-hidden ring-4 ring-primary/30 hover:scale-105 transition-transform duration-200"
           >
             <div className="w-full h-full flex items-center justify-center">
               <span className="text-white text-xl font-bold">A</span>
             </div>
-          </motion.div>
-        </motion.div>
-      </motion.header>
+          </div>
+        </div>
+      </header>
 
       {/* Main Content Grid */}
       <main className="relative z-20 px-10 pt-4 pb-8">
@@ -339,13 +274,9 @@ export const MiHomeScreen = ({
                   <RefreshCw className="w-4 h-4" />
                   <span>Last Update : 2 day ago</span>
                 </div>
-                <motion.span 
-                  className="px-3 py-1 rounded-full bg-gradient-to-r from-primary to-accent text-white text-xs font-bold uppercase tracking-wider"
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
+                <span className="px-3 py-1 rounded-full bg-gradient-to-r from-primary to-accent text-white text-xs font-bold uppercase tracking-wider">
                   Live
-                </motion.span>
+                </span>
               </div>
 
               <div className="flex-1 flex items-center justify-center">
@@ -360,11 +291,7 @@ export const MiHomeScreen = ({
               </div>
 
               <div className="flex justify-center pt-4">
-                <motion.div 
-                  className="w-24 h-1.5 rounded-full bg-gradient-to-r from-primary to-accent"
-                  animate={{ scaleX: [0.7, 1, 0.7], opacity: [0.7, 1, 0.7] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
+                <div className="w-24 h-1.5 rounded-full bg-gradient-to-r from-primary to-accent opacity-80" />
               </div>
             </div>
           </GlowCard>
@@ -381,13 +308,9 @@ export const MiHomeScreen = ({
               <div className="relative h-full p-5 flex flex-col justify-between">
                 <div className="flex items-start justify-between">
                   <FloatingIcon icon={Film} color="purple" />
-                  <motion.div 
-                    className="opacity-30"
-                    animate={{ rotate: [0, 360] }}
-                    transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                  >
+                  <div className="opacity-30">
                     <Zap className="w-8 h-8 text-purple-400" />
-                  </motion.div>
+                  </div>
                 </div>
                 <div className="mt-auto">
                   <h3 className="text-2xl font-bold text-foreground">Movies</h3>
@@ -408,15 +331,11 @@ export const MiHomeScreen = ({
               <div className="relative h-full p-5 flex flex-col justify-between">
                 <div className="flex items-start justify-between">
                   <FloatingIcon icon={Clapperboard} color="accent" />
-                  <motion.div 
-                    className="z-10"
-                    animate={{ rotate: [-5, 5, -5], scale: [1, 1.1, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
+                  <div className="z-10">
                     <span className="px-3 py-1 rounded-full bg-gradient-to-r from-accent to-primary text-white text-xs font-bold uppercase">
                       New
                     </span>
-                  </motion.div>
+                  </div>
                 </div>
                 <div className="mt-auto">
                   <h3 className="text-2xl font-bold text-foreground">Series</h3>
@@ -451,96 +370,42 @@ export const MiHomeScreen = ({
             </div>
           </GlowCard>
 
-          {/* Action buttons */}
+          {/* Action buttons - simplified with CSS transitions only */}
           <div className="flex flex-col gap-3 flex-shrink-0 h-[430px] justify-center">
             {[
-              { icon: User, label: 'Account', action: () => onNavigate('settings'), color: 'primary', gradient: 'from-primary to-accent' },
-              { icon: RefreshCw, label: 'Reload', action: onReload, color: 'cyan', gradient: 'from-cyan-400 to-blue-500' },
-              { icon: Clock, label: isRefreshing ? 'Updating...' : 'Catch up', action: handleCatchUp, color: 'accent', gradient: 'from-accent to-primary', spinning: isRefreshing },
-              { icon: LogOut, label: 'Exit', action: () => {}, color: 'purple', gradient: 'from-purple-500 to-pink-500' },
-            ].map(({ icon: Icon, label, action, color, gradient, spinning }, index) => (
-              <motion.button
+              { icon: User, label: 'Account', action: () => onNavigate('settings') },
+              { icon: RefreshCw, label: 'Reload', action: onReload },
+              { icon: Clock, label: isRefreshing ? 'Updating...' : 'Catch up', action: handleCatchUp, spinning: isRefreshing },
+              { icon: LogOut, label: 'Exit', action: () => {} },
+            ].map(({ icon: Icon, label, action, spinning }) => (
+              <button
                 key={label}
                 onClick={action}
-                className="relative flex items-center gap-4 px-6 py-4 rounded-xl border border-white/10 backdrop-blur-sm overflow-hidden group"
+                className="relative flex items-center gap-4 px-6 py-4 rounded-xl border border-white/10 backdrop-blur-sm overflow-hidden group hover:scale-105 hover:translate-x-2 transition-all duration-200"
                 style={{
                   background: 'linear-gradient(145deg, hsl(260 30% 16%) 0%, hsl(260 30% 12%) 100%)',
                 }}
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + index * 0.1 }}
-                whileHover={{ 
-                  scale: 1.05, 
-                  x: 8,
-                  transition: { duration: 0.2 }
-                }}
-                whileTap={{ scale: 0.95 }}
                 disabled={spinning}
               >
-                {/* Hover glow background */}
-                <motion.div 
-                  className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-0 group-hover:opacity-20 transition-opacity duration-300`}
-                />
-                {/* Animated border on hover */}
-                <motion.div 
-                  className={`absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-white/20 transition-all duration-300`}
-                />
-                {/* Icon with color on hover */}
-                <motion.div
-                  className="relative z-10"
-                  whileHover={{ rotate: spinning ? 0 : 15, scale: 1.2 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Icon className={`w-5 h-5 text-muted-foreground group-hover:text-white transition-colors duration-300 ${spinning ? 'animate-spin' : ''}`} />
-                </motion.div>
-                <span className="relative z-10 text-foreground font-medium group-hover:text-white transition-colors duration-300">{label}</span>
-                {/* Shine effect */}
-                <motion.div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100"
-                  initial={{ x: '-100%' }}
-                  whileHover={{ x: '100%' }}
-                  transition={{ duration: 0.6 }}
-                  style={{
-                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)',
-                  }}
-                />
-              </motion.button>
+                <Icon className={`w-5 h-5 text-muted-foreground group-hover:text-white transition-colors duration-200 ${spinning ? 'animate-spin' : ''}`} />
+                <span className="text-foreground font-medium group-hover:text-white transition-colors duration-200">{label}</span>
+              </button>
             ))}
           </div>
         </div>
       </main>
 
-      {/* Bottom Right - Time & Weather */}
-      <motion.div 
-        className="absolute bottom-8 right-12 text-right z-20"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.8 }}
-      >
+      {/* Bottom Right - Time & Weather - simplified */}
+      <div className="absolute bottom-8 right-12 text-right z-20">
         <div className="flex items-center justify-end gap-2 text-muted-foreground mb-2">
-          <motion.div
-            animate={{ rotate: [0, 360] }}
-            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-          >
-            <Cloud className="w-6 h-6" />
-          </motion.div>
+          <Cloud className="w-6 h-6" />
           <span className="text-lg font-medium">24°</span>
         </div>
-        <motion.p 
-          className="text-6xl font-light text-foreground tracking-tight"
-          animate={{ 
-            textShadow: [
-              '0 0 20px hsl(var(--primary) / 0.3)', 
-              '0 0 40px hsl(var(--primary) / 0.5)', 
-              '0 0 20px hsl(var(--primary) / 0.3)'
-            ] 
-          }}
-          transition={{ duration: 3, repeat: Infinity }}
-        >
+        <p className="text-6xl font-light text-foreground tracking-tight">
           {formatTime()}
-        </motion.p>
+        </p>
         <p className="text-muted-foreground text-lg mt-1">{formatDate()}</p>
-      </motion.div>
+      </div>
     </div>
   );
 };
