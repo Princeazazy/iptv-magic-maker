@@ -1,0 +1,44 @@
+{
+  "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  "appId": "app.arabiatv.desktop",
+  "productName": "ArabiaTV",
+  "directories": {
+    "output": "electron-dist",
+    "buildResources": "electron/resources"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "!electron/resources"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      },
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "public/favicon.ico"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "installerIcon": "public/favicon.ico",
+    "uninstallerIcon": "public/favicon.ico",
+    "installerHeaderIcon": "public/favicon.ico"
+  },
+  "mac": {
+    "target": ["dmg", "zip"],
+    "icon": "public/favicon.ico",
+    "category": "public.app-category.entertainment"
+  },
+  "linux": {
+    "target": ["AppImage", "deb"],
+    "icon": "public/favicon.ico",
+    "category": "AudioVideo"
+  }
+}
