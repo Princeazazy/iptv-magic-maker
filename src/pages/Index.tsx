@@ -71,6 +71,15 @@ const Index = () => {
     }
   }, []);
 
+  // Auto-refresh channels every 30 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refresh();
+    }, 30 * 60 * 1000); // 30 minutes in milliseconds
+
+    return () => clearInterval(interval);
+  }, [refresh]);
+
   useEffect(() => {
     localStorage.setItem('iptv-favorites', JSON.stringify(Array.from(favorites)));
   }, [favorites]);

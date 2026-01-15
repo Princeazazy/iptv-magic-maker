@@ -269,11 +269,7 @@ export const MiHomeScreen = ({
           >
             <div className="relative h-full flex flex-col p-6">
               {/* Live badge */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <RefreshCw className="w-4 h-4" />
-                  <span>Last Update : 2 day ago</span>
-                </div>
+              <div className="flex items-center justify-end">
                 <span className="px-3 py-1 rounded-full bg-gradient-to-r from-primary to-accent text-white text-xs font-bold uppercase tracking-wider">
                   Live
                 </span>
