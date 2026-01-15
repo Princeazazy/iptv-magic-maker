@@ -19,6 +19,36 @@ const getWeatherIcon = (code: number): WeatherData['icon'] => {
   return 'cloud';
 };
 
+// Get location from IP (no permission required)
+const getLocationFromIP = async (): Promise<{ latitude: number; longitude: number; countryCode: string }> => {
+  const response = await fetch('https://ipapi.co/json/');
+  if (!response.ok) throw new Error('IP geolocation failed');
+  const data = await response.json();
+  return {
+    latitude: data.latitude,
+    longitude: data.longitude,
+    countryCode: data.country_code,
+  };
+};
+
+// Get location from browser geolocation API
+const getBrowserLocation = (): Promise<{ latitude: number; longitude: number }> => {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation not supported'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => resolve({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      }),
+      reject,
+      { timeout: 3000, maximumAge: 600000 }
+    );
+  });
+};
+
 export const useWeather = () => {
   const [weather, setWeather] = useState<WeatherData>({
     temp: 0,
@@ -30,22 +60,30 @@ export const useWeather = () => {
   useEffect(() => {
     const fetchWeather = async () => {
       try {
-        // Get user's location
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            timeout: 5000,
-            maximumAge: 600000, // 10 min cache
-          });
-        });
+        let latitude: number;
+        let longitude: number;
+        let isUSA = false;
 
-        const { latitude, longitude } = position.coords;
-
-        // Determine if USA (rough bounding box)
-        const isUSA =
-          latitude >= 24.396308 &&
-          latitude <= 49.384358 &&
-          longitude >= -125.0 &&
-          longitude <= -66.93457;
+        // Try browser geolocation first, fall back to IP-based
+        try {
+          const browserLoc = await getBrowserLocation();
+          latitude = browserLoc.latitude;
+          longitude = browserLoc.longitude;
+          
+          // Determine if USA based on coordinates
+          isUSA =
+            latitude >= 24.396308 &&
+            latitude <= 49.384358 &&
+            longitude >= -125.0 &&
+            longitude <= -66.93457;
+        } catch {
+          // Browser geolocation failed, use IP-based
+          console.log('Browser geolocation unavailable, using IP-based location');
+          const ipLoc = await getLocationFromIP();
+          latitude = ipLoc.latitude;
+          longitude = ipLoc.longitude;
+          isUSA = ipLoc.countryCode === 'US';
+        }
 
         const unit = isUSA ? 'F' : 'C';
         const tempUnit = isUSA ? 'fahrenheit' : 'celsius';
@@ -61,6 +99,8 @@ export const useWeather = () => {
         const temp = Math.round(data.current.temperature_2m);
         const weatherCode = data.current.weather_code;
 
+        console.log(`Weather fetched: ${temp}°${unit} at ${latitude}, ${longitude}`);
+
         setWeather({
           temp,
           unit,
@@ -68,11 +108,11 @@ export const useWeather = () => {
           loading: false,
         });
       } catch (error) {
-        console.log('Weather fetch failed, using defaults:', error);
+        console.error('Weather fetch failed:', error);
         // Fallback to a reasonable default
         setWeather({
-          temp: 24,
-          unit: 'C',
+          temp: 45,
+          unit: 'F',
           icon: 'cloud',
           loading: false,
         });
