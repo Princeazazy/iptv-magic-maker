@@ -24,13 +24,51 @@ export interface Channel {
   backdrop_path?: string[];
 }
 
+const CACHE_KEY = 'iptv-channels-cache';
+const CACHE_TIMESTAMP_KEY = 'iptv-channels-cache-timestamp';
+const CACHE_MAX_AGE_MS = 30 * 60 * 1000; // 30 minutes
+
+// Load cached channels from localStorage
+const getCachedChannels = (): Channel[] | null => {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+    if (cached && timestamp) {
+      const age = Date.now() - parseInt(timestamp, 10);
+      // Return cache even if stale - we'll refresh in background
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        console.log(`Loaded ${parsed.length} channels from cache (age: ${Math.round(age / 1000)}s)`);
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to load cached channels:', e);
+  }
+  return null;
+};
+
+// Save channels to localStorage
+const setCachedChannels = (channels: Channel[]) => {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(channels));
+    localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+    console.log(`Cached ${channels.length} channels`);
+  } catch (e) {
+    console.warn('Failed to cache channels:', e);
+  }
+};
+
 export const useIPTV = (m3uUrl?: string) => {
   // Use provided URL or fall back to stored URL
   const effectiveUrl = m3uUrl || getStoredPlaylistUrl();
   
   console.log('useIPTV hook called with URL:', effectiveUrl);
-  const [channels, setChannels] = useState<Channel[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  // Initialize with cached channels immediately
+  const [channels, setChannels] = useState<Channel[]>(() => getCachedChannels() || []);
+  // If we have cached channels, don't show loading state
+  const [loading, setLoading] = useState(() => !getCachedChannels());
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -152,10 +190,12 @@ export const useIPTV = (m3uUrl?: string) => {
           group: 'Kids'
         }
       ];
-      setChannels(demoChannels.map((ch) => ({
+      const mappedChannels = demoChannels.map((ch) => ({
         ...ch,
-        type: ch.group?.toLowerCase().includes('sport') ? 'sports' : 'live',
-      })));
+        type: (ch.group?.toLowerCase().includes('sport') ? 'sports' : 'live') as Channel['type'],
+      }));
+      setChannels(mappedChannels);
+      setCachedChannels(mappedChannels);
       setError(null);
       setLoading(false);
     };
@@ -265,6 +305,7 @@ export const useIPTV = (m3uUrl?: string) => {
             });
             
             setChannels(parsedChannels);
+            setCachedChannels(parsedChannels);
             setError(null);
             setLoading(false);
             return;
@@ -282,6 +323,7 @@ export const useIPTV = (m3uUrl?: string) => {
         }
         
         setChannels(parsedChannels);
+        setCachedChannels(parsedChannels);
         setError(null);
       } catch (err: any) {
         console.error('Error fetching M3U:', err);
