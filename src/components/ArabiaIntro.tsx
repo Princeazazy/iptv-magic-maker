@@ -17,14 +17,45 @@ export const ArabiaIntro = ({ onComplete }: ArabiaIntroProps) => {
     const video = videoRef.current;
     if (!video) return;
 
+    let stuckTimer: number | null = null;
+    const clearStuckTimer = () => {
+      if (stuckTimer) {
+        clearTimeout(stuckTimer);
+        stuckTimer = null;
+      }
+    };
+
+    const hardTimeout = window.setTimeout(() => {
+      // Absolute failsafe: never block app startup on the intro.
+      onComplete();
+    }, 12000);
+
     const handleEnded = () => onComplete();
-    const handleError = () => setState('error');
-    const handleCanPlay = () => {
+    const handleError = () => {
+      setState('error');
+      // If the asset/codecs fail in a browser, move on.
+      onComplete();
+    };
+
+    const tryPlay = () => {
+      clearStuckTimer();
       video
         .play()
-        .then(() => setState('playing'))
+        .then(() => {
+          setState('playing');
+          // If the video doesn't advance, it's effectively "stuck" (common in some browsers/codecs).
+          stuckTimer = window.setTimeout(() => {
+            if (video.currentTime < 0.1) onComplete();
+          }, 2500);
+        })
         .catch(() => setState('blocked'));
     };
+
+    const handleCanPlay = () => {
+      // Attempt autoplay once the browser reports it can play.
+      tryPlay();
+    };
+
     const handleTimeUpdate = () => {
       if (video.duration) {
         setProgress((video.currentTime / video.duration) * 100);
@@ -36,22 +67,19 @@ export const ArabiaIntro = ({ onComplete }: ArabiaIntroProps) => {
     video.addEventListener('canplay', handleCanPlay);
     video.addEventListener('timeupdate', handleTimeUpdate);
 
+    // Kick off load + best-effort autoplay.
     video.load();
-
-    const watchdog = setTimeout(() => {
-      if (state !== 'playing') {
-        onComplete();
-      }
-    }, 5000);
+    tryPlay();
 
     return () => {
-      clearTimeout(watchdog);
+      clearTimeout(hardTimeout);
+      clearStuckTimer();
       video.removeEventListener('ended', handleEnded);
       video.removeEventListener('error', handleError);
       video.removeEventListener('canplay', handleCanPlay);
       video.removeEventListener('timeupdate', handleTimeUpdate);
     };
-  }, [onComplete, state]);
+  }, [onComplete]);
 
   const handleUserStart = async () => {
     const video = videoRef.current;
