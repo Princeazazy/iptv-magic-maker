@@ -118,6 +118,7 @@ serve(async (req) => {
     const baseHeaders: Record<string, string> = {
       // Mimic Android APK requests to bypass web restrictions
       "Referer": referer,
+      "Origin": `${upstream.protocol}//${upstream.host}`,
       "Accept": "*/*",
       "Accept-Encoding": "identity",
       "Connection": "keep-alive",
@@ -125,6 +126,10 @@ serve(async (req) => {
       "Pragma": "no-cache",
       "X-Requested-With": "com.nst.iptvsmarterstvbox",
       "Accept-Language": "en-US,en;q=0.9",
+      // Some providers check these
+      "Sec-Fetch-Dest": "empty",
+      "Sec-Fetch-Mode": "cors", 
+      "Sec-Fetch-Site": "same-origin",
     };
     if (range) baseHeaders["Range"] = range;
 
