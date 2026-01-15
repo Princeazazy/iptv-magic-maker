@@ -756,10 +756,10 @@ export const MiLiveTVList = ({
                   </div>
 
                   {/* Channel Info */}
-                  <div className="flex-1 flex flex-col justify-between py-1">
-                    <div>
-                      <h3 className="text-foreground font-semibold text-left text-lg">{channel.name}</h3>
-                      <p className="text-muted-foreground text-sm text-left">+8.2M Views</p>
+                  <div className="flex-1 flex flex-col justify-between py-1 min-w-0">
+                    <div className="min-w-0">
+                      <h3 className="text-foreground font-semibold text-left text-lg truncate">{channel.name}</h3>
+                      <p className="text-muted-foreground text-sm text-left truncate">{channel.group || 'Live TV'}</p>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex gap-1">
