@@ -57,68 +57,69 @@ export const useWeather = () => {
     loading: true,
   });
 
-  useEffect(() => {
-    const fetchWeather = async () => {
+  const fetchWeather = async () => {
+    setWeather(prev => ({ ...prev, loading: true }));
+    try {
+      let latitude: number;
+      let longitude: number;
+      let isUSA = false;
+
+      // Try browser geolocation first, fall back to IP-based
       try {
-        let latitude: number;
-        let longitude: number;
-        let isUSA = false;
-
-        // Try browser geolocation first, fall back to IP-based
-        try {
-          const browserLoc = await getBrowserLocation();
-          latitude = browserLoc.latitude;
-          longitude = browserLoc.longitude;
-          
-          // Determine if USA based on coordinates
-          isUSA =
-            latitude >= 24.396308 &&
-            latitude <= 49.384358 &&
-            longitude >= -125.0 &&
-            longitude <= -66.93457;
-        } catch {
-          // Browser geolocation failed, use IP-based
-          console.log('Browser geolocation unavailable, using IP-based location');
-          const ipLoc = await getLocationFromIP();
-          latitude = ipLoc.latitude;
-          longitude = ipLoc.longitude;
-          isUSA = ipLoc.countryCode === 'US';
-        }
-
-        const unit = isUSA ? 'F' : 'C';
-        const tempUnit = isUSA ? 'fahrenheit' : 'celsius';
-
-        // Fetch weather from Open-Meteo (free, no API key needed)
-        const response = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&temperature_unit=${tempUnit}`
-        );
-
-        if (!response.ok) throw new Error('Weather fetch failed');
-
-        const data = await response.json();
-        const temp = Math.round(data.current.temperature_2m);
-        const weatherCode = data.current.weather_code;
-
-        console.log(`Weather fetched: ${temp}°${unit} at ${latitude}, ${longitude}`);
-
-        setWeather({
-          temp,
-          unit,
-          icon: getWeatherIcon(weatherCode),
-          loading: false,
-        });
-      } catch (error) {
-        console.error('Weather fetch failed:', error);
-        // Fallback to a reasonable default
-        setWeather({
-          temp: 45,
-          unit: 'F',
-          icon: 'cloud',
-          loading: false,
-        });
+        const browserLoc = await getBrowserLocation();
+        latitude = browserLoc.latitude;
+        longitude = browserLoc.longitude;
+        
+        // Determine if USA based on coordinates
+        isUSA =
+          latitude >= 24.396308 &&
+          latitude <= 49.384358 &&
+          longitude >= -125.0 &&
+          longitude <= -66.93457;
+      } catch {
+        // Browser geolocation failed, use IP-based
+        console.log('Browser geolocation unavailable, using IP-based location');
+        const ipLoc = await getLocationFromIP();
+        latitude = ipLoc.latitude;
+        longitude = ipLoc.longitude;
+        isUSA = ipLoc.countryCode === 'US';
       }
-    };
 
+      const unit = isUSA ? 'F' : 'C';
+      const tempUnit = isUSA ? 'fahrenheit' : 'celsius';
+
+      // Fetch weather from Open-Meteo (free, no API key needed)
+      const response = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&temperature_unit=${tempUnit}`
+      );
+
+      if (!response.ok) throw new Error('Weather fetch failed');
+
+      const data = await response.json();
+      const temp = Math.round(data.current.temperature_2m);
+      const weatherCode = data.current.weather_code;
+
+      console.log(`Weather fetched: ${temp}°${unit} at ${latitude}, ${longitude}`);
+
+      setWeather({
+        temp,
+        unit,
+        icon: getWeatherIcon(weatherCode),
+        loading: false,
+      });
+    } catch (error) {
+      console.error('Weather fetch failed:', error);
+      // Fallback to a reasonable default
+      setWeather({
+        temp: 45,
+        unit: 'F',
+        icon: 'cloud',
+        loading: false,
+      });
+    }
+  };
+
+  useEffect(() => {
     fetchWeather();
 
     // Refresh weather every 30 minutes
@@ -128,5 +129,5 @@ export const useWeather = () => {
 
   const displayTemp = `${weather.temp}°${weather.unit === 'F' ? 'F' : ''}`;
 
-  return { ...weather, displayTemp };
+  return { ...weather, displayTemp, refresh: fetchWeather };
 };
