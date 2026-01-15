@@ -589,7 +589,7 @@ export const MiLiveTVList = ({
           {groups.slice(0, 15).map((group) => (
             <button
               key={group.name}
-              onClick={() => setSelectedGroup(group.name)}
+              onClick={() => handleGroupSelect(group.name)}
               className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors ${
                 selectedGroup === group.name
                   ? 'bg-card text-foreground'
@@ -622,7 +622,7 @@ export const MiLiveTVList = ({
         {/* Bottom Nav Icons */}
         <div className="p-4 flex flex-col gap-2">
           <button
-            onClick={() => setSelectedGroup('all')}
+            onClick={() => handleGroupSelect('all')}
             className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
               selectedGroup === 'all' && !showFavoritesOnly ? 'bg-secondary text-foreground' : 'bg-card text-muted-foreground hover:bg-card/80'
             }`}
@@ -641,13 +641,31 @@ export const MiLiveTVList = ({
       </div>
 
       {/* Main Content - Channel List */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border/30">
+        <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b border-border/30 gap-2">
+          {/* Mobile Menu Button & Back */}
+          {isMobile && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onBack}
+                className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center"
+              >
+                <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+              </button>
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="w-10 h-10 rounded-full bg-card flex items-center justify-center"
+              >
+                <Menu className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </div>
+          )}
+
           {/* Sort Dropdown */}
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-60 bg-card border-border/50 rounded-xl h-12">
-              <SelectValue placeholder="Order By Number" />
+            <SelectTrigger className={`${isMobile ? 'w-32' : 'w-60'} bg-card border-border/50 rounded-xl h-10 md:h-12`}>
+              <SelectValue placeholder="Order By" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="number">Order By Number</SelectItem>
@@ -657,43 +675,49 @@ export const MiLiveTVList = ({
             </SelectContent>
           </Select>
 
-          {/* Time & Weather */}
-          <div className="flex items-center gap-6">
-            <span className="text-foreground font-medium text-lg">
-              {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </span>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <WeatherIcon icon={weather.icon} />
-              <span>{weather.displayTemp}</span>
+          {/* Time & Weather - Hidden on mobile */}
+          {!isMobile && (
+            <div className="flex items-center gap-6">
+              <span className="text-foreground font-medium text-lg">
+                {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <WeatherIcon icon={weather.icon} />
+                <span>{weather.displayTemp}</span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Right Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             <button 
               onClick={() => setViewMode(viewMode === 'list' ? 'card' : 'list')}
-              className="w-11 h-11 rounded-full bg-card flex items-center justify-center hover:bg-card/80 transition-colors"
+              className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-card flex items-center justify-center hover:bg-card/80 transition-colors"
             >
-              {viewMode === 'list' ? <Grid className="w-5 h-5 text-muted-foreground" /> : <List className="w-5 h-5 text-muted-foreground" />}
+              {viewMode === 'list' ? <Grid className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground" /> : <List className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />}
             </button>
-            <button className="w-11 h-11 rounded-full bg-card flex items-center justify-center hover:bg-card/80 transition-colors">
-              <Search className="w-5 h-5 text-muted-foreground" />
-            </button>
-            <div className="w-11 h-11 rounded-full bg-primary overflow-hidden flex items-center justify-center ring-2 ring-primary/30">
-              <User className="w-5 h-5 text-primary-foreground" />
-            </div>
+            {!isMobile && (
+              <>
+                <button className="w-11 h-11 rounded-full bg-card flex items-center justify-center hover:bg-card/80 transition-colors">
+                  <Search className="w-5 h-5 text-muted-foreground" />
+                </button>
+                <div className="w-11 h-11 rounded-full bg-primary overflow-hidden flex items-center justify-center ring-2 ring-primary/30">
+                  <User className="w-5 h-5 text-primary-foreground" />
+                </div>
+              </>
+            )}
           </div>
         </div>
 
         {/* Channel List */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 mi-scrollbar" onScroll={onScroll}>
+        <div className={`flex-1 overflow-y-auto ${isMobile ? 'px-3 py-3' : 'px-6 py-4'} mi-scrollbar`} onScroll={onScroll}>
           {viewMode === 'list' ? (
             <div className="space-y-2">
               {visibleChannels.map((channel, index) => (
                 <button
                   key={channel.id}
                   onClick={() => onChannelSelect(channel)}
-                  className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${
+                  className={`w-full flex items-center gap-3 md:gap-4 px-3 md:px-4 py-2.5 md:py-3 rounded-xl transition-all ${
                     currentChannel?.id === channel.id
                       ? 'mi-card-selected'
                       : focusedIndex === index
@@ -702,7 +726,7 @@ export const MiLiveTVList = ({
                   }`}
                 >
                   {/* Channel Logo */}
-                  <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
                     {channel.logo ? (
                       <img
                         src={channel.logo}
@@ -714,21 +738,21 @@ export const MiLiveTVList = ({
                         }}
                       />
                     ) : (
-                      <span className="text-lg font-bold text-muted-foreground">
+                      <span className="text-base md:text-lg font-bold text-muted-foreground">
                         {channel.name.charAt(0)}
                       </span>
                     )}
                   </div>
 
                   {/* Channel Name */}
-                  <span className="flex-1 text-left text-foreground font-medium truncate">
+                  <span className="flex-1 text-left text-foreground font-medium truncate text-sm md:text-base">
                     {channel.name}
                   </span>
 
-                  {/* Badges */}
-                  <div className="flex items-center gap-2">
-                    <span className="mi-badge mi-badge-secondary">HD</span>
-                    <span className="mi-badge mi-badge-secondary">EPG</span>
+                  {/* Badges - Simplified on mobile */}
+                  <div className="flex items-center gap-1.5 md:gap-2">
+                    {!isMobile && <span className="mi-badge mi-badge-secondary text-xs">HD</span>}
+                    {!isMobile && <span className="mi-badge mi-badge-secondary text-xs">EPG</span>}
                     <span
                       role="button"
                       tabIndex={0}
@@ -745,7 +769,7 @@ export const MiLiveTVList = ({
                       className="cursor-pointer"
                     >
                       <Star
-                        className={`w-5 h-5 ${
+                        className={`w-4 h-4 md:w-5 md:h-5 ${
                           favorites.has(channel.id)
                             ? 'fill-accent text-accent'
                             : 'text-muted-foreground hover:text-foreground'
@@ -757,7 +781,7 @@ export const MiLiveTVList = ({
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className={`grid gap-3 md:gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
               {visibleChannels.map((channel, index) => (
                 <button
                   key={channel.id}
@@ -845,8 +869,8 @@ export const MiLiveTVList = ({
         </div>
       </div>
 
-      {/* Video Preview Panel (when channel selected) */}
-      {currentChannel && (
+      {/* Video Preview Panel (when channel selected) - Desktop only */}
+      {!isMobile && currentChannel && (
         <div className="w-[420px] relative bg-gradient-to-l from-background/95 to-transparent">
           <div 
             className="absolute inset-0 bg-cover bg-center opacity-30"
