@@ -430,26 +430,6 @@ export const MiHomeScreen = ({
               ))}
             </div>
 
-            {/* Time & Weather - Compact footer */}
-            <motion.div 
-              className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background/95 to-transparent px-4 py-4 backdrop-blur-sm"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <WeatherIcon icon={weather.icon} />
-                    <span className="text-sm font-medium">{weather.loading ? '...' : weather.displayTemp}</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-light text-foreground tracking-tight">{formatTime()}</p>
-                  <p className="text-muted-foreground text-xs">{formatDate()}</p>
-                </div>
-              </div>
-            </motion.div>
           </div>
         ) : (
           /* Desktop Layout - Horizontal cards */
