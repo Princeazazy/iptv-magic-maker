@@ -61,10 +61,24 @@ export const MiFullscreenPlayer = ({
 
   const [showControls, setShowControls] = useState(true);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [currentTime, setCurrentTime] = useState('00:00:00');
   const [time, setTime] = useState(new Date());
   const weather = useWeather();
   const [error, setError] = useState<string | null>(null);
+  
+  // VOD-specific states (movies/series)
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  
+  const isVOD = channel.group?.toLowerCase().includes('movie') || 
+                channel.group?.toLowerCase().includes('series') || 
+                channel.group?.toLowerCase().includes('vod') ||
+                channel.url?.includes('/movie/') ||
+                channel.url?.includes('/series/');
+  
+  const speedOptions = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 
   const functionConfig = useMemo(() => {
     // Avoid import.meta.env usage; reuse values from the already-configured client.
@@ -339,7 +353,7 @@ export const MiFullscreenPlayer = ({
     }
   }, [hasUserInteracted]);
 
-  // Update playback time
+  // Update playback time and progress
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -352,11 +366,58 @@ export const MiFullscreenPlayer = ({
       setCurrentTime(
         `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
       );
+      
+      // Update progress for VOD
+      if (video.duration && isFinite(video.duration)) {
+        setProgress((video.currentTime / video.duration) * 100);
+        setDuration(video.duration);
+      }
     };
 
     video.addEventListener('timeupdate', updateTime);
     return () => video.removeEventListener('timeupdate', updateTime);
   }, []);
+  
+  // Format duration helper
+  const formatTime = (seconds: number) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    if (hrs > 0) {
+      return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+  
+  // Seek to position
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    const video = videoRef.current;
+    if (!video || !duration) return;
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    const newTime = percentage * duration;
+    
+    video.currentTime = newTime;
+    setProgress(percentage * 100);
+  };
+  
+  // Skip forward/backward for VOD
+  const skipTime = (seconds: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.currentTime = Math.max(0, Math.min(video.currentTime + seconds, duration || video.duration || 0));
+  };
+  
+  // Change playback speed
+  const changeSpeed = (speed: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.playbackRate = speed;
+    setPlaybackSpeed(speed);
+    setShowSpeedMenu(false);
+  };
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -536,41 +597,121 @@ export const MiFullscreenPlayer = ({
           <p className="text-white/60 text-2xl font-light mt-4">{currentTime}</p>
         </div>
 
+        {/* VOD Progress Bar (Movies/Series only) */}
+        {isVOD && duration > 0 && (
+          <div className="absolute bottom-24 left-6 right-6">
+            {/* Time labels */}
+            <div className="flex justify-between text-white/80 text-sm mb-2">
+              <span>{formatTime(videoRef.current?.currentTime || 0)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
+            
+            {/* Progress bar */}
+            <div 
+              className="h-2 bg-white/20 rounded-full cursor-pointer group relative"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSeek(e);
+              }}
+            >
+              {/* Buffered progress (optional visual) */}
+              <div 
+                className="absolute h-full bg-white/30 rounded-full"
+                style={{ width: `${progress}%` }}
+              />
+              {/* Current progress */}
+              <div 
+                className="absolute h-full bg-primary rounded-full transition-all"
+                style={{ width: `${progress}%` }}
+              />
+              {/* Scrubber handle */}
+              <div 
+                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ left: `calc(${progress}% - 8px)` }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Bottom Center - Playback Controls */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-6">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onPrevious?.();
-            }}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
-          >
-            <SkipBack className="w-8 h-8 text-white" />
-          </button>
+          {isVOD ? (
+            <>
+              {/* -10s button for VOD */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  skipTime(-10);
+                }}
+                className="p-2 rounded-full hover:bg-white/10 transition-colors flex flex-col items-center"
+              >
+                <SkipBack className="w-7 h-7 text-white" />
+                <span className="text-white/70 text-xs">10s</span>
+              </button>
+              
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  togglePlay();
+                }}
+                className="w-16 h-16 rounded-full bg-white/20 hover:bg-white/30 transition-colors flex items-center justify-center backdrop-blur-sm"
+              >
+                {isPlaying ? (
+                  <Pause className="w-8 h-8 text-white" />
+                ) : (
+                  <Play className="w-8 h-8 text-white ml-1" />
+                )}
+              </button>
+              
+              {/* +10s button for VOD */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  skipTime(10);
+                }}
+                className="p-2 rounded-full hover:bg-white/10 transition-colors flex flex-col items-center"
+              >
+                <SkipForward className="w-7 h-7 text-white" />
+                <span className="text-white/70 text-xs">10s</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPrevious?.();
+                }}
+                className="p-2 rounded-full hover:bg-white/10 transition-colors"
+              >
+                <SkipBack className="w-8 h-8 text-white" />
+              </button>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              togglePlay();
-            }}
-            className="w-16 h-16 rounded-full bg-white/20 hover:bg-white/30 transition-colors flex items-center justify-center backdrop-blur-sm"
-          >
-            {isPlaying ? (
-              <Pause className="w-8 h-8 text-white" />
-            ) : (
-              <Play className="w-8 h-8 text-white ml-1" />
-            )}
-          </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  togglePlay();
+                }}
+                className="w-16 h-16 rounded-full bg-white/20 hover:bg-white/30 transition-colors flex items-center justify-center backdrop-blur-sm"
+              >
+                {isPlaying ? (
+                  <Pause className="w-8 h-8 text-white" />
+                ) : (
+                  <Play className="w-8 h-8 text-white ml-1" />
+                )}
+              </button>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onNext?.();
-            }}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
-          >
-            <SkipForward className="w-8 h-8 text-white" />
-          </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onNext?.();
+                }}
+                className="p-2 rounded-full hover:bg-white/10 transition-colors"
+              >
+                <SkipForward className="w-8 h-8 text-white" />
+              </button>
+            </>
+          )}
         </div>
 
         {/* Bottom Right - Additional Controls */}
@@ -631,9 +772,40 @@ export const MiFullscreenPlayer = ({
             <Subtitles className="w-5 h-5 text-white" />
           </button>
 
-          <button className="mi-player-control">
-            <span className="text-white text-sm font-bold">1x</span>
-          </button>
+          {/* Speed Control (functional for VOD) */}
+          <div className="relative">
+            <button 
+              className="mi-player-control"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isVOD) setShowSpeedMenu(!showSpeedMenu);
+              }}
+            >
+              <span className="text-white text-sm font-bold">{playbackSpeed}x</span>
+            </button>
+            
+            {/* Speed menu popup */}
+            {showSpeedMenu && isVOD && (
+              <div className="absolute bottom-14 right-0 bg-card/95 backdrop-blur-sm rounded-xl p-2 min-w-[100px] shadow-xl border border-white/10">
+                {speedOptions.map((speed) => (
+                  <button
+                    key={speed}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      changeSpeed(speed);
+                    }}
+                    className={`w-full px-4 py-2 text-left rounded-lg transition-colors ${
+                      playbackSpeed === speed 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {speed}x
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Bottom Center - Back/Close Button */}
