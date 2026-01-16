@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 import { getStoredPlaylistUrl } from '@/lib/playlistStorage';
+import { getLocalChannels, hasLocalChannels, LocalChannel } from '@/lib/localPlaylistStorage';
 
 export interface Channel {
   id: string;
@@ -10,6 +11,8 @@ export interface Channel {
   logo?: string;
   group?: string;
   type?: 'live' | 'movies' | 'series' | 'sports';
+  // Flag to indicate this is from local file upload (skip proxy)
+  isLocal?: boolean;
   // Extended metadata for movies/series
   stream_id?: number;
   series_id?: number;
@@ -59,30 +62,69 @@ const setCachedChannels = (channels: Channel[]) => {
   }
 };
 
+// Convert local channels to Channel type
+const convertLocalChannels = (localChannels: LocalChannel[]): Channel[] => {
+  return localChannels.map(ch => ({
+    ...ch,
+    isLocal: true, // Mark as local - player will skip proxy
+  }));
+};
+
 export const useIPTV = (m3uUrl?: string) => {
   // Use provided URL or fall back to stored URL
   const effectiveUrl = m3uUrl || getStoredPlaylistUrl();
   
   console.log('useIPTV hook called with URL:', effectiveUrl);
   
-  // Initialize with cached channels immediately
-  const [channels, setChannels] = useState<Channel[]>(() => getCachedChannels() || []);
-  // If we have cached channels, don't show loading state
-  const [loading, setLoading] = useState(() => !getCachedChannels());
+  // Check for local channels first (from file upload - Bocaletto approach)
+  const localChannels = getLocalChannels();
+  const hasLocal = hasLocalChannels();
+  
+  // Initialize with local channels if available, otherwise cached channels
+  const [channels, setChannels] = useState<Channel[]>(() => {
+    if (hasLocal && localChannels) {
+      console.log(`Using ${localChannels.length} locally uploaded channels (direct playback - no proxy)`);
+      return convertLocalChannels(localChannels);
+    }
+    return getCachedChannels() || [];
+  });
+  
+  // If we have local or cached channels, don't show loading state
+  const [loading, setLoading] = useState(() => !hasLocal && !getCachedChannels());
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Function to trigger a refresh without reloading the app
   const refresh = useCallback(() => {
     console.log('Refreshing channels...');
+    // Re-check for local channels
+    const freshLocal = getLocalChannels();
+    if (freshLocal && freshLocal.length > 0) {
+      console.log(`Refreshed with ${freshLocal.length} local channels`);
+      setChannels(convertLocalChannels(freshLocal));
+      setError(null);
+      setLoading(false);
+      return;
+    }
     setRefreshKey(prev => prev + 1);
   }, []);
 
   useEffect(() => {
     console.log('useIPTV useEffect running');
     
+    // If we have local channels from file upload, use those (Bocaletto approach)
+    // This skips the edge function entirely - streams play directly from user's IP
+    const freshLocal = getLocalChannels();
+    if (freshLocal && freshLocal.length > 0) {
+      console.log(`Using ${freshLocal.length} locally uploaded channels - direct playback enabled`);
+      setChannels(convertLocalChannels(freshLocal));
+      setError(null);
+      setLoading(false);
+      return;
+    }
+    
     const loadDemoChannels = () => {
-      console.log('Loading demo channels - real channels will work in native app');
+      console.log('Loading demo channels - real channels will work in native app or upload M3U file');
       const demoChannels: Channel[] = [
         {
           id: 'demo-1',

@@ -79,6 +79,14 @@ export const MiFullscreenPlayer = ({
   const getPlayableUrl = (rawUrl: string) => {
     const isNative = Capacitor.isNativePlatform();
     if (isNative) return rawUrl;
+    
+    // If channel is from local file upload (Bocaletto approach), play directly
+    // This is the key insight: streams play from user's residential IP, not datacenter
+    if (channel.isLocal) {
+      console.log('Playing local channel directly (no proxy) - user IP:', rawUrl);
+      return rawUrl;
+    }
+    
     if (!functionConfig.streamProxyUrl) return rawUrl;
 
     // Web preview runs on https; most IPTV providers give http streams.
