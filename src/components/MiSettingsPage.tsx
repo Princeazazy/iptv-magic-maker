@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, User, Shield, ListVideo, Trash2, Cloud, Sun, CloudRain, Snowflake, CloudLightning, Check, X, Upload, FileVideo } from 'lucide-react';
+import { ChevronLeft, User, Shield, ListVideo, Trash2, Cloud, Sun, CloudRain, Snowflake, CloudLightning, Check, X, Upload, FileVideo, Download, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -17,6 +17,7 @@ import {
   hasLocalChannels,
   clearLocalChannels
 } from '@/lib/localPlaylistStorage';
+import { supabase } from '@/integrations/supabase/client';
 import arabiaLogo from '@/assets/arabia-logo-new.png';
 import { useWeather } from '@/hooks/useWeather';
 
@@ -41,6 +42,7 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
   const [playlistUrl, setPlaylistUrl] = useState('');
   const [localPlaylistName, setLocalPlaylistName] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const weather = useWeather();
 
@@ -117,6 +119,76 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+    }
+  };
+
+  // Fetch M3U from URL using edge function, then store locally for direct playback
+  const handleFetchFromUrl = async () => {
+    const url = playlistUrl.trim();
+    if (!url) {
+      toast.error('Please enter a valid M3U URL');
+      return;
+    }
+
+    setIsFetching(true);
+    try {
+      toast.info('Fetching playlist from server...');
+      
+      const { data, error } = await supabase.functions.invoke('fetch-m3u', {
+        body: { 
+          url,
+          maxChannels: 50000,
+          maxBytesMB: 40,
+          maxReturnPerType: 10000,
+          preferXtreamApi: true
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data?.blocked) {
+        toast.error('Provider blocked the request. Try downloading the M3U file manually.');
+        return;
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      if (data?.channels && Array.isArray(data.channels)) {
+        const channels = data.channels
+          .filter((ch: any) => ch.name && (ch.url || ch.type === 'series'))
+          .map((ch: any, idx: number) => ({
+            id: `fetched-${idx}`,
+            name: ch.name,
+            url: ch.url || '',
+            logo: ch.logo || undefined,
+            group: ch.group || 'Live TV',
+            type: ch.type || 'live',
+          }));
+
+        if (channels.length === 0) {
+          toast.error('No channels found in playlist');
+          return;
+        }
+
+        // Save as local channels for direct playback (no proxy when playing)
+        saveLocalChannels(channels, `Fetched from URL`);
+        setLocalPlaylistName(`${channels.length} channels from URL`);
+        
+        toast.success(`Loaded ${channels.length} channels! Streams will play directly.`);
+        setShowPlaylistDialog(false);
+        onPlaylistChange?.();
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (err: any) {
+      console.error('Error fetching M3U:', err);
+      toast.error(err.message || 'Failed to fetch playlist');
+    } finally {
+      setIsFetching(false);
     }
   };
 
@@ -333,34 +405,44 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
               </button>
             </div>
 
-            {/* Alternative: URL (for native apps) */}
-            <div className="space-y-2">
-              <label className="text-sm text-muted-foreground">Or enter M3U URL (native apps only)</label>
+            {/* Fetch from URL - for providers that block browser access */}
+            <div className="space-y-3">
+              <label className="text-sm text-muted-foreground">Or fetch from URL</label>
               <Input
                 value={playlistUrl}
                 onChange={(e) => setPlaylistUrl(e.target.value)}
                 placeholder="http://example.com/playlist.m3u"
                 className="bg-secondary border-border/50 h-12 text-foreground placeholder:text-muted-foreground"
               />
+              <button
+                onClick={handleFetchFromUrl}
+                disabled={isFetching || !playlistUrl.trim()}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isFetching ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="font-medium">Fetching channels...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    <span className="font-medium">Fetch & Load Channels</span>
+                  </>
+                )}
+              </button>
               <p className="text-xs text-muted-foreground">
-                URL-based loading works in Android/iOS apps but may be blocked by providers in web browsers.
+                This fetches the channel list via our server, then streams play directly from your device.
               </p>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-2">
               <button
                 onClick={() => setShowPlaylistDialog(false)}
                 className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-secondary rounded-xl hover:bg-secondary/80 transition-colors"
               >
                 <X className="w-5 h-5" />
                 <span className="font-medium">Cancel</span>
-              </button>
-              <button
-                onClick={handleSavePlaylist}
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors"
-              >
-                <Check className="w-5 h-5" />
-                <span className="font-medium">Save URL</span>
               </button>
             </div>
           </div>
