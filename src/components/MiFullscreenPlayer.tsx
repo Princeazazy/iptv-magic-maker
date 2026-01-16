@@ -79,14 +79,22 @@ export const MiFullscreenPlayer = ({
   const getPlayableUrl = (rawUrl: string) => {
     const isNative = Capacitor.isNativePlatform();
     if (isNative) return rawUrl;
-    
-    // If channel is from local file upload (Bocaletto approach), play directly
-    // This is the key insight: streams play from user's residential IP, not datacenter
+
+    // Web apps (HTTPS) cannot load http:// media directly (mixed content).
+    // So even for "local" playlists, if the stream is http:// we must proxy it to https://.
     if (channel.isLocal) {
-      console.log('Playing local channel directly (no proxy) - user IP:', rawUrl);
+      if (rawUrl.startsWith('https://')) {
+        console.log('Playing local channel directly (https)');
+        return rawUrl;
+      }
+      // http:// local stream: try proxy to avoid mixed-content blocking
+      if (functionConfig.streamProxyUrl) {
+        console.log('Local channel is http://, using secure proxy for playback');
+        return `${functionConfig.streamProxyUrl}?url=${encodeURIComponent(rawUrl)}`;
+      }
       return rawUrl;
     }
-    
+
     if (!functionConfig.streamProxyUrl) return rawUrl;
 
     // Web preview runs on https; most IPTV providers give http streams.
@@ -185,24 +193,37 @@ export const MiFullscreenPlayer = ({
             return;
           }
 
-          if (data.fatal) {
-            let msg = `Playback error: ${data.type}${code ? ` (HTTP ${code})` : ''}`;
-            if (code === 401 || code === 403) {
-              msg += ' — stream is blocked or requires authentication.';
+          // Non-fatal stalls can happen when segments stop downloading.
+          // Try to resume loading instead of letting the stream freeze.
+          if (!data.fatal) {
+            if (data.details === 'bufferStalledError') {
+              console.log('HLS buffer stalled; attempting to resume loading');
+              try {
+                hls.startLoad();
+              } catch {
+                // ignore
+              }
             }
-            if (code === 502) {
-              msg += ' — upstream rejected the request.';
-            }
-            setError(msg);
-
-            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-              hls.startLoad();
-            } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-              hls.recoverMediaError();
-            }
-
-            onFail?.();
+            return;
           }
+
+          // Fatal errors
+          let msg = `Playback error: ${data.type}${code ? ` (HTTP ${code})` : ''}`;
+          if (code === 401 || code === 403) {
+            msg += ' — stream is blocked or requires authentication.';
+          }
+          if (code === 502) {
+            msg += ' — upstream rejected the request.';
+          }
+          setError(msg);
+
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+            hls.startLoad();
+          } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+            hls.recoverMediaError();
+          }
+
+          onFail?.();
         });
 
         hlsRef.current = hls;
