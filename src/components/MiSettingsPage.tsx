@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { ChevronLeft, User, Shield, ListVideo, Trash2, Cloud, Sun, CloudRain, Snowflake, CloudLightning, Check, X } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { ChevronLeft, User, Shield, ListVideo, Trash2, Cloud, Sun, CloudRain, Snowflake, CloudLightning, Check, X, Upload, FileVideo } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -9,6 +9,14 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { getStoredPlaylistUrl, setStoredPlaylistUrl } from '@/lib/playlistStorage';
+import { 
+  readM3UFile, 
+  parseM3UContent, 
+  saveLocalChannels, 
+  getLocalPlaylistName,
+  hasLocalChannels,
+  clearLocalChannels
+} from '@/lib/localPlaylistStorage';
 import arabiaLogo from '@/assets/arabia-logo-new.png';
 import { useWeather } from '@/hooks/useWeather';
 
@@ -31,6 +39,9 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
   const [time, setTime] = useState(new Date());
   const [showPlaylistDialog, setShowPlaylistDialog] = useState(false);
   const [playlistUrl, setPlaylistUrl] = useState('');
+  const [localPlaylistName, setLocalPlaylistName] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const weather = useWeather();
 
   useEffect(() => {
@@ -43,11 +54,19 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
     if (saved) {
       setPlaylistUrl(saved);
     }
+    // Check for local playlist
+    const localName = getLocalPlaylistName();
+    if (localName) {
+      setLocalPlaylistName(localName);
+    }
   }, []);
 
   const handleSavePlaylist = () => {
     if (playlistUrl.trim()) {
       setStoredPlaylistUrl(playlistUrl.trim());
+      // Clear local channels when using URL
+      clearLocalChannels();
+      setLocalPlaylistName(null);
       toast.success('Playlist saved!');
       setShowPlaylistDialog(false);
       onPlaylistChange?.();
@@ -56,10 +75,57 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
     }
   };
 
+  // Handle local M3U file upload (Bocaletto approach - browser-side parsing)
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validExtensions = ['.m3u', '.m3u8'];
+    const isValidFile = validExtensions.some(ext => 
+      file.name.toLowerCase().endsWith(ext)
+    );
+
+    if (!isValidFile) {
+      toast.error('Please upload a .m3u or .m3u8 file');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const content = await readM3UFile(file);
+      const channels = parseM3UContent(content);
+      
+      if (channels.length === 0) {
+        toast.error('No channels found in the playlist file');
+        return;
+      }
+
+      // Save channels locally
+      saveLocalChannels(channels, file.name);
+      setLocalPlaylistName(file.name);
+      
+      toast.success(`Loaded ${channels.length} channels from ${file.name}`);
+      setShowPlaylistDialog(false);
+      onPlaylistChange?.();
+    } catch (err) {
+      console.error('Error reading M3U file:', err);
+      toast.error('Failed to read playlist file');
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   const handleDeleteCache = () => {
     localStorage.removeItem('mi-player-favorites');
     localStorage.removeItem('mi-player-last-channel');
     localStorage.removeItem('mi-player-playlist-url');
+    clearLocalChannels();
+    setLocalPlaylistName(null);
     toast.success('Cache cleared - reloading with default playlist...');
     setTimeout(() => {
       window.location.reload();
@@ -169,7 +235,36 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
               <span className="text-foreground font-medium text-lg">Parent Control</span>
             </button>
 
-            {/* Change Playlist */}
+            {/* Upload Local M3U File - RECOMMENDED FOR WEB */}
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="w-full flex items-center gap-4 px-6 py-5 mi-card hover:bg-card border-2 border-accent/50"
+            >
+              <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center">
+                <Upload className="w-6 h-6 text-accent" />
+              </div>
+              <div className="flex-1 text-left">
+                <span className="text-foreground font-medium text-lg block">
+                  {isUploading ? 'Uploading...' : 'Upload M3U File'}
+                </span>
+                <span className="text-accent text-sm block">
+                  {localPlaylistName 
+                    ? `✓ ${localPlaylistName}` 
+                    : 'Best for web - works with all providers!'}
+                </span>
+              </div>
+              {localPlaylistName && <FileVideo className="w-5 h-5 text-accent" />}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".m3u,.m3u8"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+
+            {/* Change Playlist URL */}
             <button 
               onClick={() => setShowPlaylistDialog(true)}
               className="w-full flex items-center gap-4 px-6 py-5 mi-card hover:bg-card"
@@ -178,14 +273,17 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
                 <ListVideo className="w-6 h-6 text-muted-foreground" />
               </div>
               <div className="flex-1 text-left">
-                <span className="text-foreground font-medium text-lg block">Change Playlist</span>
-                {playlistUrl && (
+                <span className="text-foreground font-medium text-lg block">Playlist URL</span>
+                {!localPlaylistName && playlistUrl && (
                   <span className="text-muted-foreground text-sm truncate block max-w-xs">
                     {playlistUrl.includes('?') ? playlistUrl.split('?')[0] + '...' : playlistUrl}
                   </span>
                 )}
+                {!localPlaylistName && !playlistUrl && (
+                  <span className="text-muted-foreground text-sm block">For native apps only</span>
+                )}
               </div>
-              {playlistUrl && <Check className="w-5 h-5 text-accent" />}
+              {!localPlaylistName && playlistUrl && <Check className="w-5 h-5 text-accent" />}
             </button>
 
             {/* Delete Cache */}
@@ -209,24 +307,43 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
       <Dialog open={showPlaylistDialog} onOpenChange={setShowPlaylistDialog}>
         <DialogContent className="bg-card border-border/30 max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-foreground">Change Playlist</DialogTitle>
+            <DialogTitle className="text-xl font-semibold text-foreground">Playlist Settings</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-6 py-4">
+            {/* Recommended: File Upload */}
+            <div className="bg-accent/10 border border-accent/30 rounded-xl p-4">
+              <div className="flex items-center gap-3 mb-2">
+                <Upload className="w-5 h-5 text-accent" />
+                <strong className="text-foreground">Recommended for Web</strong>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Upload your M3U file directly. Streams will play from your device's IP, 
+                bypassing provider blocks. This is how apps like IPTV Smarters work!
+              </p>
+              <button
+                onClick={() => {
+                  setShowPlaylistDialog(false);
+                  setTimeout(() => fileInputRef.current?.click(), 100);
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors"
+              >
+                <Upload className="w-4 h-4" />
+                <span className="font-medium">Upload M3U File</span>
+              </button>
+            </div>
+
+            {/* Alternative: URL (for native apps) */}
             <div className="space-y-2">
-              <label className="text-sm text-muted-foreground">M3U Playlist URL</label>
+              <label className="text-sm text-muted-foreground">Or enter M3U URL (native apps only)</label>
               <Input
                 value={playlistUrl}
                 onChange={(e) => setPlaylistUrl(e.target.value)}
                 placeholder="http://example.com/playlist.m3u"
                 className="bg-secondary border-border/50 h-12 text-foreground placeholder:text-muted-foreground"
               />
-            </div>
-
-            <div className="bg-secondary/50 rounded-xl p-4">
-              <p className="text-sm text-muted-foreground">
-                <strong className="text-foreground">Note:</strong> In the web preview, demo channels are shown because most IPTV providers block browser requests. 
-                Your real playlist will work perfectly in the native Android/iOS app.
+              <p className="text-xs text-muted-foreground">
+                URL-based loading works in Android/iOS apps but may be blocked by providers in web browsers.
               </p>
             </div>
 
@@ -243,7 +360,7 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
                 className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors"
               >
                 <Check className="w-5 h-5" />
-                <span className="font-medium">Save Playlist</span>
+                <span className="font-medium">Save URL</span>
               </button>
             </div>
           </div>
