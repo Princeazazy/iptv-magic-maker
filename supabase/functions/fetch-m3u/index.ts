@@ -33,14 +33,35 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Android APK headers to bypass web restrictions
-const apkHeaders = {
-  'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 13; Pixel 7 Pro Build/TQ3A.230805.001)',
-  'X-Requested-With': 'com.nst.iptvsmarterstvbox',
+// STB (Set-Top Box) headers to mimic legitimate STB devices
+const stbHeaders = {
+  'User-Agent': 'MAG250 MAG254 MAG256 Aura/1.0.0',
   'Accept': '*/*',
   'Accept-Language': 'en-US,en;q=0.9',
   'Connection': 'keep-alive',
+  'X-Device-Type': 'stb',
+  'X-Device-Model': 'MAG256',
 };
+
+// Alternative STB user agents for rotation
+const stbUserAgents = [
+  'MAG250 MAG254 MAG256 Aura/1.0.0',
+  'Formuler Z8 Pro/1.0 (Linux; Android 9)',
+  'BuzzTV XRS 4500/1.0.0',
+  'MAG324/325 (Linux; Sigma SDK 4.X)',
+  'DreamLink T2/1.0.0',
+  'IPTV Smarters Pro/3.0.0 (Linux; STB)',
+  'TiviMate/4.7.0 (STB)',
+  'STB Emulator/1.2.0',
+];
+
+// Get STB headers with rotated user agent
+function getStbHeaders(index: number = 0): Record<string, string> {
+  return {
+    ...stbHeaders,
+    'User-Agent': stbUserAgents[index % stbUserAgents.length],
+  };
+}
 
 // Determine content type from group/name
 function getContentType(group: string, name: string): 'live' | 'movies' | 'series' | 'sports' {
@@ -173,7 +194,7 @@ async function fetchXtreamLive(
     console.log('Fetching Xtream live categories...');
     const categoriesRes = await fetchWithTimeout(
       `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_live_categories`,
-      { headers: apkHeaders },
+      { headers: getStbHeaders(0) },
       6000
     );
     
@@ -224,7 +245,7 @@ async function fetchXtreamLiveByCategory(
         const url = `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_live_streams&category_id=${encodeURIComponent(categoryId)}`;
 
         try {
-          const res = await fetchWithTimeout(url, { headers: apkHeaders }, CATEGORY_FETCH_TIMEOUT);
+          const res = await fetchWithTimeout(url, { headers: getStbHeaders(1) }, CATEGORY_FETCH_TIMEOUT);
           if (!res.ok) return { categoryId, categoryName, streams: [] };
 
           const streams = await res.json().catch(() => null);
@@ -283,7 +304,7 @@ async function fetchXtreamMovies(
     console.log('Fetching Xtream VOD categories...');
     const categoriesRes = await fetchWithTimeout(
       `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_vod_categories`,
-      { headers: apkHeaders },
+      { headers: getStbHeaders(2) },
       6000
     );
 
@@ -332,7 +353,7 @@ async function fetchXtreamVodByCategory(
         try {
           const res = await fetchWithTimeout(
             `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_vod_streams&category_id=${encodeURIComponent(categoryId)}`,
-            { headers: apkHeaders },
+            { headers: getStbHeaders(3) },
             CATEGORY_FETCH_TIMEOUT
           );
           if (!res.ok) return { categoryId, categoryName, streams: [] };
@@ -392,7 +413,7 @@ async function fetchXtreamSeries(
     console.log('Fetching Xtream series categories...');
     const categoriesRes = await fetchWithTimeout(
       `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_series_categories`,
-      { headers: apkHeaders },
+      { headers: getStbHeaders(4) },
       6000
     );
 
@@ -441,7 +462,7 @@ async function fetchXtreamSeriesByCategory(
         try {
           const res = await fetchWithTimeout(
             `${baseUrl}/player_api.php?username=${username}&password=${password}&action=get_series&category_id=${encodeURIComponent(categoryId)}`,
-            { headers: apkHeaders },
+            { headers: getStbHeaders(5) },
             CATEGORY_FETCH_TIMEOUT
           );
           if (!res.ok) return { categoryId, categoryName, streams: [] };
