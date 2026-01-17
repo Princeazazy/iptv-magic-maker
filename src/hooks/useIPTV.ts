@@ -27,14 +27,16 @@ export interface Channel {
   backdrop_path?: string[];
 }
 
-const CACHE_KEY = 'iptv-channels-cache-v2'; // v2 to bust old incomplete caches
-const CACHE_TIMESTAMP_KEY = 'iptv-channels-cache-timestamp-v2';
+const CACHE_KEY = 'iptv-channels-cache-v3'; // v3 to bust cache after sports fix
+const CACHE_TIMESTAMP_KEY = 'iptv-channels-cache-timestamp-v3';
 const CACHE_MAX_AGE_MS = 30 * 60 * 1000; // 30 minutes
 
 // Clear old cache keys on load
 try {
   localStorage.removeItem('iptv-channels-cache');
   localStorage.removeItem('iptv-channels-cache-timestamp');
+  localStorage.removeItem('iptv-channels-cache-v2');
+  localStorage.removeItem('iptv-channels-cache-timestamp-v2');
 } catch (e) {
   // Ignore
 }
@@ -408,23 +410,18 @@ const parseM3U = (content: string): Channel[] => {
     name: string = ''
   ): NonNullable<Channel['type']> => {
     const groupLower = group.toLowerCase();
-    const nameLower = name.toLowerCase();
-    const combined = `${groupLower} ${nameLower}`;
 
-    // Sports detection (can appear in name)
+    // Sports detection - ONLY based on GROUP to avoid misclassifying channels
     if (
-      combined.includes('sport') ||
-      combined.includes('football') ||
-      combined.includes('soccer') ||
-      combined.includes('basketball') ||
-      combined.includes('tennis') ||
-      combined.includes('cricket') ||
-      combined.includes('boxing') ||
-      combined.includes('wrestling') ||
-      combined.includes('nfl') ||
-      combined.includes('nba') ||
-      combined.includes('mlb') ||
-      combined.includes('nhl')
+      groupLower.includes('sport') ||
+      (groupLower.includes('bein') && groupLower.includes('sport')) ||
+      groupLower.includes('espn sport') ||
+      groupLower.includes('fox sport') ||
+      groupLower.includes('sky sport') ||
+      groupLower.includes('nfl') ||
+      groupLower.includes('nba') ||
+      groupLower.includes('mlb') ||
+      groupLower.includes('nhl')
     ) {
       return 'sports';
     }
