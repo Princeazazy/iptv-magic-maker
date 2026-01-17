@@ -27,9 +27,17 @@ export interface Channel {
   backdrop_path?: string[];
 }
 
-const CACHE_KEY = 'iptv-channels-cache';
-const CACHE_TIMESTAMP_KEY = 'iptv-channels-cache-timestamp';
+const CACHE_KEY = 'iptv-channels-cache-v2'; // v2 to bust old incomplete caches
+const CACHE_TIMESTAMP_KEY = 'iptv-channels-cache-timestamp-v2';
 const CACHE_MAX_AGE_MS = 30 * 60 * 1000; // 30 minutes
+
+// Clear old cache keys on load
+try {
+  localStorage.removeItem('iptv-channels-cache');
+  localStorage.removeItem('iptv-channels-cache-timestamp');
+} catch (e) {
+  // Ignore
+}
 
 // Load cached channels from localStorage
 const getCachedChannels = (): Channel[] | null => {
