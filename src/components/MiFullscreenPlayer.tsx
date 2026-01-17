@@ -636,46 +636,22 @@ export const MiFullscreenPlayer = ({
         {/* Bottom Center - Playback Controls */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-6">
           {isVOD ? (
-            <>
-              {/* -10s button for VOD */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  skipTime(-10);
-                }}
-                className="p-2 rounded-full hover:bg-white/10 transition-colors flex flex-col items-center"
-              >
-                <SkipBack className="w-7 h-7 text-white" />
-                <span className="text-white/70 text-xs">10s</span>
-              </button>
-              
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  togglePlay();
-                }}
-                className="w-16 h-16 rounded-full bg-white/20 hover:bg-white/30 transition-colors flex items-center justify-center backdrop-blur-sm"
-              >
-                {isPlaying ? (
-                  <Pause className="w-8 h-8 text-white" />
-                ) : (
-                  <Play className="w-8 h-8 text-white ml-1" />
-                )}
-              </button>
-              
-              {/* +10s button for VOD */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  skipTime(10);
-                }}
-                className="p-2 rounded-full hover:bg-white/10 transition-colors flex flex-col items-center"
-              >
-                <SkipForward className="w-7 h-7 text-white" />
-                <span className="text-white/70 text-xs">10s</span>
-              </button>
-            </>
+            /* VOD: Only play/pause button */
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                togglePlay();
+              }}
+              className="w-16 h-16 rounded-full bg-white/20 hover:bg-white/30 transition-colors flex items-center justify-center backdrop-blur-sm"
+            >
+              {isPlaying ? (
+                <Pause className="w-8 h-8 text-white" />
+              ) : (
+                <Play className="w-8 h-8 text-white ml-1" />
+              )}
+            </button>
           ) : (
+            /* Live TV: prev/play/next */
             <>
               <button
                 onClick={(e) => {
