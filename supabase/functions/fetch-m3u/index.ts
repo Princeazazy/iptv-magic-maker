@@ -67,26 +67,19 @@ function getStbHeaders(index: number = 0): Record<string, string> {
 function getContentType(group: string, name: string): 'live' | 'movies' | 'series' | 'sports' {
   const groupLower = (group || '').toLowerCase();
   const nameLower = (name || '').toLowerCase();
-  const combined = `${groupLower} ${nameLower}`;
 
-  // Sports detection (can appear in name)
+  // Sports detection - ONLY based on GROUP to avoid misclassifying channels
+  // Channels like "beIN Drama" or "ESPN Documentary" should not be sports
   if (
-    combined.includes('sport') ||
-    combined.includes('football') ||
-    combined.includes('soccer') ||
-    combined.includes('basketball') ||
-    combined.includes('tennis') ||
-    combined.includes('cricket') ||
-    combined.includes('boxing') ||
-    combined.includes('wrestling') ||
-    combined.includes('nfl') ||
-    combined.includes('nba') ||
-    combined.includes('mlb') ||
-    combined.includes('nhl') ||
-    combined.includes('espn') ||
-    combined.includes('fox sport') ||
-    combined.includes('bein') ||
-    combined.includes('sky sport')
+    groupLower.includes('sport') ||
+    (groupLower.includes('bein') && groupLower.includes('sport')) ||
+    groupLower.includes('espn sport') ||
+    groupLower.includes('fox sport') ||
+    groupLower.includes('sky sport') ||
+    groupLower.includes('nfl') ||
+    groupLower.includes('nba') ||
+    groupLower.includes('mlb') ||
+    groupLower.includes('nhl')
   ) {
     return 'sports';
   }
@@ -157,9 +150,9 @@ function isXtreamGetM3UUrl(url: string): boolean {
 type XtreamFetchResult = { items: any[]; total: number; tooLarge?: boolean };
 
 const XTREAM_MAX_JSON_BYTES = 15 * 1024 * 1024; // 15MB safety cap per API response
-const XTREAM_MAX_ITEMS_PER_RESPONSE = 3000; // Lower cap to prevent timeout issues
-const CATEGORY_FETCH_TIMEOUT = 4000; // 4s timeout per category fetch
-const MAX_CATEGORIES_PER_TYPE = 15; // Limit categories to prevent long-running fetches
+const XTREAM_MAX_ITEMS_PER_RESPONSE = 5000; // Increased to get more channels
+const CATEGORY_FETCH_TIMEOUT = 5000; // 5s timeout per category fetch
+const MAX_CATEGORIES_PER_TYPE = 50; // Increased to fetch more live channel categories
 
 function responseTooLarge(res: Response, maxBytes: number): boolean {
   const len = res.headers.get('content-length');
@@ -271,7 +264,13 @@ async function fetchXtreamLiveByCategory(
 
         const streamUrl = `${baseUrl}/live/${username}/${password}/${stream.stream_id}.m3u8`;
         const categoryLower = categoryName.toLowerCase();
-        const isSports = categoryLower.includes('sport') || categoryLower.includes('bein') || categoryLower.includes('espn');
+        // Only classify as sports based on CATEGORY name, not channel name
+        // This prevents regular channels like "beIN Drama" from being misclassified
+        const isSports = categoryLower.includes('sport') || 
+          (categoryLower.includes('bein') && categoryLower.includes('sport')) || 
+          categoryLower.includes('espn') ||
+          categoryLower.includes('fox sport') ||
+          categoryLower.includes('sky sport');
 
         items.push({
           name: stream.name || 'Unknown Channel',
