@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo, useState } from 'react';
+import { useRef, useEffect, useMemo, useState, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import Hls from 'hls.js';
 import {
@@ -17,10 +17,12 @@ import {
   ChevronDown,
   Subtitles,
   Settings,
+  RotateCcw,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Channel } from '@/hooks/useIPTV';
 import { useWeather } from '@/hooks/useWeather';
+import { useWatchProgress } from '@/hooks/useWatchProgress';
 
 const WeatherIcon = ({ icon }: { icon: string }) => {
   switch (icon) {
@@ -71,6 +73,9 @@ export const MiFullscreenPlayer = ({
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [showResumePrompt, setShowResumePrompt] = useState(false);
+  const [hasResumed, setHasResumed] = useState(false);
+  const lastSaveTimeRef = useRef(0);
   
   const isVOD = channel.group?.toLowerCase().includes('movie') || 
                 channel.group?.toLowerCase().includes('series') || 
@@ -79,6 +84,13 @@ export const MiFullscreenPlayer = ({
                 channel.url?.includes('/series/');
   
   const speedOptions = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+  
+  // Watch progress hook for resume functionality
+  const { savedPosition, hasSavedProgress, saveProgress, saveInterval } = useWatchProgress(
+    channel.id,
+    channel.name,
+    channel.logo
+  );
 
   const functionConfig = useMemo(() => {
     // Avoid import.meta.env usage; reuse values from the already-configured client.
@@ -353,7 +365,7 @@ export const MiFullscreenPlayer = ({
     }
   }, [hasUserInteracted]);
 
-  // Update playback time and progress
+  // Update playback time and progress, and save watch progress for VOD
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -371,11 +383,44 @@ export const MiFullscreenPlayer = ({
       if (video.duration && isFinite(video.duration)) {
         setProgress((video.currentTime / video.duration) * 100);
         setDuration(video.duration);
+        
+        // Save progress periodically for VOD content
+        if (isVOD && time - lastSaveTimeRef.current >= saveInterval) {
+          saveProgress(time, video.duration);
+          lastSaveTimeRef.current = time;
+        }
       }
     };
 
     video.addEventListener('timeupdate', updateTime);
     return () => video.removeEventListener('timeupdate', updateTime);
+  }, [isVOD, saveProgress, saveInterval]);
+
+  // Show resume prompt when VOD has saved progress
+  useEffect(() => {
+    if (isVOD && hasSavedProgress && !hasResumed) {
+      setShowResumePrompt(true);
+    }
+  }, [isVOD, hasSavedProgress, hasResumed]);
+
+  // Handle resume from saved position
+  const handleResume = useCallback(() => {
+    const video = videoRef.current;
+    if (video && savedPosition > 0) {
+      video.currentTime = savedPosition;
+    }
+    setShowResumePrompt(false);
+    setHasResumed(true);
+  }, [savedPosition]);
+
+  // Handle start from beginning
+  const handleStartOver = useCallback(() => {
+    const video = videoRef.current;
+    if (video) {
+      video.currentTime = 0;
+    }
+    setShowResumePrompt(false);
+    setHasResumed(true);
   }, []);
   
   // Format duration helper
@@ -525,6 +570,42 @@ export const MiFullscreenPlayer = ({
             >
               Back
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Resume Prompt Overlay (VOD only) */}
+      {showResumePrompt && isVOD && (
+        <div 
+          className="absolute inset-0 flex items-center justify-center bg-black/80 z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="text-center max-w-md px-6">
+            <RotateCcw className="w-12 h-12 text-primary mx-auto mb-4" />
+            <h3 className="text-white text-xl font-bold mb-2">Resume Watching?</h3>
+            <p className="text-white/70 mb-6">
+              You were at {formatTime(savedPosition)} of this content.
+            </p>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleStartOver();
+                }}
+                className="px-6 py-3 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors"
+              >
+                Start Over
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleResume();
+                }}
+                className="px-6 py-3 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-medium"
+              >
+                Resume
+              </button>
+            </div>
           </div>
         </div>
       )}
