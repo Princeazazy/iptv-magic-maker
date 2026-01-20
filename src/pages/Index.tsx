@@ -42,19 +42,16 @@ const Index = () => {
       return channels;
     }
 
-    // "Live" should include all live streams (including sports)
+    // "Live" should be NON-sports live TV (sports live streams live in the Sports Guide)
     if (currentScreen === 'live') {
-      return channels.filter((ch) => ch.type === 'live' || ch.type === 'sports' || !ch.type);
+      return channels.filter((ch) => ch.type === 'live' || !ch.type);
     }
 
     return channels.filter((ch) => ch.type === currentScreen);
   }, [channels, currentScreen]);
 
   // Count channels by type
-  const liveCount = useMemo(
-    () => channels.filter((ch) => ch.type === 'live' || ch.type === 'sports' || !ch.type).length,
-    [channels],
-  );
+  const liveCount = useMemo(() => channels.filter((ch) => ch.type === 'live' || !ch.type).length, [channels]);
   const movieCount = useMemo(() => channels.filter((ch) => ch.type === 'movies').length, [channels]);
   const seriesCount = useMemo(() => channels.filter((ch) => ch.type === 'series').length, [channels]);
   const sportsCount = useMemo(() => channels.filter((ch) => ch.type === 'sports').length, [channels]);
@@ -245,6 +242,7 @@ const Index = () => {
       return (
         <div className="h-screen bg-background overflow-hidden">
           <MiMediaGrid
+            key={currentScreen}
             items={filteredChannelsByCategory}
             favorites={favorites}
             onItemSelect={handleItemSelect}
@@ -260,6 +258,7 @@ const Index = () => {
       return (
         <div className="h-screen bg-background overflow-hidden">
           <MiLiveTVList
+            key={currentScreen}
             channels={filteredChannelsByCategory}
             currentChannel={currentChannel}
             favorites={favorites}
