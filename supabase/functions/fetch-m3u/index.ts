@@ -150,9 +150,9 @@ function isXtreamGetM3UUrl(url: string): boolean {
 type XtreamFetchResult = { items: any[]; total: number; tooLarge?: boolean };
 
 const XTREAM_MAX_JSON_BYTES = 15 * 1024 * 1024; // 15MB safety cap per API response
-const XTREAM_MAX_ITEMS_PER_RESPONSE = 5000; // Increased to get more channels
+const XTREAM_MAX_ITEMS_PER_RESPONSE = 20000; // Increased: many providers have >5k movies/series
 const CATEGORY_FETCH_TIMEOUT = 5000; // 5s timeout per category fetch
-const MAX_CATEGORIES_PER_TYPE = 50; // Increased to fetch more live channel categories
+const MAX_CATEGORIES_PER_TYPE = 50; // categories per type (keep conservative for runtime)
 
 function responseTooLarge(res: Response, maxBytes: number): boolean {
   const len = res.headers.get('content-length');

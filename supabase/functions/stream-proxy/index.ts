@@ -100,8 +100,20 @@ serve(async (req) => {
 
       console.log("stream-proxy =>", upstreamUrl);
 
-      // Build headers like nodecast-tv (standard browser, not IPTV apps)
-      const headers: Record<string, string> = {
+      // Default to IPTV-app-like headers (many providers block generic browser UAs in cloud proxies)
+      const iptvHeaders: Record<string, string> = {
+        "User-Agent": "IPTV Smarters Pro/3.0.0 (Linux; STB)",
+        "Accept": "*/*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "identity",
+        "Connection": "keep-alive",
+        "Origin": upstream.origin,
+        "Referer": upstream.origin + "/",
+        "X-Requested-With": "com.nst.iptvsmarterstvbox",
+      };
+
+      // Fallback to a standard browser header-set if the IPTV headers are rejected
+      const browserHeaders: Record<string, string> = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept": "*/*",
         "Accept-Language": "en-US,en;q=0.9",
@@ -112,57 +124,44 @@ serve(async (req) => {
       // Forward Range header for video seeking support
       const rangeHeader = req.headers.get("range");
       if (rangeHeader) {
-        headers["Range"] = rangeHeader;
+        iptvHeaders["Range"] = rangeHeader;
+        browserHeaders["Range"] = rangeHeader;
       }
 
-      const res = await fetch(upstreamUrl, {
+      // Attempt 1: IPTV headers
+      let res = await fetch(upstreamUrl, {
         redirect: "follow",
-        headers,
+        headers: iptvHeaders,
       });
 
       // Retry on 5xx errors
       if (res.status >= 500 && attempt < MAX_RETRIES) {
         console.log(`[Proxy] Upstream 5xx error (attempt ${attempt}/${MAX_RETRIES}), retrying...`);
-        await new Promise(r => setTimeout(r, 500));
+        await new Promise((r) => setTimeout(r, 500));
         continue;
+      }
+
+      // Attempt 2 (only for auth-style blocks): browser headers
+      if (!res.ok && (res.status === 401 || res.status === 403) && attempt < MAX_RETRIES) {
+        console.log(`[Proxy] Got ${res.status} with IPTV headers, trying browser headers...`);
+        res = await fetch(upstreamUrl, {
+          redirect: "follow",
+          headers: browserHeaders,
+        });
       }
 
       if (!res.ok) {
         console.error("Upstream error:", res.status, res.statusText, upstreamUrl);
-        
-        // For 403/401, try with IPTV-style headers as fallback
-        if ((res.status === 401 || res.status === 403) && attempt < MAX_RETRIES) {
-          console.log(`[Proxy] Got ${res.status}, trying IPTV headers...`);
-          
-          const iptvHeaders: Record<string, string> = {
-            "User-Agent": "Dalvik/2.1.0 (Linux; U; Android 13; Pixel 7 Pro Build/TQ3A.230805.001)",
-            "Accept": "*/*",
-            "Accept-Encoding": "identity",
-            "Referer": upstream.origin + "/",
-            "Origin": upstream.origin,
-            "X-Requested-With": "com.nst.iptvsmarterstvbox",
-          };
-          if (rangeHeader) iptvHeaders["Range"] = rangeHeader;
-          
-          const retryRes = await fetch(upstreamUrl, {
-            redirect: "follow",
-            headers: iptvHeaders,
-          });
-          
-          if (retryRes.ok) {
-            // Use this response instead
-            return await processResponse(retryRes, upstreamUrl, proxyBase, req);
-          }
-        }
-        
+
         return new Response(
           JSON.stringify({
             error: `Upstream error: ${res.status} ${res.statusText}`,
             upstream_status: res.status,
             upstream_url: upstreamUrl,
-            hint: res.status === 403 || res.status === 401 
-              ? "This provider may block cloud/proxy playback. Works in native apps but not web."
-              : undefined,
+            hint:
+              res.status === 403 || res.status === 401
+                ? "This provider may block cloud/proxy playback. Works in native apps but not web."
+                : undefined,
           }),
           { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );

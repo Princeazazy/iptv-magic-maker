@@ -294,9 +294,9 @@ export const useIPTV = (m3uUrl?: string) => {
           const { data, error } = await supabase.functions.invoke('fetch-m3u', {
             body: { 
               url: effectiveUrl, 
-              maxChannels: 50000, // Limit total channels to prevent memory issues
+              maxChannels: 100000, // high cap; backend still applies safety limits
               maxBytesMB: 40, 
-              maxReturnPerType: 10000, // Limit per content type to prevent memory overflow
+              maxReturnPerType: 20000, // fetch more movies/series than before
               preferXtreamApi: true // Use Xtream API directly - IPTV Smarters compatible
             }
           });
