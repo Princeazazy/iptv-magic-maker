@@ -80,8 +80,19 @@ serve(async (req) => {
     );
   }
 
-  const MAX_RETRIES = 2;
+  const MAX_RETRIES = 3;
   let lastError: Error | null = null;
+
+  // Multiple STB/IPTV user agents for rotation
+  const stbUserAgents = [
+    'IPTV Smarters Pro/3.0.0 (Linux; STB)',
+    'MAG250 MAG254 MAG256 Aura/1.0.0',
+    'TiviMate/4.7.0 (Linux; Android 12; SM-S908B)',
+    'GSE SMART IPTV/7.4 (Android 11; TV)',
+    'Kodi/20.2 (Linux; Android 12; SHIELD Android TV)',
+    'VLC/3.0.18 LibVLC/3.0.18',
+    'Dalvik/2.1.0 (Linux; U; Android 13; Pixel 7 Pro)',
+  ];
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
@@ -98,11 +109,14 @@ serve(async (req) => {
       const upstream = new URL(upstreamUrl);
       const proxyBase = getProxyBase(req);
 
-      console.log("stream-proxy =>", upstreamUrl);
+      console.log(`[stream-proxy] attempt ${attempt} => ${upstreamUrl}`);
+
+      // Rotate user agents between attempts
+      const userAgent = stbUserAgents[(attempt - 1) % stbUserAgents.length];
 
       // Default to IPTV-app-like headers (many providers block generic browser UAs in cloud proxies)
       const iptvHeaders: Record<string, string> = {
-        "User-Agent": "IPTV Smarters Pro/3.0.0 (Linux; STB)",
+        "User-Agent": userAgent,
         "Accept": "*/*",
         "Accept-Language": "en-US,en;q=0.9",
         "Accept-Encoding": "identity",
@@ -110,11 +124,12 @@ serve(async (req) => {
         "Origin": upstream.origin,
         "Referer": upstream.origin + "/",
         "X-Requested-With": "com.nst.iptvsmarterstvbox",
+        "X-Device-Type": "stb",
       };
 
       // Fallback to a standard browser header-set if the IPTV headers are rejected
       const browserHeaders: Record<string, string> = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
         "Accept": "*/*",
         "Accept-Language": "en-US,en;q=0.9",
         "Origin": upstream.origin,
@@ -128,7 +143,7 @@ serve(async (req) => {
         browserHeaders["Range"] = rangeHeader;
       }
 
-      // Attempt 1: IPTV headers
+      // First attempt with IPTV headers
       let res = await fetch(upstreamUrl, {
         redirect: "follow",
         headers: iptvHeaders,
@@ -136,22 +151,50 @@ serve(async (req) => {
 
       // Retry on 5xx errors
       if (res.status >= 500 && attempt < MAX_RETRIES) {
-        console.log(`[Proxy] Upstream 5xx error (attempt ${attempt}/${MAX_RETRIES}), retrying...`);
-        await new Promise((r) => setTimeout(r, 500));
+        console.log(`[Proxy] Upstream 5xx error (attempt ${attempt}/${MAX_RETRIES}), retrying with different UA...`);
+        await new Promise((r) => setTimeout(r, 300 * attempt));
         continue;
       }
 
-      // Attempt 2 (only for auth-style blocks): browser headers
-      if (!res.ok && (res.status === 401 || res.status === 403) && attempt < MAX_RETRIES) {
+      // On auth-style blocks, try browser headers
+      if (!res.ok && (res.status === 401 || res.status === 403)) {
         console.log(`[Proxy] Got ${res.status} with IPTV headers, trying browser headers...`);
         res = await fetch(upstreamUrl, {
           redirect: "follow",
           headers: browserHeaders,
         });
+        
+        // If still failing, try with no referer (some providers block certain referers)
+        if (!res.ok && attempt < MAX_RETRIES) {
+          console.log(`[Proxy] Browser headers also failed, trying minimal headers...`);
+          res = await fetch(upstreamUrl, {
+            redirect: "follow",
+            headers: {
+              "User-Agent": stbUserAgents[attempt % stbUserAgents.length],
+              "Accept": "*/*",
+            },
+          });
+        }
       }
 
       if (!res.ok) {
         console.error("Upstream error:", res.status, res.statusText, upstreamUrl);
+
+        // On 404, don't retry - the resource doesn't exist
+        if (res.status === 404) {
+          return new Response(
+            JSON.stringify({
+              error: `Resource not found: ${res.status}`,
+              upstream_status: res.status,
+            }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        if (attempt < MAX_RETRIES) {
+          await new Promise((r) => setTimeout(r, 300 * attempt));
+          continue;
+        }
 
         return new Response(
           JSON.stringify({
@@ -160,7 +203,7 @@ serve(async (req) => {
             upstream_url: upstreamUrl,
             hint:
               res.status === 403 || res.status === 401
-                ? "This provider may block cloud/proxy playback. Works in native apps but not web."
+                ? "This provider may block cloud/proxy playback. Use Local M3U mode for direct playback."
                 : undefined,
           }),
           { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -173,7 +216,7 @@ serve(async (req) => {
       lastError = err as Error;
       console.error(`Stream proxy error (attempt ${attempt}/${MAX_RETRIES}):`, (err as Error).message);
       if (attempt < MAX_RETRIES) {
-        await new Promise(r => setTimeout(r, 500));
+        await new Promise(r => setTimeout(r, 300 * attempt));
         continue;
       }
     }
