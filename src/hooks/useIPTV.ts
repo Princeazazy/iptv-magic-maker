@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 import { getStoredPlaylistUrl } from '@/lib/playlistStorage';
 import { getLocalChannels, hasLocalChannels, LocalChannel } from '@/lib/localPlaylistStorage';
+import { getCachedChannels, setCachedChannels, clearLegacyCache } from '@/lib/channelCache';
 
 export interface Channel {
   id: string;
@@ -27,50 +28,8 @@ export interface Channel {
   backdrop_path?: string[];
 }
 
-const CACHE_KEY = 'iptv-channels-cache-v3'; // v3 to bust cache after sports fix
-const CACHE_TIMESTAMP_KEY = 'iptv-channels-cache-timestamp-v3';
-const CACHE_MAX_AGE_MS = 30 * 60 * 1000; // 30 minutes
-
-// Clear old cache keys on load
-try {
-  localStorage.removeItem('iptv-channels-cache');
-  localStorage.removeItem('iptv-channels-cache-timestamp');
-  localStorage.removeItem('iptv-channels-cache-v2');
-  localStorage.removeItem('iptv-channels-cache-timestamp-v2');
-} catch (e) {
-  // Ignore
-}
-
-// Load cached channels from localStorage
-const getCachedChannels = (): Channel[] | null => {
-  try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
-    if (cached && timestamp) {
-      const age = Date.now() - parseInt(timestamp, 10);
-      // Return cache even if stale - we'll refresh in background
-      const parsed = JSON.parse(cached);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        console.log(`Loaded ${parsed.length} channels from cache (age: ${Math.round(age / 1000)}s)`);
-        return parsed;
-      }
-    }
-  } catch (e) {
-    console.warn('Failed to load cached channels:', e);
-  }
-  return null;
-};
-
-// Save channels to localStorage
-const setCachedChannels = (channels: Channel[]) => {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(channels));
-    localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
-    console.log(`Cached ${channels.length} channels`);
-  } catch (e) {
-    console.warn('Failed to cache channels:', e);
-  }
-};
+// Clear old localStorage cache on module load
+clearLegacyCache();
 
 // Convert local channels to Channel type
 const convertLocalChannels = (localChannels: LocalChannel[]): Channel[] => {
@@ -90,19 +49,39 @@ export const useIPTV = (m3uUrl?: string) => {
   const localChannels = getLocalChannels();
   const hasLocal = hasLocalChannels();
   
-  // Initialize with local channels if available, otherwise cached channels
+  // Initialize with local channels if available
   const [channels, setChannels] = useState<Channel[]>(() => {
     if (hasLocal && localChannels) {
       console.log(`Using ${localChannels.length} locally uploaded channels (direct playback - no proxy)`);
       return convertLocalChannels(localChannels);
     }
-    return getCachedChannels() || [];
+    return [];
   });
   
-  // If we have local or cached channels, don't show loading state
-  const [loading, setLoading] = useState(() => !hasLocal && !getCachedChannels());
+  // Track if we've loaded from cache yet
+  const cacheLoaded = useRef(false);
+  
+  // If we have local channels, don't show loading state
+  const [loading, setLoading] = useState(() => !hasLocal);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Load from IndexedDB cache on mount
+  useEffect(() => {
+    if (hasLocal || cacheLoaded.current) return;
+    
+    const loadCache = async () => {
+      const cached = await getCachedChannels();
+      if (cached && cached.length > 0 && channels.length === 0) {
+        console.log(`Loaded ${cached.length} channels from IndexedDB cache`);
+        setChannels(cached);
+        setLoading(false);
+      }
+      cacheLoaded.current = true;
+    };
+    
+    loadCache();
+  }, [hasLocal, channels.length]);
 
   // Function to trigger a refresh without reloading the app
   const refresh = useCallback(() => {
@@ -357,7 +336,8 @@ export const useIPTV = (m3uUrl?: string) => {
             });
             
             setChannels(parsedChannels);
-            setCachedChannels(parsedChannels);
+            // Cache asynchronously - don't block UI
+            setCachedChannels(parsedChannels).catch(err => console.warn('Failed to cache:', err));
             setError(null);
             setLoading(false);
             return;
@@ -375,7 +355,8 @@ export const useIPTV = (m3uUrl?: string) => {
         }
         
         setChannels(parsedChannels);
-        setCachedChannels(parsedChannels);
+        // Cache asynchronously - don't block UI
+        setCachedChannels(parsedChannels).catch(err => console.warn('Failed to cache:', err));
         setError(null);
       } catch (err: any) {
         console.error('Error fetching M3U:', err);

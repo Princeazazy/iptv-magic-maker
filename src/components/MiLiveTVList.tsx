@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
-import { ChevronLeft, Search, Star, Tv, Cloud, Sun, CloudRain, Snowflake, CloudLightning, User, Grid, List, Menu, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, Search, Star, Tv, Cloud, Sun, CloudRain, Snowflake, CloudLightning, User, Grid, List, Menu, X, Play, Zap } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
 import { useProgressiveList } from '@/hooks/useProgressiveList';
 import { useWeather } from '@/hooks/useWeather';
@@ -584,9 +585,9 @@ export const MiLiveTVList = ({
           </h1>
         </div>
 
-        {/* Country/Category List */}
+        {/* Country/Category List - Show ALL categories */}
         <div className="flex-1 overflow-y-auto px-3 space-y-1 mi-scrollbar">
-          {groups.slice(0, 15).map((group) => (
+          {groups.map((group) => (
             <button
               key={group.name}
               onClick={() => handleGroupSelect(group.name)}
@@ -712,119 +713,66 @@ export const MiLiveTVList = ({
         {/* Channel List */}
         <div className={`flex-1 overflow-y-auto ${isMobile ? 'px-3 py-3' : 'px-6 py-4'} mi-scrollbar`} onScroll={onScroll}>
           {viewMode === 'list' ? (
-            <div className="space-y-2">
-              {visibleChannels.map((channel, index) => (
-                <button
-                  key={channel.id}
-                  onClick={() => onChannelSelect(channel)}
-                  className={`w-full flex items-center gap-3 md:gap-4 px-3 md:px-4 py-2.5 md:py-3 rounded-xl transition-all ${
-                    currentChannel?.id === channel.id
-                      ? 'mi-card-selected'
-                      : focusedIndex === index
-                      ? 'bg-card'
-                      : 'bg-card/50 hover:bg-card'
-                  }`}
-                >
-                  {/* Channel Logo */}
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                    {channel.logo ? (
-                      <img
-                        src={channel.logo}
-                        alt={channel.name}
-                        loading="lazy"
-                        className="w-full h-full object-contain p-1"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <span className="text-base md:text-lg font-bold text-muted-foreground">
-                        {channel.name.charAt(0)}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Channel Name */}
-                  <span className="flex-1 text-left text-foreground font-medium truncate text-sm md:text-base">
-                    {channel.name}
-                  </span>
-
-                  {/* Badges - Simplified on mobile */}
-                  <div className="flex items-center gap-1.5 md:gap-2">
-                    {!isMobile && <span className="mi-badge mi-badge-secondary text-xs">HD</span>}
-                    {!isMobile && <span className="mi-badge mi-badge-secondary text-xs">EPG</span>}
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onToggleFavorite(channel.id);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.stopPropagation();
-                          onToggleFavorite(channel.id);
-                        }
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <Star
-                        className={`w-4 h-4 md:w-5 md:h-5 ${
-                          favorites.has(channel.id)
-                            ? 'fill-accent text-accent'
-                            : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                      />
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className={`grid gap-3 md:gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
-              {visibleChannels.map((channel, index) => (
-                <button
-                  key={channel.id}
-                  onClick={() => onChannelSelect(channel)}
-                  className={`flex gap-4 p-4 rounded-xl transition-all ${
-                    currentChannel?.id === channel.id
-                      ? 'mi-card-selected bg-card'
-                      : focusedIndex === index
-                      ? 'bg-card'
-                      : 'bg-card/50 hover:bg-card'
-                  }`}
-                >
-                  {/* Channel Logo - Larger for card view */}
-                  <div className="w-28 h-20 rounded-xl bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                    {channel.logo ? (
-                      <img
-                        src={channel.logo}
-                        alt={channel.name}
-                        loading="lazy"
-                        className="w-full h-full object-contain p-3"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <span className="text-2xl font-bold text-muted-foreground">
-                        {channel.name.charAt(0)}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Channel Info */}
-                  <div className="flex-1 flex flex-col justify-between py-1 min-w-0">
-                    <div className="min-w-0">
-                      <h3 className="text-foreground font-semibold text-left text-lg truncate">{channel.name.replace(/_/g, ' ')}</h3>
-                      <p className="text-muted-foreground text-sm text-left truncate">{(channel.group || 'Live TV').replace(/_/g, ' ')}</p>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex gap-1">
-                        <span className="mi-badge mi-badge-secondary">HD</span>
-                        <span className="mi-badge mi-badge-secondary">EPG</span>
+            <motion.div 
+              className="space-y-2"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                visible: { transition: { staggerChildren: 0.03 } }
+              }}
+            >
+              <AnimatePresence mode="popLayout">
+                {visibleChannels.map((channel, index) => (
+                  <motion.button
+                    key={channel.id}
+                    onClick={() => onChannelSelect(channel)}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    whileHover={{ scale: 1.01, x: 4 }}
+                    whileTap={{ scale: 0.99 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    className={`w-full flex items-center gap-3 md:gap-4 px-3 md:px-4 py-2.5 md:py-3 rounded-xl transition-all group ${
+                      currentChannel?.id === channel.id
+                        ? 'mi-card-selected ring-2 ring-primary/50'
+                        : focusedIndex === index
+                        ? 'bg-card ring-1 ring-primary/30'
+                        : 'bg-card/50 hover:bg-card hover:shadow-lg hover:shadow-primary/5'
+                    }`}
+                  >
+                    {/* Channel Logo with play overlay */}
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0 relative group-hover:ring-2 group-hover:ring-primary/30 transition-all">
+                      {channel.logo ? (
+                        <img
+                          src={channel.logo}
+                          alt={channel.name}
+                          loading="lazy"
+                          className="w-full h-full object-contain p-1"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <span className="text-base md:text-lg font-bold text-muted-foreground">
+                          {channel.name.charAt(0)}
+                        </span>
+                      )}
+                      {/* Play icon overlay on hover */}
+                      <div className="absolute inset-0 bg-primary/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <Play className="w-5 h-5 text-white fill-white" />
                       </div>
-                      <span
+                    </div>
+
+                    {/* Channel Name */}
+                    <span className="flex-1 text-left text-foreground font-medium truncate text-sm md:text-base group-hover:text-primary transition-colors">
+                      {channel.name}
+                    </span>
+
+                    {/* Badges - Simplified on mobile */}
+                    <div className="flex items-center gap-1.5 md:gap-2">
+                      {!isMobile && <span className="mi-badge mi-badge-secondary text-xs">HD</span>}
+                      {!isMobile && <span className="mi-badge mi-badge-secondary text-xs">EPG</span>}
+                      <motion.span
                         role="button"
                         tabIndex={0}
                         onClick={(e) => {
@@ -837,21 +785,121 @@ export const MiLiveTVList = ({
                             onToggleFavorite(channel.id);
                           }
                         }}
+                        whileHover={{ scale: 1.2 }}
+                        whileTap={{ scale: 0.9 }}
                         className="cursor-pointer"
                       >
                         <Star
-                          className={`w-5 h-5 ${
+                          className={`w-4 h-4 md:w-5 md:h-5 transition-all duration-200 ${
                             favorites.has(channel.id)
-                              ? 'fill-accent text-accent'
-                              : 'text-muted-foreground hover:text-foreground'
+                              ? 'fill-accent text-accent drop-shadow-[0_0_8px_hsl(32,100%,55%)]'
+                              : 'text-muted-foreground hover:text-accent'
                           }`}
                         />
-                      </span>
+                      </motion.span>
                     </div>
-                  </div>
-                </button>
-              ))}
-            </div>
+                  </motion.button>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          ) : (
+            <motion.div 
+              className={`grid gap-3 md:gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}
+              initial="hidden"
+              animate="visible"
+              variants={{
+                visible: { transition: { staggerChildren: 0.04 } }
+              }}
+            >
+              <AnimatePresence mode="popLayout">
+                {visibleChannels.map((channel, index) => (
+                  <motion.button
+                    key={channel.id}
+                    onClick={() => onChannelSelect(channel)}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    className={`flex gap-4 p-4 rounded-xl transition-all group relative overflow-hidden ${
+                      currentChannel?.id === channel.id
+                        ? 'mi-card-selected bg-card ring-2 ring-primary/50'
+                        : focusedIndex === index
+                        ? 'bg-card ring-1 ring-primary/30'
+                        : 'bg-card/50 hover:bg-card hover:shadow-xl hover:shadow-primary/10'
+                    }`}
+                  >
+                    {/* Animated background glow on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    
+                    {/* Channel Logo - Larger for card view */}
+                    <div className="w-28 h-20 rounded-xl bg-muted flex items-center justify-center overflow-hidden flex-shrink-0 relative group-hover:ring-2 group-hover:ring-primary/30 transition-all">
+                      {channel.logo ? (
+                        <img
+                          src={channel.logo}
+                          alt={channel.name}
+                          loading="lazy"
+                          className="w-full h-full object-contain p-3 transition-transform duration-300 group-hover:scale-110"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <span className="text-2xl font-bold text-muted-foreground">
+                          {channel.name.charAt(0)}
+                        </span>
+                      )}
+                      {/* Play overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-primary/90 to-primary/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                          <Play className="w-5 h-5 text-white fill-white" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Channel Info */}
+                    <div className="flex-1 flex flex-col justify-between py-1 min-w-0 relative z-10">
+                      <div className="min-w-0">
+                        <h3 className="text-foreground font-semibold text-left text-lg truncate group-hover:text-primary transition-colors">{channel.name.replace(/_/g, ' ')}</h3>
+                        <p className="text-muted-foreground text-sm text-left truncate">{(channel.group || 'Live TV').replace(/_/g, ' ')}</p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex gap-1">
+                          <span className="mi-badge mi-badge-secondary group-hover:bg-primary/20 group-hover:text-primary transition-colors">HD</span>
+                          <span className="mi-badge mi-badge-secondary group-hover:bg-primary/20 group-hover:text-primary transition-colors">EPG</span>
+                        </div>
+                        <motion.span
+                          role="button"
+                          tabIndex={0}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleFavorite(channel.id);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.stopPropagation();
+                              onToggleFavorite(channel.id);
+                            }
+                          }}
+                          whileHover={{ scale: 1.3, rotate: 15 }}
+                          whileTap={{ scale: 0.8 }}
+                          className="cursor-pointer"
+                        >
+                          <Star
+                            className={`w-5 h-5 transition-all duration-200 ${
+                              favorites.has(channel.id)
+                                ? 'fill-accent text-accent drop-shadow-[0_0_10px_hsl(32,100%,55%)]'
+                                : 'text-muted-foreground hover:text-accent'
+                            }`}
+                          />
+                        </motion.span>
+                      </div>
+                    </div>
+                  </motion.button>
+                ))}
+              </AnimatePresence>
+            </motion.div>
           )}
 
           {hasMore && (
