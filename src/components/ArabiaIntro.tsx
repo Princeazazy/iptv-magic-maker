@@ -170,14 +170,6 @@ export const ArabiaIntro = ({ onComplete }: ArabiaIntroProps) => {
         )}
       </AnimatePresence>
 
-      {/* Progress bar at bottom - simple CSS transition */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
-        <div
-          className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-100"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-
       {/* Skip button - simple hover */}
       <button
         onClick={handleSkip}
