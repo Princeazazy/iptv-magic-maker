@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { useIPTV, Channel } from '@/hooks/useIPTV';
 import { MiHomeScreen } from '@/components/MiHomeScreen';
 import { MiLiveTVList } from '@/components/MiLiveTVList';
@@ -6,6 +7,7 @@ import { MiMediaGrid } from '@/components/MiMediaGrid';
 import { MiMovieDetail } from '@/components/MiMovieDetail';
 import { MiSettingsPage } from '@/components/MiSettingsPage';
 import { MiFullscreenPlayer } from '@/components/MiFullscreenPlayer';
+import { MiniPlayer } from '@/components/MiniPlayer';
 import { ArabiaIntro } from '@/components/ArabiaIntro';
 import { GlobalSearchModal } from '@/components/GlobalSearchModal';
 import { BackgroundMusic } from '@/components/BackgroundMusic';
@@ -29,6 +31,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showMiniPlayer, setShowMiniPlayer] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { toast } = useToast();
 
@@ -108,6 +111,7 @@ const Index = () => {
 
   const handleChannelSelect = (channel: Channel) => {
     setCurrentChannel(channel);
+    setShowMiniPlayer(false);
     setIsFullscreen(true);
   };
 
@@ -188,7 +192,10 @@ const Index = () => {
       <MiFullscreenPlayer
         channel={currentChannel}
         isFavorite={favorites.has(currentChannel.id)}
-        onClose={() => setIsFullscreen(false)}
+        onClose={() => {
+          setIsFullscreen(false);
+          setShowMiniPlayer(true); // Show mini player when closing fullscreen
+        }}
         onNext={handleNextChannel}
         onPrevious={handlePreviousChannel}
         onToggleFavorite={() => handleToggleFavorite(currentChannel.id)}
@@ -290,8 +297,8 @@ const Index = () => {
     }
   };
 
-  // Only play background music when not in fullscreen player
-  const shouldPlayMusic = !isFullscreen;
+  // Only play background music when not in fullscreen player or mini player
+  const shouldPlayMusic = !isFullscreen && !showMiniPlayer;
 
   return (
     <>
@@ -302,6 +309,24 @@ const Index = () => {
         defaultVolume={0.25} 
       />
       {renderScreen()}
+      
+      {/* Mini Player (PiP) - shown when user exits fullscreen but channel is still playing */}
+      <AnimatePresence>
+        {showMiniPlayer && currentChannel && (
+          <MiniPlayer
+            channel={currentChannel}
+            onExpand={() => {
+              setShowMiniPlayer(false);
+              setIsFullscreen(true);
+            }}
+            onClose={() => {
+              setShowMiniPlayer(false);
+              setCurrentChannel(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
+      
       <GlobalSearchModal
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}

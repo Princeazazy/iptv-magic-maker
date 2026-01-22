@@ -462,8 +462,13 @@ export const MiLiveTVList = ({
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [time, setTime] = useState(new Date());
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [localSearchQuery, setLocalSearchQuery] = useState('');
+  const [showSearchInput, setShowSearchInput] = useState(false);
   const weather = useWeather();
   const isMobile = useIsMobile();
+
+  // Use local search if user typed in the search box, otherwise use prop
+  const effectiveSearchQuery = localSearchQuery || searchQuery;
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -483,7 +488,7 @@ export const MiLiveTVList = ({
 
   const filteredChannels = useMemo(() => {
     let filtered = channels.filter((channel) => {
-      const matchesSearch = channel.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = channel.name.toLowerCase().includes(effectiveSearchQuery.toLowerCase());
       const matchesGroup = selectedGroup === 'all' || channel.group === selectedGroup;
       const matchesFavorites = !showFavoritesOnly || favorites.has(channel.id);
       return matchesSearch && matchesGroup && matchesFavorites;
@@ -499,7 +504,7 @@ export const MiLiveTVList = ({
     }
 
     return filtered;
-  }, [channels, searchQuery, selectedGroup, showFavoritesOnly, favorites, sortBy]);
+  }, [channels, effectiveSearchQuery, selectedGroup, showFavoritesOnly, favorites, sortBy]);
 
   const {
     visibleItems: visibleChannels,
@@ -697,15 +702,43 @@ export const MiLiveTVList = ({
             >
               {viewMode === 'list' ? <Grid className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground" /> : <List className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />}
             </button>
+          {showSearchInput ? (
+              <div className="relative">
+                <input
+                  type="text"
+                  value={localSearchQuery}
+                  onChange={(e) => setLocalSearchQuery(e.target.value)}
+                  placeholder="Search channels..."
+                  autoFocus
+                  onBlur={() => {
+                    if (!localSearchQuery) setShowSearchInput(false);
+                  }}
+                  className="w-40 md:w-60 px-4 py-2 bg-card border border-border/50 rounded-xl text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                {localSearchQuery && (
+                  <button
+                    onClick={() => {
+                      setLocalSearchQuery('');
+                      setShowSearchInput(false);
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowSearchInput(true)}
+                className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-card flex items-center justify-center hover:bg-card/80 transition-colors"
+              >
+                <Search className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
+              </button>
+            )}
             {!isMobile && (
-              <>
-                <button className="w-11 h-11 rounded-full bg-card flex items-center justify-center hover:bg-card/80 transition-colors">
-                  <Search className="w-5 h-5 text-muted-foreground" />
-                </button>
-                <div className="w-11 h-11 rounded-full bg-primary overflow-hidden flex items-center justify-center ring-2 ring-primary/30">
-                  <User className="w-5 h-5 text-primary-foreground" />
-                </div>
-              </>
+              <div className="w-11 h-11 rounded-full bg-primary overflow-hidden flex items-center justify-center ring-2 ring-primary/30">
+                <User className="w-5 h-5 text-primary-foreground" />
+              </div>
             )}
           </div>
         </div>

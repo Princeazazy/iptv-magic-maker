@@ -81,6 +81,8 @@ export const MiMediaGrid = ({
   const [sortBy, setSortBy] = useState<string>('number');
   const [time] = useState(new Date());
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearchInput, setShowSearchInput] = useState(false);
   const weather = useWeather();
   const isMobile = useIsMobile();
 
@@ -97,7 +99,9 @@ export const MiMediaGrid = ({
 
   const filteredItems = useMemo(() => {
     let filtered = items.filter((item) => {
-      return selectedGroup === 'all' || item.group === selectedGroup;
+      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesGroup = selectedGroup === 'all' || item.group === selectedGroup;
+      return matchesSearch && matchesGroup;
     });
 
     switch (sortBy) {
@@ -113,7 +117,7 @@ export const MiMediaGrid = ({
     }
 
     return filtered;
-  }, [items, selectedGroup, sortBy]);
+  }, [items, searchQuery, selectedGroup, sortBy]);
 
   const { visibleItems, onScroll, hasMore } = useProgressiveList(filteredItems, {
     initial: 60,
@@ -266,9 +270,39 @@ export const MiMediaGrid = ({
 
           {/* Right Actions */}
           <div className="flex items-center gap-2 md:gap-3">
-            <button className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-card flex items-center justify-center hover:bg-card/80 transition-colors">
-              <Search className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
-            </button>
+            {showSearchInput ? (
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={`Search ${title.toLowerCase()}...`}
+                  autoFocus
+                  onBlur={() => {
+                    if (!searchQuery) setShowSearchInput(false);
+                  }}
+                  className="w-40 md:w-60 px-4 py-2 bg-card border border-border/50 rounded-xl text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setShowSearchInput(false);
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowSearchInput(true)}
+                className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-card flex items-center justify-center hover:bg-card/80 transition-colors"
+              >
+                <Search className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
+              </button>
+            )}
             {!isMobile && (
               <>
                 <button className="w-11 h-11 rounded-full bg-card flex items-center justify-center hover:bg-card/80 transition-colors">

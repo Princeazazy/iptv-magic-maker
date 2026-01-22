@@ -1,0 +1,195 @@
+import { useRef, useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { X, Maximize2, Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import Hls from 'hls.js';
+import { Capacitor } from '@capacitor/core';
+import { supabase } from '@/integrations/supabase/client';
+import { Channel } from '@/hooks/useIPTV';
+
+interface MiniPlayerProps {
+  channel: Channel;
+  onExpand: () => void;
+  onClose: () => void;
+}
+
+export const MiniPlayer = ({ channel, onExpand, onClose }: MiniPlayerProps) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const hlsRef = useRef<Hls | null>(null);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isMuted, setIsMuted] = useState(() => !Capacitor.isNativePlatform());
+  const [error, setError] = useState<string | null>(null);
+
+  const streamProxyUrl = (() => {
+    const supabaseUrl = (supabase as any).supabaseUrl as string | undefined;
+    if (!supabaseUrl) return '';
+    return new URL('functions/v1/stream-proxy', supabaseUrl).toString();
+  })();
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !channel.url) return;
+
+    // Clean up previous HLS instance
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+
+    setError(null);
+
+    // Build source URL
+    let sourceUrl = channel.url;
+    if (!channel.isLocal && streamProxyUrl) {
+      sourceUrl = `${streamProxyUrl}?url=${encodeURIComponent(channel.url)}`;
+    }
+
+    const isHls = sourceUrl.includes('.m3u8') || channel.url.includes('.m3u8');
+
+    if (isHls && Hls.isSupported()) {
+      const hls = new Hls({
+        maxBufferLength: 30,
+        maxMaxBufferLength: 60,
+        enableWorker: true,
+        lowLatencyMode: false,
+      });
+
+      hlsRef.current = hls;
+      hls.loadSource(sourceUrl);
+      hls.attachMedia(video);
+
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.muted = isMuted;
+        video.play().catch(() => setIsPlaying(false));
+      });
+
+      hls.on(Hls.Events.ERROR, (_, data) => {
+        if (data.fatal) {
+          setError('Playback error');
+        }
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Native HLS (Safari)
+      video.src = sourceUrl;
+      video.muted = isMuted;
+      video.play().catch(() => setIsPlaying(false));
+    } else {
+      // Direct playback
+      video.src = sourceUrl;
+      video.muted = isMuted;
+      video.play().catch(() => setIsPlaying(false));
+    }
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [channel.url, channel.isLocal, streamProxyUrl, isMuted]);
+
+  const togglePlay = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isPlaying) {
+      video.pause();
+    } else {
+      video.play().catch(() => {});
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const toggleMute = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.muted = !isMuted;
+    setIsMuted(!isMuted);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8, y: 50 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.8, y: 50 }}
+      drag
+      dragMomentum={false}
+      className="fixed bottom-24 right-6 z-50 w-80 rounded-2xl overflow-hidden shadow-2xl shadow-black/50 border border-border/30 bg-black cursor-move"
+      style={{ aspectRatio: '16/9' }}
+    >
+      {/* Video */}
+      <video
+        ref={videoRef}
+        className="w-full h-full object-contain bg-black"
+        playsInline
+        muted={isMuted}
+      />
+
+      {/* Error overlay */}
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+          <p className="text-red-400 text-xs">{error}</p>
+        </div>
+      )}
+
+      {/* Controls overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 opacity-0 hover:opacity-100 transition-opacity">
+        {/* Top - Channel name & close */}
+        <div className="absolute top-0 left-0 right-0 p-2 flex items-center justify-between">
+          <p className="text-white text-xs font-medium truncate flex-1 mr-2">{channel.name}</p>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            className="w-6 h-6 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/70 transition-colors"
+          >
+            <X className="w-3 h-3 text-white" />
+          </button>
+        </div>
+
+        {/* Bottom - Controls */}
+        <div className="absolute bottom-0 left-0 right-0 p-2 flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                togglePlay();
+              }}
+              className="w-7 h-7 rounded-full bg-primary/80 flex items-center justify-center hover:bg-primary transition-colors"
+            >
+              {isPlaying ? (
+                <Pause className="w-3 h-3 text-white" />
+              ) : (
+                <Play className="w-3 h-3 text-white ml-0.5" />
+              )}
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleMute();
+              }}
+              className="w-7 h-7 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/70 transition-colors"
+            >
+              {isMuted ? (
+                <VolumeX className="w-3 h-3 text-white" />
+              ) : (
+                <Volume2 className="w-3 h-3 text-white" />
+              )}
+            </button>
+          </div>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onExpand();
+            }}
+            className="w-7 h-7 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/70 transition-colors"
+          >
+            <Maximize2 className="w-3 h-3 text-white" />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
