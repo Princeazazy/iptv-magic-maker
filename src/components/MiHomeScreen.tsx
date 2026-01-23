@@ -133,12 +133,18 @@ export const MiHomeScreen = ({
   const formatDate = () => time.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-30"
+        style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&h=1080&fit=crop)' }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-background/80" />
       {/* Header - Mi Player Pro style */}
-      <header className="flex items-center justify-between px-6 md:px-10 py-4 md:py-6">
+      <header className="relative z-10 flex items-center justify-between px-6 md:px-10 py-4 md:py-6">
         {/* Logo */}
         <div className="flex items-center gap-3">
-          <img src={arabiaLogo} alt="Mi Player Pro" className="h-10 md:h-14 w-auto" />
+          <img src={arabiaLogo} alt="Mi Player Pro" className="h-14 md:h-20 w-auto" />
         </div>
 
         {/* Search Bar */}
@@ -185,16 +191,10 @@ export const MiHomeScreen = ({
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 px-6 md:px-10 pb-8 overflow-y-auto">
+      <main className="relative z-10 flex-1 px-6 md:px-10 pb-8 overflow-y-auto">
         {isMobile ? (
           /* Mobile Layout - Vertical stack */
           <div className="flex flex-col gap-4 pb-20">
-            {/* Last Updated */}
-            <div className="flex items-center gap-2 text-muted-foreground text-sm">
-              <Clock className="w-4 h-4" />
-              <span>Last Update: 2 days ago</span>
-            </div>
-
             {/* Live TV - Featured */}
             <TileCard onClick={() => onNavigate('live')} size="large" delay={0} className="min-h-[160px]">
               <div className="flex-1 flex flex-col justify-between">
@@ -260,10 +260,9 @@ export const MiHomeScreen = ({
             </TileCard>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-2 gap-3 mt-2">
+            <div className="grid grid-cols-3 gap-3 mt-2">
               <ActionButton icon={User} label="Account" onClick={() => onNavigate('settings')} />
               <ActionButton icon={RefreshCw} label="Reload" onClick={onReload} />
-              <ActionButton icon={Clock} label="Catch up" onClick={handleCatchUp} spinning={isRefreshing} />
               <ActionButton icon={LogOut} label="Exit" onClick={() => window.close()} />
             </div>
           </div>
@@ -272,12 +271,6 @@ export const MiHomeScreen = ({
           <div className="flex gap-6 h-full">
             {/* Left Section - Content Tiles */}
             <div className="flex-1 flex flex-col gap-4">
-              {/* Top row with info */}
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <Clock className="w-4 h-4" />
-                <span>Last Update: 2 days ago</span>
-              </div>
-
               {/* Main Grid */}
               <div className="grid grid-cols-3 grid-rows-2 gap-4 flex-1">
                 {/* Live TV - Takes full left column */}
@@ -364,7 +357,6 @@ export const MiHomeScreen = ({
               <div className="flex flex-col gap-2">
                 <ActionButton icon={User} label="Account" onClick={() => onNavigate('settings')} />
                 <ActionButton icon={RefreshCw} label="Reload" onClick={onReload} />
-                <ActionButton icon={Clock} label="Catch up" onClick={handleCatchUp} spinning={isRefreshing} />
                 <ActionButton icon={LogOut} label="Exit" onClick={() => window.close()} />
               </div>
 
