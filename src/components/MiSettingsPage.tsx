@@ -9,12 +9,11 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { getStoredPlaylistUrl, setStoredPlaylistUrl } from '@/lib/playlistStorage';
-import { 
-  readM3UFile, 
-  parseM3UContent, 
-  saveLocalChannels, 
+import {
+  readM3UFile,
+  parseM3UContent,
+  saveLocalChannels,
   getLocalPlaylistName,
-  hasLocalChannels,
   clearLocalChannels
 } from '@/lib/localPlaylistStorage';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,20 +52,14 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
 
   useEffect(() => {
     const saved = getStoredPlaylistUrl();
-    if (saved) {
-      setPlaylistUrl(saved);
-    }
-    // Check for local playlist
+    if (saved) setPlaylistUrl(saved);
     const localName = getLocalPlaylistName();
-    if (localName) {
-      setLocalPlaylistName(localName);
-    }
+    if (localName) setLocalPlaylistName(localName);
   }, []);
 
   const handleSavePlaylist = () => {
     if (playlistUrl.trim()) {
       setStoredPlaylistUrl(playlistUrl.trim());
-      // Clear local channels when using URL
       clearLocalChannels();
       setLocalPlaylistName(null);
       toast.success('Playlist saved!');
@@ -77,17 +70,12 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
     }
   };
 
-  // Handle local M3U file upload (Bocaletto approach - browser-side parsing)
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     const validExtensions = ['.m3u', '.m3u8'];
-    const isValidFile = validExtensions.some(ext => 
-      file.name.toLowerCase().endsWith(ext)
-    );
-
+    const isValidFile = validExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
     if (!isValidFile) {
       toast.error('Please upload a .m3u or .m3u8 file');
       return;
@@ -97,16 +85,12 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
     try {
       const content = await readM3UFile(file);
       const channels = parseM3UContent(content);
-      
       if (channels.length === 0) {
         toast.error('No channels found in the playlist file');
         return;
       }
-
-      // Save channels locally
       saveLocalChannels(channels, file.name);
       setLocalPlaylistName(file.name);
-      
       toast.success(`Loaded ${channels.length} channels from ${file.name}`);
       setShowPlaylistDialog(false);
       onPlaylistChange?.();
@@ -115,14 +99,10 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
       toast.error('Failed to read playlist file');
     } finally {
       setIsUploading(false);
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  // Fetch M3U from URL using edge function, then store locally for direct playback
   const handleFetchFromUrl = async () => {
     const url = playlistUrl.trim();
     if (!url) {
@@ -133,29 +113,16 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
     setIsFetching(true);
     try {
       toast.info('Fetching playlist from server...');
-      
       const { data, error } = await supabase.functions.invoke('fetch-m3u', {
-        body: { 
-          url,
-          maxChannels: 50000,
-          maxBytesMB: 40,
-          maxReturnPerType: 10000,
-          preferXtreamApi: true
-        }
+        body: { url, maxChannels: 50000, maxBytesMB: 40, maxReturnPerType: 10000, preferXtreamApi: true }
       });
 
-      if (error) {
-        throw new Error(error.message);
-      }
-
+      if (error) throw new Error(error.message);
       if (data?.blocked) {
         toast.error('Provider blocked the request. Try downloading the M3U file manually.');
         return;
       }
-
-      if (data?.error) {
-        throw new Error(data.error);
-      }
+      if (data?.error) throw new Error(data.error);
 
       if (data?.channels && Array.isArray(data.channels)) {
         const channels = data.channels
@@ -174,11 +141,9 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
           return;
         }
 
-        // Save as local channels for direct playback (no proxy when playing)
         saveLocalChannels(channels, `Fetched from URL`);
         setLocalPlaylistName(`${channels.length} channels from URL`);
-        
-        toast.success(`Loaded ${channels.length} channels! Streams will play directly.`);
+        toast.success(`Loaded ${channels.length} channels!`);
         setShowPlaylistDialog(false);
         onPlaylistChange?.();
       } else {
@@ -199,12 +164,9 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
     clearLocalChannels();
     setLocalPlaylistName(null);
     toast.success('Cache cleared - reloading with default playlist...');
-    setTimeout(() => {
-      window.location.reload();
-    }, 1000);
+    setTimeout(() => window.location.reload(), 1000);
   };
 
-  // Mock account data from Figma
   const accountData = {
     status: 'Active',
     macAddress: '8f:f7:2f:95:d1',
@@ -214,13 +176,13 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="flex items-center justify-between px-10 py-6">
+      {/* Header - Mi Player Pro Style */}
+      <header className="flex items-center justify-between px-6 md:px-10 py-4 md:py-6">
         {/* Back & Title */}
         <div className="flex items-center gap-4">
           <button
             onClick={onBack}
-            className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 active:scale-95 transition-all duration-100"
+            className="w-12 h-12 rounded-full bg-card border border-border/30 flex items-center justify-center hover:bg-card/80 transition-colors"
           >
             <ChevronLeft className="w-6 h-6 text-muted-foreground" />
           </button>
@@ -228,12 +190,12 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
         </div>
 
         {/* Center Logo */}
-        <div className="flex items-center justify-center">
-          <img src={arabiaLogo} alt="Arabia" className="h-24 w-auto" />
+        <div className="hidden md:flex items-center justify-center">
+          <img src={arabiaLogo} alt="Mi Player Pro" className="h-12 w-auto" />
         </div>
 
         {/* Time & Weather */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 md:gap-6">
           <span className="text-foreground font-medium text-lg">
             {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
@@ -241,129 +203,74 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
             <WeatherIcon icon={weather.icon} />
             <span>{weather.displayTemp}</span>
           </div>
-          {/* Profile */}
-          <div className="w-12 h-12 rounded-full bg-primary overflow-hidden ring-2 ring-primary/30">
-            <div className="w-full h-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-              <span className="text-primary-foreground text-lg font-bold">A</span>
-            </div>
-          </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="px-10 py-8">
-        <div className="max-w-5xl mx-auto flex gap-6">
-          {/* Left - User Profile Card */}
-          <div className="flex-1 mi-card p-8">
-            <div className="flex items-center gap-6 mb-8">
-              {/* Avatar */}
-              <div className="w-24 h-24 rounded-full bg-primary overflow-hidden ring-4 ring-primary/30">
-                <div className="w-full h-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-                  <span className="text-primary-foreground text-4xl font-bold">A</span>
-                </div>
-              </div>
-
-              {/* User Info */}
-              <div>
-                <h2 className="text-2xl font-bold text-foreground">Ameer E</h2>
-                <p className="text-muted-foreground">ameer@example.com</p>
-              </div>
+      {/* Main Content - Mi Player Pro Layout */}
+      <main className="px-6 md:px-10 py-6">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-6">
+          {/* Left Panel - Account Info */}
+          <div className="flex-1 bg-card rounded-2xl border border-border/30 p-6 md:p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <button onClick={onBack} className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+              </button>
+              <h2 className="text-xl font-semibold text-foreground">Account</h2>
             </div>
 
-            {/* Account Button */}
-            <button className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-secondary rounded-xl hover:bg-secondary/80 transition-colors">
-              <User className="w-5 h-5 text-muted-foreground" />
-              <span className="text-foreground font-medium">Account</span>
-            </button>
-
-            {/* Account Details (from Figma page 5) */}
-            <div className="mt-6 space-y-3 p-4 bg-secondary/50 rounded-xl">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-sm">Account Status</span>
-                <span className="text-accent font-medium text-sm">{accountData.status}</span>
+            {/* Account Details Grid */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center py-3 border-b border-border/30">
+                <span className="text-muted-foreground">Account Status :</span>
+                <span className="text-accent font-medium">{accountData.status}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-sm">Mac Address</span>
-                <span className="text-foreground text-sm font-mono">{accountData.macAddress}</span>
+              <div className="flex justify-between items-center py-3 border-b border-border/30">
+                <span className="text-muted-foreground">Mac Address :</span>
+                <span className="text-foreground font-mono">{accountData.macAddress}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-sm">Device Key</span>
-                <span className="text-foreground text-sm font-mono">{accountData.deviceKey}</span>
+              <div className="flex justify-between items-center py-3 border-b border-border/30">
+                <span className="text-muted-foreground">Device Key :</span>
+                <span className="text-foreground font-mono">{accountData.deviceKey}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-sm">Expire Date</span>
-                <span className="text-accent font-medium text-sm">{accountData.expireDate}</span>
+              <div className="flex justify-between items-center py-3">
+                <span className="text-muted-foreground">Expire Date :</span>
+                <span className="text-foreground">{accountData.expireDate}</span>
               </div>
             </div>
           </div>
 
-          {/* Right - Settings Options */}
-          <div className="flex-1 space-y-3">
+          {/* Right Panel - Action Buttons */}
+          <div className="w-full md:w-80 flex flex-col gap-3">
             {/* Parent Control */}
-            <button className="w-full flex items-center gap-4 px-6 py-5 mi-card hover:bg-card">
-              <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center">
+            <button className="w-full flex items-center gap-4 px-6 py-5 bg-card rounded-2xl border border-border/30 hover:bg-card/80 transition-colors text-left">
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
                 <Shield className="w-6 h-6 text-muted-foreground" />
               </div>
               <span className="text-foreground font-medium text-lg">Parent Control</span>
             </button>
 
-            {/* Upload Local M3U File - RECOMMENDED FOR WEB */}
-            <button 
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-              className="w-full flex items-center gap-4 px-6 py-5 mi-card hover:bg-card border-2 border-accent/50"
-            >
-              <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center">
-                <Upload className="w-6 h-6 text-accent" />
-              </div>
-              <div className="flex-1 text-left">
-                <span className="text-foreground font-medium text-lg block">
-                  {isUploading ? 'Uploading...' : 'Upload M3U File'}
-                </span>
-                <span className="text-accent text-sm block">
-                  {localPlaylistName 
-                    ? `✓ ${localPlaylistName}` 
-                    : 'Best for web - works with all providers!'}
-                </span>
-              </div>
-              {localPlaylistName && <FileVideo className="w-5 h-5 text-accent" />}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".m3u,.m3u8"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-
-            {/* Change Playlist URL */}
-            <button 
+            {/* Change Playlist */}
+            <button
               onClick={() => setShowPlaylistDialog(true)}
-              className="w-full flex items-center gap-4 px-6 py-5 mi-card hover:bg-card"
+              className="w-full flex items-center gap-4 px-6 py-5 bg-card rounded-2xl border border-border/30 hover:bg-card/80 transition-colors text-left"
             >
-              <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
                 <ListVideo className="w-6 h-6 text-muted-foreground" />
               </div>
-              <div className="flex-1 text-left">
-                <span className="text-foreground font-medium text-lg block">Playlist URL</span>
-                {!localPlaylistName && playlistUrl && (
-                  <span className="text-muted-foreground text-sm truncate block max-w-xs">
-                    {playlistUrl.includes('?') ? playlistUrl.split('?')[0] + '...' : playlistUrl}
-                  </span>
-                )}
-                {!localPlaylistName && !playlistUrl && (
-                  <span className="text-muted-foreground text-sm block">For native apps only</span>
+              <div className="flex-1">
+                <span className="text-foreground font-medium text-lg block">Change Playlist</span>
+                {localPlaylistName && (
+                  <span className="text-muted-foreground text-sm">{localPlaylistName}</span>
                 )}
               </div>
-              {!localPlaylistName && playlistUrl && <Check className="w-5 h-5 text-accent" />}
             </button>
 
             {/* Delete Cache */}
-            <button 
+            <button
               onClick={handleDeleteCache}
-              className="w-full flex items-center gap-4 px-6 py-5 mi-card hover:bg-card"
+              className="w-full flex items-center gap-4 px-6 py-5 bg-card rounded-2xl border border-border/30 hover:bg-card/80 transition-colors text-left"
             >
-              <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
                 <Trash2 className="w-6 h-6 text-muted-foreground" />
               </div>
               <span className="text-foreground font-medium text-lg">Delete Cache</span>
@@ -381,7 +288,7 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-foreground">Playlist Settings</DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-6 py-4">
             {/* Recommended: File Upload */}
             <div className="bg-accent/10 border border-accent/30 rounded-xl p-4">
@@ -390,14 +297,10 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
                 <strong className="text-foreground">Recommended for Web</strong>
               </div>
               <p className="text-sm text-muted-foreground mb-3">
-                Upload your M3U file directly. Streams will play from your device's IP, 
-                bypassing provider blocks. This is how apps like IPTV Smarters work!
+                Upload your M3U file directly. Streams will play from your device's IP.
               </p>
               <button
-                onClick={() => {
-                  setShowPlaylistDialog(false);
-                  setTimeout(() => fileInputRef.current?.click(), 100);
-                }}
+                onClick={() => { setShowPlaylistDialog(false); setTimeout(() => fileInputRef.current?.click(), 100); }}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors"
               >
                 <Upload className="w-4 h-4" />
@@ -405,7 +308,7 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
               </button>
             </div>
 
-            {/* Fetch from URL - for providers that block browser access */}
+            {/* Fetch from URL */}
             <div className="space-y-3">
               <label className="text-sm text-muted-foreground">Or fetch from URL</label>
               <Input
@@ -417,37 +320,38 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
               <button
                 onClick={handleFetchFromUrl}
                 disabled={isFetching || !playlistUrl.trim()}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
                 {isFetching ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="font-medium">Fetching channels...</span>
-                  </>
+                  <><Loader2 className="w-4 h-4 animate-spin" /><span>Fetching...</span></>
                 ) : (
-                  <>
-                    <Download className="w-4 h-4" />
-                    <span className="font-medium">Fetch & Load Channels</span>
-                  </>
+                  <><Download className="w-4 h-4" /><span>Fetch & Load Channels</span></>
                 )}
               </button>
-              <p className="text-xs text-muted-foreground">
-                This fetches the channel list via our server, then streams play directly from your device.
-              </p>
             </div>
 
             <div className="flex gap-3 pt-2">
-              <button
-                onClick={() => setShowPlaylistDialog(false)}
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-secondary rounded-xl hover:bg-secondary/80 transition-colors"
-              >
+              <button onClick={() => setShowPlaylistDialog(false)} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-secondary rounded-xl hover:bg-secondary/80 transition-colors">
                 <X className="w-5 h-5" />
-                <span className="font-medium">Cancel</span>
+                <span>Cancel</span>
+              </button>
+              <button onClick={handleSavePlaylist} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors">
+                <Check className="w-5 h-5" />
+                <span>Save URL</span>
               </button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".m3u,.m3u8"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
     </div>
   );
 };
