@@ -22,10 +22,11 @@ const WeatherIcon = ({ icon }: { icon: string }) => {
   }
 };
 
-// Get category emoji based on group name
+// Get category emoji based on group name - improved for movies/series
 const getCategoryEmoji = (group: string): string => {
   const groupLower = group.toLowerCase();
   
+  // Streaming platforms
   if (groupLower.includes('netflix') || group.includes('نتفلكس')) return '🎬';
   if (groupLower.includes('amazon') || groupLower.includes('prime')) return '📦';
   if (groupLower.includes('hulu')) return '📺';
@@ -34,28 +35,59 @@ const getCategoryEmoji = (group: string): string => {
   if (groupLower.includes('osn')) return '📡';
   if (groupLower.includes('starz')) return '⭐';
   if (groupLower.includes('showtime')) return '🎪';
-  if (groupLower.includes('power')) return '⚡';
-  if (groupLower.includes('wwe') || group.includes('مصارعة')) return '🤼';
+  if (groupLower.includes('apple')) return '🍎';
+  if (groupLower.includes('paramount')) return '🏔️';
+  if (groupLower.includes('peacock')) return '🦚';
+  if (groupLower.includes('crunchyroll')) return '🍥';
+  if (groupLower.includes('shahid')) return '📺';
+  if (groupLower.includes('bein')) return '⚽';
+  
+  // Seasonal content
+  if (groupLower.includes('christmas') || groupLower.includes('holiday') || groupLower.includes('xmas')) return '🎄';
+  if (groupLower.includes('halloween')) return '🎃';
+  if (groupLower.includes('ramadan') || group.includes('رمضان')) return '🌙';
+  if (groupLower.includes('eid') || group.includes('عيد')) return '🕌';
+  
+  // Arabic content
+  if (group.includes('عربي') || group.includes('arabic') || groupLower.includes('arab')) return '🇸🇦';
+  if (group.includes('مصر') || groupLower.includes('egypt')) return '🇪🇬';
+  if (group.includes('خليج') || groupLower.includes('khalij') || groupLower.includes('gulf')) return '🇦🇪';
+  if (group.includes('مغرب') || groupLower.includes('maghreb')) return '🇲🇦';
+  
+  // Genres
+  if (groupLower.includes('action') || groupLower.includes('adventure')) return '💥';
+  if (groupLower.includes('comedy') || group.includes('كوميدي')) return '😂';
+  if (groupLower.includes('horror') || groupLower.includes('scary') || group.includes('رعب')) return '👻';
+  if (groupLower.includes('crime') || groupLower.includes('mystery') || groupLower.includes('thriller')) return '🔍';
+  if (groupLower.includes('sci-fi') || groupLower.includes('fantasy') || groupLower.includes('scifi')) return '🚀';
+  if (groupLower.includes('romance') || group.includes('رومانسي')) return '💕';
+  if (groupLower.includes('drama') || group.includes('دراما')) return '🎭';
+  if (groupLower.includes('animation') || groupLower.includes('anime') || group.includes('انمي')) return '🎨';
+  if (groupLower.includes('family') || groupLower.includes('kids') || group.includes('اطفال')) return '👨‍👩‍👧‍👦';
+  if (groupLower.includes('war') || groupLower.includes('military')) return '⚔️';
+  if (groupLower.includes('western')) return '🤠';
+  if (groupLower.includes('sports')) return '🏆';
+  if (groupLower.includes('documentary') || groupLower.includes('doc') || group.includes('وثائقي')) return '📽️';
+  if (groupLower.includes('biography') || groupLower.includes('history')) return '📜';
+  if (groupLower.includes('music') || groupLower.includes('musical')) return '🎵';
+  
+  // Years (2020s first)
+  if (groupLower.match(/\b202[4-9]\b/) || groupLower.match(/\b2030\b/)) return '🆕';
+  if (groupLower.match(/\b202[0-3]\b/)) return '📅';
+  if (groupLower.match(/\b201\d\b/)) return '📆';
+  if (groupLower.match(/\b20[01]\d\b/)) return '🗓️';
+  if (groupLower.match(/\b(19\d{2})\b/)) return '📼';
+  
+  // Other content types
+  if (groupLower.includes('indian') || group.includes('هند')) return '🇮🇳';
+  if (groupLower.includes('turk') || group.includes('ترك')) return '🇹🇷';
+  if (groupLower.includes('korean') || groupLower.includes('kdrama')) return '🇰🇷';
+  if (groupLower.includes('power') || groupLower.includes('wrestling') || groupLower.includes('wwe')) return '🤼';
   if (groupLower.includes('3d')) return '🥽';
   if (groupLower.includes('cartoon') || group.includes('كرتون')) return '🎨';
-  if (groupLower.includes('albania')) return '🇦🇱';
-  if (groupLower.includes('germany') || groupLower.includes('german') || groupLower.includes('ger')) return '🇩🇪';
-  if (groupLower.includes('indian') || group.includes('هندية')) return '🇮🇳';
-  if (groupLower.includes('vod fr') || groupLower.includes('france') || groupLower.includes('french')) return '🇫🇷';
-  if (groupLower.includes('turk') || group.includes('تركية') || group.includes('تركي')) return '🇹🇷';
-  if (groupLower.includes('asia')) return '🌏';
-  if (groupLower.includes('vod en') || groupLower.includes('subtitles') || groupLower.includes('english')) return '🇬🇧';
-  if (groupLower.includes('russia')) return '🇷🇺';
-  if (groupLower.includes('egypt') || group.includes('مصر')) return '🇪🇬';
-  if (groupLower.includes('doc') || group.includes('وثائقية') || groupLower.includes('documentary')) return '📽️';
-  if (groupLower.includes('vod') || groupLower.includes('mov') || group.includes('أفلام') || group.includes('افلام')) return '🎬';
-  if (groupLower.match(/\b(19|20)\d{2}\b/)) return '🎬';
-  if (groupLower.includes('series') || group.includes('مسلسل')) return '📺';
-  if (groupLower.includes('action') || groupLower.includes('adventure')) return '💥';
-  if (groupLower.includes('comedy')) return '😂';
-  if (groupLower.includes('horror') || groupLower.includes('scary')) return '👻';
-  if (groupLower.includes('crime') || groupLower.includes('mystery')) return '🔍';
-  if (groupLower.includes('sci-fi') || groupLower.includes('fantasy')) return '🚀';
+  if (groupLower.includes('country') && groupLower.includes('fr')) return '🇫🇷';
+  if (groupLower.includes('vod en') || groupLower.includes('english')) return '🇬🇧';
+  if (groupLower.includes('adult') || groupLower.includes('xxx')) return '🔞';
   
   return '🎬';
 };
@@ -86,15 +118,65 @@ export const MiMediaGrid = ({
   const weather = useWeather();
   const isMobile = useIsMobile();
 
+  // Smart sorting for groups - prioritize by year, then Arabic, then seasonal, then alphabetical
+  const getGroupSortPriority = (groupName: string): number => {
+    const g = groupName.toLowerCase();
+    
+    // Extract year if present
+    const yearMatch = g.match(/\b(19|20)\d{2}\b/);
+    if (yearMatch) {
+      const year = parseInt(yearMatch[0]);
+      // Future/latest years get priority 1-50 (2026=1, 2025=2, etc.)
+      return 2030 - year;
+    }
+    
+    // Arabic content priority 51-60
+    if (g.includes('arab') || groupName.includes('عربي') || groupName.includes('افلام عربي')) return 51;
+    if (groupName.includes('مصر') || g.includes('egypt')) return 52;
+    if (groupName.includes('خليج') || g.includes('khalij')) return 53;
+    
+    // Seasonal content priority 100-110
+    if (g.includes('ramadan') || groupName.includes('رمضان')) return 100;
+    if (g.includes('christmas') || g.includes('holiday') || g.includes('xmas')) return 101;
+    if (g.includes('eid') || groupName.includes('عيد')) return 102;
+    
+    // Streaming platforms 150-200
+    if (g.includes('netflix')) return 150;
+    if (g.includes('hbo') || g.includes('max')) return 151;
+    if (g.includes('amazon') || g.includes('prime')) return 152;
+    if (g.includes('disney')) return 153;
+    if (g.includes('apple')) return 154;
+    if (g.includes('shahid')) return 155;
+    
+    // Everything else 500+
+    return 500;
+  };
+
   const groups = useMemo(() => {
-    const groupCounts = new Map<string, number>();
+    const groupCounts = new Map<string, { count: number; firstLogo?: string }>();
     items.forEach((item) => {
       const group = item.group || 'Uncategorized';
-      groupCounts.set(group, (groupCounts.get(group) || 0) + 1);
+      const existing = groupCounts.get(group);
+      if (!existing) {
+        groupCounts.set(group, { count: 1, firstLogo: item.backdrop_path?.[0] || item.logo });
+      } else {
+        existing.count++;
+        // Use better logo if available
+        if (!existing.firstLogo && (item.backdrop_path?.[0] || item.logo)) {
+          existing.firstLogo = item.backdrop_path?.[0] || item.logo;
+        }
+      }
     });
+    
+    // Sort by priority (year desc, then Arabic, then seasonal, then alpha)
     return Array.from(groupCounts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([name, count]) => ({ name, count }));
+      .sort((a, b) => {
+        const priorityA = getGroupSortPriority(a[0]);
+        const priorityB = getGroupSortPriority(b[0]);
+        if (priorityA !== priorityB) return priorityA - priorityB;
+        return a[0].localeCompare(b[0]);
+      })
+      .map(([name, data]) => ({ name, count: data.count, firstLogo: data.firstLogo }));
   }, [items]);
 
   const filteredItems = useMemo(() => {
@@ -113,6 +195,23 @@ export const MiMediaGrid = ({
         break;
       case 'rating':
         filtered = [...filtered].sort((a, b) => parseFloat(b.rating || '0') - parseFloat(a.rating || '0'));
+        break;
+      case 'year':
+        filtered = [...filtered].sort((a, b) => {
+          const yearA = parseInt(a.year || '0');
+          const yearB = parseInt(b.year || '0');
+          return yearB - yearA; // Descending (newest first)
+        });
+        break;
+      case 'number':
+      default:
+        // Default: sort by year descending, then by name
+        filtered = [...filtered].sort((a, b) => {
+          const yearA = parseInt(a.year || '0');
+          const yearB = parseInt(b.year || '0');
+          if (yearA !== yearB) return yearB - yearA;
+          return a.name.localeCompare(b.name);
+        });
         break;
     }
 
@@ -187,8 +286,21 @@ export const MiMediaGrid = ({
                   : 'text-muted-foreground hover:bg-card/50 hover:text-foreground'
               }`}
             >
-              <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-2xl">
-                {getCategoryEmoji(group.name)}
+              <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center overflow-hidden flex-shrink-0">
+                {/* Use group's first movie/series poster as icon if available, otherwise emoji */}
+                {group.firstLogo ? (
+                  <img 
+                    src={group.firstLogo} 
+                    alt={group.name} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.parentElement!.innerHTML = `<span class="text-2xl">${getCategoryEmoji(group.name)}</span>`;
+                    }}
+                  />
+                ) : (
+                  <span className="text-2xl">{getCategoryEmoji(group.name)}</span>
+                )}
               </div>
               <div className="flex-1 text-left">
                 <p className={`text-sm truncate ${selectedGroup === group.name ? 'font-semibold text-foreground' : ''}`}>
@@ -247,11 +359,11 @@ export const MiMediaGrid = ({
               <SelectValue placeholder="Order By" />
             </SelectTrigger>
             <SelectContent className="bg-card border-border/50">
-              <SelectItem value="number">Order By Number</SelectItem>
-              <SelectItem value="added">Order By Added</SelectItem>
-              <SelectItem value="rating">Order By Rating</SelectItem>
-              <SelectItem value="a-z">Order By A-Z</SelectItem>
-              <SelectItem value="z-a">Order By Z-A</SelectItem>
+              <SelectItem value="number">Latest First</SelectItem>
+              <SelectItem value="year">By Year</SelectItem>
+              <SelectItem value="rating">By Rating</SelectItem>
+              <SelectItem value="a-z">A-Z</SelectItem>
+              <SelectItem value="z-a">Z-A</SelectItem>
             </SelectContent>
           </Select>
 

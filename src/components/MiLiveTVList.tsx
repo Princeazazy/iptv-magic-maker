@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Search, Star, Tv, Cloud, Sun, CloudRain, Snowflake, CloudLightning, User, Menu, X, Play, Calendar } from 'lucide-react';
+import { ChevronLeft, Search, Star, Tv, Cloud, Sun, CloudRain, Snowflake, CloudLightning, User, Menu, X, Play, Calendar, Heart } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
 import { useProgressiveList } from '@/hooks/useProgressiveList';
 import { useWeather } from '@/hooks/useWeather';
@@ -176,16 +176,22 @@ export const MiLiveTVList = ({
   // Preview channel (hovered or current)
   const previewChannel = hoveredChannel || currentChannel;
 
-  // Get logo for groups (use country flag or first channel's logo)
+  // Get logo for groups - ALWAYS use country flag for countries, never channel logos
   const getGroupLogo = (group: { name: string; displayName: string; firstLogo?: string; originalNames: string[] }): string | null => {
-    // Check if any original name has a country flag
-    for (const origName of group.originalNames) {
-      const countryFlag = getCountryFlagUrl(origName);
-      if (countryFlag) return countryFlag;
+    // For countries, ALWAYS return the flag URL - never use channel logos for countries
+    const countryInfo = getCountryInfo(group.displayName);
+    if (countryInfo) {
+      return countryInfo.flagUrl;
     }
     
-    // For non-country groups, use the first channel's logo
-    return group.firstLogo || null;
+    // Check if any original name is a country
+    for (const origName of group.originalNames) {
+      const flag = getCountryFlagUrl(origName);
+      if (flag) return flag;
+    }
+    
+    // Only for non-country groups (e.g., "Netflix", "Premium"), use the first channel's logo
+    return null;
   };
 
   return (
@@ -271,18 +277,22 @@ export const MiLiveTVList = ({
           <button
             onClick={() => handleGroupSelect('all')}
             className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-              selectedGroup === 'all' ? 'bg-card text-foreground ring-2 ring-primary/30' : 'bg-muted text-muted-foreground'
+              selectedGroup === 'all' && !showFavoritesOnly ? 'bg-card text-foreground ring-2 ring-primary/30' : 'bg-muted text-muted-foreground'
             }`}
           >
             <Tv className="w-5 h-5" />
           </button>
           <button
-            onClick={() => onToggleFavorite('')}
+            onClick={() => {
+              // Toggle favorites filter directly here
+              onToggleFavorite('');
+            }}
             className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-              showFavoritesOnly ? 'bg-card text-foreground ring-2 ring-accent/30' : 'bg-muted text-muted-foreground'
+              showFavoritesOnly ? 'bg-accent text-white ring-2 ring-accent/30' : 'bg-muted text-muted-foreground hover:bg-muted/80'
             }`}
+            title={showFavoritesOnly ? 'Show All Channels' : 'Show Favorites Only'}
           >
-            <Star className={`w-5 h-5 ${showFavoritesOnly ? 'fill-accent text-accent' : ''}`} />
+            <Heart className={`w-5 h-5 ${showFavoritesOnly ? 'fill-white text-white' : ''}`} />
           </button>
         </div>
       </div>
