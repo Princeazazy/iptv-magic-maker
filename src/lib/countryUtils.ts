@@ -124,7 +124,7 @@ const OTHER_COUNTRIES: Record<string, CountryInfo> = {
   'mexico': { name: 'Mexico', code: 'mx', flagUrl: 'https://flagcdn.com/w80/mx.png', priority: 78 },
   'br': { name: 'Brazil', code: 'br', flagUrl: 'https://flagcdn.com/w80/br.png', priority: 79 },
   'brazil': { name: 'Brazil', code: 'br', flagUrl: 'https://flagcdn.com/w80/br.png', priority: 79 },
-  'ar': { name: 'Argentina', code: 'ar', flagUrl: 'https://flagcdn.com/w80/ar.png', priority: 80 },
+  'arg': { name: 'Argentina', code: 'ar', flagUrl: 'https://flagcdn.com/w80/ar.png', priority: 80 },
   'argentina': { name: 'Argentina', code: 'ar', flagUrl: 'https://flagcdn.com/w80/ar.png', priority: 80 },
   'co': { name: 'Colombia', code: 'co', flagUrl: 'https://flagcdn.com/w80/co.png', priority: 81 },
   'colombia': { name: 'Colombia', code: 'co', flagUrl: 'https://flagcdn.com/w80/co.png', priority: 81 },
