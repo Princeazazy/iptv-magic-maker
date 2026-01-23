@@ -5,7 +5,7 @@ import { Channel } from '@/hooks/useIPTV';
 import { useProgressiveList } from '@/hooks/useProgressiveList';
 import { useWeather } from '@/hooks/useWeather';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { getCountryInfo, getCountryFlagUrl, getDisplayName, getCategoryEmoji, sortGroupsByPriority, getGroupPriority } from '@/lib/countryUtils';
+import { getCountryInfo, getCountryFlagUrl, getDisplayName, getCategoryEmoji, mergeAndSortGroups, normalizeGroupName } from '@/lib/countryUtils';
 import { EPGGuide } from './EPGGuide';
 import {
   Select,
@@ -78,33 +78,55 @@ export const MiLiveTVList = ({
 
   // Build groups with first channel logo for non-country groups
   const groupsWithLogos = useMemo(() => {
-    const groupData = new Map<string, { count: number; firstLogo?: string }>();
+    const groupData = new Map<string, { count: number; firstLogo?: string; originalNames: string[] }>();
     channels.forEach((ch) => {
       const group = ch.group || 'Uncategorized';
-      const existing = groupData.get(group);
+      const normalizedKey = normalizeGroupName(group);
+      const existing = groupData.get(normalizedKey);
       if (!existing) {
-        groupData.set(group, { count: 1, firstLogo: ch.logo });
+        groupData.set(normalizedKey, { count: 1, firstLogo: ch.logo, originalNames: [group] });
       } else {
         existing.count++;
+        // Track all original group names for this normalized key
+        if (!existing.originalNames.includes(group)) {
+          existing.originalNames.push(group);
+        }
       }
     });
     return groupData;
   }, [channels]);
 
   const groups = useMemo(() => {
-    const groupList = Array.from(groupsWithLogos.entries()).map(([name, data]) => ({
-      name,
-      count: data.count,
-      firstLogo: data.firstLogo,
-    }));
-    // Sort with Arabic first, USA second, then others
-    return sortGroupsByPriority(groupList);
+    return mergeAndSortGroups(groupsWithLogos);
   }, [groupsWithLogos]);
+
+  // Create a mapping of normalized keys to original group names for filtering
+  const normalizedGroupMap = useMemo(() => {
+    const map = new Map<string, string[]>();
+    channels.forEach((ch) => {
+      const group = ch.group || 'Uncategorized';
+      const normalizedKey = normalizeGroupName(group);
+      const existing = map.get(normalizedKey);
+      if (!existing) {
+        map.set(normalizedKey, [group]);
+      } else if (!existing.includes(group)) {
+        existing.push(group);
+      }
+    });
+    return map;
+  }, [channels]);
 
   const filteredChannels = useMemo(() => {
     let filtered = channels.filter((channel) => {
       const matchesSearch = channel.name.toLowerCase().includes(effectiveSearchQuery.toLowerCase());
-      const matchesGroup = selectedGroup === 'all' || channel.group === selectedGroup;
+      
+      // For group matching, check if channel's group matches any of the original names for the selected normalized group
+      let matchesGroup = selectedGroup === 'all';
+      if (!matchesGroup) {
+        const originalNames = normalizedGroupMap.get(selectedGroup) || [];
+        matchesGroup = originalNames.includes(channel.group || 'Uncategorized');
+      }
+      
       const matchesFavorites = !showFavoritesOnly || favorites.has(channel.id);
       return matchesSearch && matchesGroup && matchesFavorites;
     });
@@ -154,14 +176,16 @@ export const MiLiveTVList = ({
   // Preview channel (hovered or current)
   const previewChannel = hoveredChannel || currentChannel;
 
-  // Get logo for non-country groups (use first channel's logo)
-  const getGroupLogo = (groupName: string): string | null => {
-    const countryFlag = getCountryFlagUrl(groupName);
-    if (countryFlag) return countryFlag;
+  // Get logo for groups (use country flag or first channel's logo)
+  const getGroupLogo = (group: { name: string; displayName: string; firstLogo?: string; originalNames: string[] }): string | null => {
+    // Check if any original name has a country flag
+    for (const origName of group.originalNames) {
+      const countryFlag = getCountryFlagUrl(origName);
+      if (countryFlag) return countryFlag;
+    }
     
     // For non-country groups, use the first channel's logo
-    const groupData = groupsWithLogos.get(groupName);
-    return groupData?.firstLogo || null;
+    return group.firstLogo || null;
   };
 
   return (
@@ -224,15 +248,15 @@ export const MiLiveTVList = ({
               }`}
             >
               <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                {getGroupLogo(group.name) ? (
-                  <img src={getGroupLogo(group.name)!} alt={group.name} className="w-full h-full object-cover" />
+                {getGroupLogo(group) ? (
+                  <img src={getGroupLogo(group)!} alt={group.displayName} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-base">{getCategoryEmoji(group.name)}</span>
+                  <span className="text-base">{getCategoryEmoji(group.displayName)}</span>
                 )}
               </div>
               <div className="flex-1 text-left min-w-0">
                 <p className={`text-sm truncate ${selectedGroup === group.name ? 'font-semibold' : ''}`}>
-                  {getDisplayName(group.name)}
+                  {group.displayName}
                 </p>
                 {selectedGroup === group.name && (
                   <p className="text-xs text-muted-foreground">{group.count} Channels</p>
