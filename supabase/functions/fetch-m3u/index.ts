@@ -594,19 +594,19 @@ serve(async (req) => {
     const safeMaxReturnPerType =
       typeof maxReturnPerType === 'number' && Number.isFinite(maxReturnPerType) && maxReturnPerType > 0
         ? Math.min(maxReturnPerType, XTREAM_MAX_ITEMS_PER_RESPONSE)
-        : XTREAM_MAX_ITEMS_PER_RESPONSE;
+        : XTREAM_MAX_ITEMS_PER_RESPONSE; // 50000 - load ALL
 
     const rawMaxChannels = typeof maxChannels === 'number' ? maxChannels : Number(maxChannels);
     const safeMaxChannels = Number.isFinite(rawMaxChannels)
-      ? Math.min(Math.max(rawMaxChannels, 0), 15000)
-      : 10000;
+      ? Math.min(Math.max(rawMaxChannels, 0), 100000) // Increased from 15000 to 100000
+      : 50000; // Increased default from 10000 to 50000
 
     const stopAfterChannels = Math.min(safeMaxChannels, safeMaxReturnPerType * 3);
 
     const rawMaxBytesMB = typeof maxBytesMB === 'number' ? maxBytesMB : Number(maxBytesMB);
     const safeMaxBytesMB = Number.isFinite(rawMaxBytesMB)
-      ? Math.min(Math.max(rawMaxBytesMB, 1), 20)
-      : 15;
+      ? Math.min(Math.max(rawMaxBytesMB, 1), 50) // Increased from 20 to 50
+      : 40; // Increased default from 15 to 40
 
     console.log('Processing URL:', url);
 

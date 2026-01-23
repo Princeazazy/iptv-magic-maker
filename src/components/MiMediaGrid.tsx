@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { ChevronLeft, Search, Star, Tv, Film, User, Cloud, Sun, CloudRain, Snowflake, CloudLightning, Menu, X } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
 import { useProgressiveList } from '@/hooks/useProgressiveList';
@@ -115,6 +115,7 @@ export const MiMediaGrid = ({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchInput, setShowSearchInput] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const weather = useWeather();
   const isMobile = useIsMobile();
 
@@ -228,6 +229,10 @@ export const MiMediaGrid = ({
   const handleGroupSelect = (groupName: string) => {
     setSelectedGroup(groupName);
     if (isMobile) setSidebarOpen(false);
+    // Reset scroll to top when changing groups
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
   };
 
   return (
@@ -427,7 +432,7 @@ export const MiMediaGrid = ({
         </div>
 
         {/* Media Grid */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 mi-scrollbar" onScroll={onScroll}>
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 md:p-6 mi-scrollbar" onScroll={onScroll}>
           <div className={`grid gap-3 md:gap-4 ${
             isMobile 
               ? 'grid-cols-2' 
