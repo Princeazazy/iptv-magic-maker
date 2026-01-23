@@ -71,6 +71,13 @@ export const MiFullscreenPlayer = ({
   const [showResumePrompt, setShowResumePrompt] = useState(false);
   const [hasResumed, setHasResumed] = useState(false);
   const lastSaveTimeRef = useRef(0);
+  
+  // Thumbnail preview scrubbing states
+  const [hoverTime, setHoverTime] = useState(0);
+  const [hoverPosition, setHoverPosition] = useState(0);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const isVOD = channel.group?.toLowerCase().includes('movie') ||
     channel.group?.toLowerCase().includes('series') ||
@@ -332,6 +339,48 @@ export const MiFullscreenPlayer = ({
     setProgress(percentage * 100);
   };
 
+  // Generate preview thumbnail when hovering over progress bar
+  const handleProgressHover = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const video = videoRef.current;
+    const canvas = previewCanvasRef.current;
+    if (!video || !duration || !canvas) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const hoverX = e.clientX - rect.left;
+    const percentage = Math.max(0, Math.min(1, hoverX / rect.width));
+    const time = percentage * duration;
+
+    setHoverTime(time);
+    setHoverPosition(hoverX);
+    setShowPreview(true);
+
+    // Create preview thumbnail from video
+    try {
+      const tempVideo = document.createElement('video');
+      tempVideo.crossOrigin = 'anonymous';
+      tempVideo.src = video.src;
+      tempVideo.currentTime = time;
+      
+      tempVideo.onseeked = () => {
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          canvas.width = 192;
+          canvas.height = 108;
+          ctx.drawImage(tempVideo, 0, 0, 192, 108);
+          setPreviewImage(canvas.toDataURL());
+        }
+        tempVideo.remove();
+      };
+    } catch {
+      // Fallback for CORS-restricted videos
+      setPreviewImage(null);
+    }
+  }, [duration]);
+
+  const handleProgressLeave = useCallback(() => {
+    setShowPreview(false);
+  }, []);
+
   useEffect(() => {
     let timeout: NodeJS.Timeout;
     const handleMouseMove = () => {
@@ -480,11 +529,64 @@ export const MiFullscreenPlayer = ({
           )}
         </div>
 
-        {/* VOD Progress Bar */}
+        {/* VOD Progress Bar with Thumbnail Preview */}
         {isVOD && duration > 0 && (
           <div className="absolute bottom-32 left-6 right-6">
-            <div className="h-1.5 bg-white/20 rounded-full cursor-pointer group" onClick={(e) => { e.stopPropagation(); handleSeek(e); }}>
-              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
+            {/* Hidden canvas for generating thumbnails */}
+            <canvas ref={previewCanvasRef} className="hidden" />
+            
+            {/* Thumbnail Preview */}
+            {showPreview && (
+              <div 
+                className="absolute bottom-8 -translate-x-1/2 pointer-events-none transition-opacity duration-150"
+                style={{ left: hoverPosition }}
+              >
+                <div className="bg-black/90 rounded-lg p-1 shadow-2xl border border-white/20">
+                  {previewImage ? (
+                    <img src={previewImage} alt="Preview" className="w-48 h-28 object-cover rounded" />
+                  ) : (
+                    <div className="w-48 h-28 bg-card/80 rounded flex items-center justify-center">
+                      <span className="text-white/50 text-sm">Preview</span>
+                    </div>
+                  )}
+                  <div className="text-center mt-1">
+                    <span className="text-white text-sm font-medium">{formatTime(hoverTime)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Progress Bar */}
+            <div 
+              className="h-2 bg-white/20 rounded-full cursor-pointer group relative"
+              onClick={(e) => { e.stopPropagation(); handleSeek(e); }}
+              onMouseMove={handleProgressHover}
+              onMouseLeave={handleProgressLeave}
+            >
+              {/* Buffered indicator */}
+              <div className="absolute inset-0 rounded-full overflow-hidden">
+                <div className="h-full bg-white/10 rounded-full" style={{ width: '60%' }} />
+              </div>
+              
+              {/* Progress */}
+              <div className="h-full bg-primary rounded-full transition-all relative z-10" style={{ width: `${progress}%` }}>
+                {/* Scrub handle */}
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-4 h-4 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              
+              {/* Hover position indicator */}
+              {showPreview && (
+                <div 
+                  className="absolute top-0 h-full w-0.5 bg-white/60 pointer-events-none"
+                  style={{ left: hoverPosition }}
+                />
+              )}
+            </div>
+            
+            {/* Time labels */}
+            <div className="flex justify-between mt-2">
+              <span className="text-white/60 text-sm">{formatTime(progress / 100 * duration)}</span>
+              <span className="text-white/60 text-sm">{formatTime(duration)}</span>
             </div>
           </div>
         )}
