@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Maximize2, Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { X, Maximize2, Play, Pause } from 'lucide-react';
 import Hls from 'hls.js';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,8 +16,9 @@ export const MiniPlayer = ({ channel, onExpand, onClose }: MiniPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(() => !Capacitor.isNativePlatform());
   const [error, setError] = useState<string | null>(null);
+  // Always start unmuted on native, muted on web for autoplay
+  const isMuted = !Capacitor.isNativePlatform();
 
   const streamProxyUrl = (() => {
     const supabaseUrl = (supabase as any).supabaseUrl as string | undefined;
@@ -99,13 +100,6 @@ export const MiniPlayer = ({ channel, onExpand, onClose }: MiniPlayerProps) => {
     setIsPlaying(!isPlaying);
   };
 
-  const toggleMute = () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    video.muted = !isMuted;
-    setIsMuted(!isMuted);
-  };
 
   return (
     <motion.div
@@ -150,34 +144,19 @@ export const MiniPlayer = ({ channel, onExpand, onClose }: MiniPlayerProps) => {
 
         {/* Bottom - Controls */}
         <div className="absolute bottom-0 left-0 right-0 p-2 flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                togglePlay();
-              }}
-              className="w-7 h-7 rounded-full bg-primary/80 flex items-center justify-center hover:bg-primary transition-colors"
-            >
-              {isPlaying ? (
-                <Pause className="w-3 h-3 text-white" />
-              ) : (
-                <Play className="w-3 h-3 text-white ml-0.5" />
-              )}
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleMute();
-              }}
-              className="w-7 h-7 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/70 transition-colors"
-            >
-              {isMuted ? (
-                <VolumeX className="w-3 h-3 text-white" />
-              ) : (
-                <Volume2 className="w-3 h-3 text-white" />
-              )}
-            </button>
-          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              togglePlay();
+            }}
+            className="w-7 h-7 rounded-full bg-primary/80 flex items-center justify-center hover:bg-primary transition-colors"
+          >
+            {isPlaying ? (
+              <Pause className="w-3 h-3 text-white" />
+            ) : (
+              <Play className="w-3 h-3 text-white ml-0.5" />
+            )}
+          </button>
 
           <button
             onClick={(e) => {

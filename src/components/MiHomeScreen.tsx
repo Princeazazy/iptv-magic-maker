@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Tv, Film, Clapperboard, Trophy, User, RefreshCw, Clock, LogOut, Search, Settings, Mic, Cloud, Sun, CloudRain, Snowflake, CloudLightning } from 'lucide-react';
 import arabiaLogo from '@/assets/arabia-logo-new.png';
+import arabianPalaceBg from '@/assets/arabian-palace-bg.png';
 import { useWeather } from '@/hooks/useWeather';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ContinueWatching } from './ContinueWatching';
@@ -142,17 +143,17 @@ export const MiHomeScreen = ({
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
-      {/* Background Image */}
+      {/* Background Image - Arabian Palace */}
       <div 
-        className="absolute inset-0 bg-cover bg-center opacity-30"
-        style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&h=1080&fit=crop)' }}
+        className="absolute inset-0 bg-cover bg-center opacity-40"
+        style={{ backgroundImage: `url(${arabianPalaceBg})` }}
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-background/80" />
+      <div className="absolute inset-0 bg-gradient-to-br from-background/90 via-background/80 to-background/70" />
       {/* Header - Mi Player Pro style */}
       <header className="relative z-10 flex items-center justify-between px-6 md:px-10 py-4 md:py-6">
         {/* Logo */}
         <div className="flex items-center gap-3">
-          <img src={arabiaLogo} alt="Mi Player Pro" className="h-14 md:h-20 w-auto" />
+          <img src={arabiaLogo} alt="Mi Player Pro" className="h-20 md:h-28 w-auto" />
         </div>
 
         {/* Search Bar */}
