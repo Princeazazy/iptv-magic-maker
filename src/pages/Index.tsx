@@ -348,9 +348,9 @@ const Index = () => {
     <>
       {renderScreen()}
       
-      {/* Mini Player (PiP) - shown when user exits fullscreen but channel is still playing */}
+      {/* Mini Player (PiP) - shown when user exits fullscreen but channel is still playing (hidden on home) */}
       <AnimatePresence>
-        {showMiniPlayer && currentChannel && (
+        {showMiniPlayer && currentChannel && currentScreen !== 'home' && (
           <MiniPlayer
             channel={currentChannel}
             onExpand={() => {
