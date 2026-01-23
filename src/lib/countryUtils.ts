@@ -175,9 +175,18 @@ const ALL_COUNTRIES = { ...ARABIC_COUNTRIES, ...USA_ENTRY, ...OTHER_COUNTRIES };
 export const getCountryInfo = (group: string): CountryInfo | null => {
   const groupLower = group.toLowerCase().trim();
 
-  // Direct match
+  // Direct match first (highest priority)
   if (ALL_COUNTRIES[groupLower]) {
     return ALL_COUNTRIES[groupLower];
+  }
+
+  // Check for full country name matches FIRST (before partial matching)
+  // This ensures "United Kingdom" matches UK, not "om" from Oman
+  for (const [key, info] of Object.entries(ALL_COUNTRIES)) {
+    // Only match if the full country name is found as a complete match
+    if (groupLower === info.name.toLowerCase()) {
+      return info;
+    }
   }
 
   // Check if group starts with country code (e.g., "US | News", "AR: Sports")
@@ -186,11 +195,28 @@ export const getCountryInfo = (group: string): CountryInfo | null => {
     return ALL_COUNTRIES[codeMatch[1]];
   }
 
-  // Check if country name is contained in group name
+  // Check if country name appears as a whole word in group name
+  // Use word boundaries to prevent "om" matching "kingdom"
   for (const [key, info] of Object.entries(ALL_COUNTRIES)) {
-    if (groupLower.includes(key) || groupLower.includes(info.name.toLowerCase())) {
+    const countryName = info.name.toLowerCase();
+    // Check if country name appears as whole word(s)
+    const nameRegex = new RegExp(`\\b${countryName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    if (nameRegex.test(groupLower)) {
       return info;
     }
+    // Check if key (like "uk", "usa") appears as whole word, but only for keys 3+ chars to avoid false matches
+    if (key.length >= 3) {
+      const keyRegex = new RegExp(`\\b${key}\\b`, 'i');
+      if (keyRegex.test(groupLower)) {
+        return info;
+      }
+    }
+  }
+
+  // For 2-letter codes, only match at start or after separator
+  const twoLetterMatch = groupLower.match(/^([a-z]{2})(?:\s|$|[|:\-])/);
+  if (twoLetterMatch && ALL_COUNTRIES[twoLetterMatch[1]]) {
+    return ALL_COUNTRIES[twoLetterMatch[1]];
   }
 
   return null;
