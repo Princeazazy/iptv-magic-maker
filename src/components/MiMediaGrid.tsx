@@ -132,7 +132,7 @@ export const MiMediaGrid = ({
   };
 
   return (
-    <div className="h-full flex bg-background relative">
+    <div className="h-full flex bg-background relative overflow-x-hidden">
       {/* Mobile Sidebar Overlay */}
       {isMobile && sidebarOpen && (
         <div 

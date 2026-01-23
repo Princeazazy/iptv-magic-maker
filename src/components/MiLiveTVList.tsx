@@ -553,7 +553,7 @@ export const MiLiveTVList = ({
   };
 
   return (
-    <div className="h-full flex bg-background relative">
+    <div className="h-full flex bg-background relative overflow-x-hidden">
       {/* Mobile Sidebar Overlay */}
       {isMobile && sidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setSidebarOpen(false)} />
@@ -950,33 +950,6 @@ export const MiLiveTVList = ({
         </div>
       </div>
 
-      {/* Video Preview Panel (when channel selected) - Desktop only */}
-      {!isMobile && currentChannel && (
-        <div className="w-[420px] relative bg-gradient-to-l from-background/95 to-transparent">
-          <div 
-            className="absolute inset-0 bg-cover bg-center opacity-30"
-            style={{ backgroundImage: `url(${currentChannel.logo || ''})` }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
-          <div className="absolute bottom-10 left-6 right-6">
-            <p className="text-muted-foreground text-sm mb-2">Now Playing...</p>
-            <h2 className="text-foreground text-3xl font-bold mb-2">{currentChannel.name}</h2>
-            <p className="text-muted-foreground text-sm line-clamp-3">
-              {currentChannel.group || 'Live TV Channel'}
-            </p>
-            {/* Progress bar placeholder */}
-            <div className="mt-6">
-              <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
-                <div className="w-3/4 h-full bg-foreground" />
-              </div>
-              <div className="flex justify-between mt-2 text-sm text-muted-foreground">
-                <span>01:52:37</span>
-                <span>02:10:46</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
