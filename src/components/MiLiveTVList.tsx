@@ -1,10 +1,12 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Search, Star, Tv, Cloud, Sun, CloudRain, Snowflake, CloudLightning, User, Menu, X, Play } from 'lucide-react';
+import { ChevronLeft, Search, Star, Tv, Cloud, Sun, CloudRain, Snowflake, CloudLightning, User, Menu, X, Play, Calendar } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
 import { useProgressiveList } from '@/hooks/useProgressiveList';
 import { useWeather } from '@/hooks/useWeather';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { getCountryInfo, getCountryFlagUrl, getDisplayName, getCategoryEmoji, sortGroupsByPriority, getGroupPriority } from '@/lib/countryUtils';
+import { EPGGuide } from './EPGGuide';
 import {
   Select,
   SelectContent,
@@ -44,81 +46,6 @@ const getCategoryTitle = (category: string): string => {
   }
 };
 
-// Country code mapping
-const countryCodeToInfo: Record<string, { name: string; code: string }> = {
-  'ar': { name: 'Arabic', code: 'sa' },
-  'arabic': { name: 'Arabic', code: 'sa' },
-  'us': { name: 'United States', code: 'us' },
-  'usa': { name: 'United States', code: 'us' },
-  'uk': { name: 'United Kingdom', code: 'gb' },
-  'gb': { name: 'United Kingdom', code: 'gb' },
-  'de': { name: 'Germany', code: 'de' },
-  'fr': { name: 'France', code: 'fr' },
-  'br': { name: 'Brazil', code: 'br' },
-  'ua': { name: 'Ukraine', code: 'ua' },
-  'pt': { name: 'Portugal', code: 'pt' },
-  'za': { name: 'South Africa', code: 'za' },
-  'cn': { name: 'China', code: 'cn' },
-  'in': { name: 'India', code: 'in' },
-  'eg': { name: 'Egypt', code: 'eg' },
-  'tr': { name: 'Turkey', code: 'tr' },
-  'es': { name: 'Spain', code: 'es' },
-  'it': { name: 'Italy', code: 'it' },
-  'nl': { name: 'Netherlands', code: 'nl' },
-  'ca': { name: 'Canada', code: 'ca' },
-  'au': { name: 'Australia', code: 'au' },
-  'ru': { name: 'Russia', code: 'ru' },
-  'jp': { name: 'Japan', code: 'jp' },
-  'kr': { name: 'South Korea', code: 'kr' },
-  'mx': { name: 'Mexico', code: 'mx' },
-};
-
-const getCountryInfo = (group: string): { name: string; code: string; flagUrl: string } | null => {
-  const groupLower = group.toLowerCase().trim();
-  
-  if (countryCodeToInfo[groupLower]) {
-    const info = countryCodeToInfo[groupLower];
-    return { name: info.name, code: info.code, flagUrl: `https://flagcdn.com/w80/${info.code}.png` };
-  }
-  
-  const codeMatch = groupLower.match(/^([a-z]{2})[\s|:\-]/);
-  if (codeMatch && countryCodeToInfo[codeMatch[1]]) {
-    const info = countryCodeToInfo[codeMatch[1]];
-    return { name: info.name, code: info.code, flagUrl: `https://flagcdn.com/w80/${info.code}.png` };
-  }
-  
-  for (const [, info] of Object.entries(countryCodeToInfo)) {
-    if (groupLower.includes(info.name.toLowerCase())) {
-      return { name: info.name, code: info.code, flagUrl: `https://flagcdn.com/w80/${info.code}.png` };
-    }
-  }
-  
-  return null;
-};
-
-const getDisplayName = (group: string): string => {
-  const countryInfo = getCountryInfo(group);
-  return countryInfo?.name || group;
-};
-
-const getCountryFlagUrl = (group: string): string | null => {
-  const countryInfo = getCountryInfo(group);
-  return countryInfo?.flagUrl || null;
-};
-
-const getCategoryEmoji = (group: string): string => {
-  const groupLower = group.toLowerCase();
-  if (groupLower.includes('netflix')) return '🎬';
-  if (groupLower.includes('hbo')) return '🎭';
-  if (groupLower.includes('sport')) return '🏆';
-  if (groupLower.includes('news')) return '📰';
-  if (groupLower.includes('movie') || groupLower.includes('vod')) return '🎥';
-  if (groupLower.includes('series')) return '📺';
-  if (groupLower.includes('kids')) return '🧸';
-  if (groupLower.includes('music')) return '🎵';
-  return '📺';
-};
-
 export const MiLiveTVList = ({
   channels,
   currentChannel,
@@ -138,6 +65,7 @@ export const MiLiveTVList = ({
   const [localSearchQuery, setLocalSearchQuery] = useState('');
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [hoveredChannel, setHoveredChannel] = useState<Channel | null>(null);
+  const [showEPG, setShowEPG] = useState(false);
   const weather = useWeather();
   const isMobile = useIsMobile();
 
@@ -148,16 +76,30 @@ export const MiLiveTVList = ({
     return () => clearInterval(timer);
   }, []);
 
-  const groups = useMemo(() => {
-    const groupCounts = new Map<string, number>();
+  // Build groups with first channel logo for non-country groups
+  const groupsWithLogos = useMemo(() => {
+    const groupData = new Map<string, { count: number; firstLogo?: string }>();
     channels.forEach((ch) => {
       const group = ch.group || 'Uncategorized';
-      groupCounts.set(group, (groupCounts.get(group) || 0) + 1);
+      const existing = groupData.get(group);
+      if (!existing) {
+        groupData.set(group, { count: 1, firstLogo: ch.logo });
+      } else {
+        existing.count++;
+      }
     });
-    return Array.from(groupCounts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([name, count]) => ({ name, count }));
+    return groupData;
   }, [channels]);
+
+  const groups = useMemo(() => {
+    const groupList = Array.from(groupsWithLogos.entries()).map(([name, data]) => ({
+      name,
+      count: data.count,
+      firstLogo: data.firstLogo,
+    }));
+    // Sort with Arabic first, USA second, then others
+    return sortGroupsByPriority(groupList);
+  }, [groupsWithLogos]);
 
   const filteredChannels = useMemo(() => {
     let filtered = channels.filter((channel) => {
@@ -212,8 +154,36 @@ export const MiLiveTVList = ({
   // Preview channel (hovered or current)
   const previewChannel = hoveredChannel || currentChannel;
 
+  // Get logo for non-country groups (use first channel's logo)
+  const getGroupLogo = (groupName: string): string | null => {
+    const countryFlag = getCountryFlagUrl(groupName);
+    if (countryFlag) return countryFlag;
+    
+    // For non-country groups, use the first channel's logo
+    const groupData = groupsWithLogos.get(groupName);
+    return groupData?.firstLogo || null;
+  };
+
   return (
-    <div className="h-full flex bg-background relative overflow-x-hidden">
+    <div className="h-full flex flex-col bg-background relative overflow-x-hidden">
+      {/* EPG Guide Overlay */}
+      <AnimatePresence>
+        {showEPG && (
+          <div className="absolute inset-0 z-50 bg-background">
+            <EPGGuide
+              channels={channels}
+              currentChannel={currentChannel}
+              onChannelSelect={(channel) => {
+                onChannelSelect(channel);
+                setShowEPG(false);
+              }}
+              onClose={() => setShowEPG(false)}
+            />
+          </div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex-1 flex overflow-hidden">
       {/* Mobile Sidebar Overlay */}
       {isMobile && sidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setSidebarOpen(false)} />
@@ -254,8 +224,8 @@ export const MiLiveTVList = ({
               }`}
             >
               <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                {getCountryFlagUrl(group.name) ? (
-                  <img src={getCountryFlagUrl(group.name)!} alt={group.name} className="w-full h-full object-cover" />
+                {getGroupLogo(group.name) ? (
+                  <img src={getGroupLogo(group.name)!} alt={group.name} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-base">{getCategoryEmoji(group.name)}</span>
                 )}
@@ -309,16 +279,29 @@ export const MiLiveTVList = ({
           )}
 
           {/* Sort Dropdown */}
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-44 bg-card border-border/30 rounded-xl h-10">
-              <SelectValue placeholder="Order By" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="number">Order By Number</SelectItem>
-              <SelectItem value="a-z">Order By A-Z</SelectItem>
-              <SelectItem value="z-a">Order By Z-A</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-44 bg-card border-border/30 rounded-xl h-10">
+                <SelectValue placeholder="Order By" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="number">Order By Number</SelectItem>
+                <SelectItem value="a-z">Order By A-Z</SelectItem>
+                <SelectItem value="z-a">Order By Z-A</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            {/* EPG Button */}
+            {category === 'live' && (
+              <button
+                onClick={() => setShowEPG(true)}
+                className="flex items-center gap-2 px-4 h-10 bg-card border border-border/30 rounded-xl hover:bg-card/80 transition-colors"
+              >
+                <Calendar className="w-4 h-4 text-muted-foreground" />
+                <span className="text-foreground text-sm">EPG</span>
+              </button>
+            )}
+          </div>
 
           {/* Time & Weather */}
           {!isMobile && (
@@ -475,6 +458,7 @@ export const MiLiveTVList = ({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
