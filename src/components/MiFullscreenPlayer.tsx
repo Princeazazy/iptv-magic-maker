@@ -66,8 +66,6 @@ export const MiFullscreenPlayer = ({
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [currentTime, setCurrentTime] = useState('00:00:00');
   const [time, setTime] = useState(new Date());
-  const [showCarousel, setShowCarousel] = useState(false);
-  const carouselTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const weather = useWeather();
   const [error, setError] = useState<string | null>(null);
 
@@ -435,72 +433,6 @@ export const MiFullscreenPlayer = ({
     }
   };
 
-  // Show carousel temporarily when navigating channels
-  const showCarouselTemporarily = useCallback(() => {
-    setShowCarousel(true);
-    if (carouselTimeoutRef.current) {
-      clearTimeout(carouselTimeoutRef.current);
-    }
-    carouselTimeoutRef.current = setTimeout(() => {
-      setShowCarousel(false);
-    }, 3000);
-  }, []);
-
-  // Wrap onNext/onPrevious to show carousel
-  const handleNext = useCallback(() => {
-    showCarouselTemporarily();
-    onNext?.();
-  }, [onNext, showCarouselTemporarily]);
-
-  const handlePrevious = useCallback(() => {
-    showCarouselTemporarily();
-    onPrevious?.();
-  }, [onPrevious, showCarouselTemporarily]);
-
-  // Handle swipe gestures for carousel
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
-  
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container || isVOD) return;
-
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      if (!touchStartRef.current) return;
-      const deltaX = e.changedTouches[0].clientX - touchStartRef.current.x;
-      const deltaY = e.changedTouches[0].clientY - touchStartRef.current.y;
-      
-      // Only trigger if horizontal swipe is dominant
-      if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
-        if (deltaX < 0) {
-          handleNext();
-        } else {
-          handlePrevious();
-        }
-      }
-      touchStartRef.current = null;
-    };
-
-    container.addEventListener('touchstart', handleTouchStart);
-    container.addEventListener('touchend', handleTouchEnd);
-
-    return () => {
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [isVOD, handleNext, handlePrevious]);
-
-  // Cleanup carousel timeout
-  useEffect(() => {
-    return () => {
-      if (carouselTimeoutRef.current) {
-        clearTimeout(carouselTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const handleVolumeChange = (newVolume: number) => {
     setVolume(newVolume);
@@ -664,45 +596,10 @@ export const MiFullscreenPlayer = ({
           </div>
         )}
 
-        {/* Channel Carousel - For Live TV only, appears on swipe/navigation */}
-        {!isVOD && allChannels.length > 0 && onSelectChannel && showCarousel && (
-          <div className="absolute bottom-24 left-0 right-0 px-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="flex gap-3 overflow-x-hidden justify-center">
-              {allChannels.slice(0, 10).map((ch) => {
-                const isActive = ch.id === channel.id;
-                return (
-                  <button
-                    key={ch.id}
-                    onClick={(e) => { e.stopPropagation(); onSelectChannel(ch); setShowCarousel(false); }}
-                    className={`flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
-                      isActive 
-                        ? 'bg-primary/30 ring-2 ring-primary scale-110' 
-                        : 'bg-black/60 hover:bg-white/20'
-                    }`}
-                  >
-                    {/* Channel Logo */}
-                    <div className="w-20 h-12 rounded-lg bg-black/50 flex items-center justify-center overflow-hidden">
-                      {ch.logo ? (
-                        <img src={ch.logo} alt={ch.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                      ) : (
-                        <span className="text-white font-bold text-lg">{ch.name.charAt(0)}</span>
-                      )}
-                    </div>
-                    {/* Channel Name */}
-                    <span className={`text-xs truncate max-w-20 ${isActive ? 'text-primary font-medium' : 'text-white/80'}`}>
-                      {ch.name}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
         {/* Center Controls */}
-        <div className={`absolute left-1/2 -translate-x-1/2 flex items-center gap-8 ${showCarousel ? 'bottom-44' : 'bottom-8'}`}>
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-8 bottom-8">
           {!isVOD && (
-            <button onClick={(e) => { e.stopPropagation(); handlePrevious(); }} className="p-3 rounded-full hover:bg-white/10 transition-colors">
+            <button onClick={(e) => { e.stopPropagation(); onPrevious?.(); }} className="p-3 rounded-full hover:bg-white/10 transition-colors">
               <SkipBack className="w-8 h-8 text-white" />
             </button>
           )}
@@ -712,14 +609,14 @@ export const MiFullscreenPlayer = ({
           </button>
 
           {!isVOD && (
-            <button onClick={(e) => { e.stopPropagation(); handleNext(); }} className="p-3 rounded-full hover:bg-white/10 transition-colors">
+            <button onClick={(e) => { e.stopPropagation(); onNext?.(); }} className="p-3 rounded-full hover:bg-white/10 transition-colors">
               <SkipForward className="w-8 h-8 text-white" />
             </button>
           )}
         </div>
 
         {/* Bottom Right - Volume */}
-        <div className={`absolute right-6 ${showCarousel ? 'bottom-44' : 'bottom-8'}`}>
+        <div className="absolute right-6 bottom-8">
           <div className="relative">
             <button
               onClick={(e) => { e.stopPropagation(); setShowVolumeSlider(!showVolumeSlider); }}

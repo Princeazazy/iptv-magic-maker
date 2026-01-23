@@ -175,9 +175,14 @@ const Index = () => {
     }
   };
 
-  const handleNavigate = useCallback((section: 'live' | 'movies' | 'series' | 'sports' | 'settings') => {
+  const handleNavigate = useCallback((section: 'live' | 'movies' | 'series' | 'sports' | 'settings' | 'home') => {
     // Navigate immediately; heavy lists render progressively inside their screens
     setCurrentScreen(section);
+    // Hide mini player when going to home
+    if (section === 'home') {
+      setShowMiniPlayer(false);
+      setCurrentChannel(null);
+    }
   }, []);
 
   const handleReload = useCallback(() => {
