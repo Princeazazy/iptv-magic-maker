@@ -11,7 +11,6 @@ type IntroState = 'loading' | 'playing' | 'blocked' | 'error';
 export const ArabiaIntro = ({ onComplete }: ArabiaIntroProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [state, setState] = useState<IntroState>('loading');
-  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -57,9 +56,7 @@ export const ArabiaIntro = ({ onComplete }: ArabiaIntroProps) => {
     };
 
     const handleTimeUpdate = () => {
-      if (video.duration) {
-        setProgress((video.currentTime / video.duration) * 100);
-      }
+      // Video is playing, update handled internally
     };
 
     video.addEventListener('ended', handleEnded);
