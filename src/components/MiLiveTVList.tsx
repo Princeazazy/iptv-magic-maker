@@ -66,6 +66,7 @@ export const MiLiveTVList = ({
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [hoveredChannel, setHoveredChannel] = useState<Channel | null>(null);
   const [showEPG, setShowEPG] = useState(false);
+  const [localShowFavoritesOnly, setLocalShowFavoritesOnly] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const weather = useWeather();
   const isMobile = useIsMobile();
@@ -128,7 +129,7 @@ export const MiLiveTVList = ({
         matchesGroup = originalNames.includes(channel.group || 'Uncategorized');
       }
       
-      const matchesFavorites = !showFavoritesOnly || favorites.has(channel.id);
+      const matchesFavorites = !localShowFavoritesOnly || favorites.has(channel.id);
       return matchesSearch && matchesGroup && matchesFavorites;
     });
 
@@ -142,7 +143,7 @@ export const MiLiveTVList = ({
     }
 
     return filtered;
-  }, [channels, effectiveSearchQuery, selectedGroup, showFavoritesOnly, favorites, sortBy]);
+  }, [channels, effectiveSearchQuery, selectedGroup, localShowFavoritesOnly, favorites, sortBy]);
 
   const { visibleItems: visibleChannels, onScroll, ensureIndexVisible, hasMore } = useProgressiveList(filteredChannels, { initial: 120, step: 120 });
 
@@ -284,16 +285,13 @@ export const MiLiveTVList = ({
         {/* Bottom Nav - Favorites Filter */}
         <div className="p-3 flex flex-col gap-2">
           <button
-            onClick={() => {
-              // Toggle favorites filter directly here
-              onToggleFavorite('');
-            }}
+            onClick={() => setLocalShowFavoritesOnly(!localShowFavoritesOnly)}
             className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-              showFavoritesOnly ? 'bg-accent text-white ring-2 ring-accent/30' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              localShowFavoritesOnly ? 'bg-accent text-white ring-2 ring-accent/30' : 'bg-muted text-muted-foreground hover:bg-muted/80'
             }`}
-            title={showFavoritesOnly ? 'Show All Channels' : 'Show Favorites Only'}
+            title={localShowFavoritesOnly ? 'Show All Channels' : 'Show Favorites Only'}
           >
-            <Heart className={`w-5 h-5 ${showFavoritesOnly ? 'fill-white text-white' : ''}`} />
+            <Heart className={`w-5 h-5 ${localShowFavoritesOnly ? 'fill-white text-white' : ''}`} />
           </button>
         </div>
       </div>
