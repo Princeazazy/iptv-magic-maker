@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { ChevronLeft, Search, Star, Tv, Film, User, Cloud, Sun, CloudRain, Snowflake, CloudLightning, Menu, X } from 'lucide-react';
+import { ChevronLeft, Search, Star, Film, User, Cloud, Sun, CloudRain, Snowflake, CloudLightning, Menu, X, Heart } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
 import { useProgressiveList } from '@/hooks/useProgressiveList';
 import { useWeather } from '@/hooks/useWeather';
@@ -115,6 +115,7 @@ export const MiMediaGrid = ({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchInput, setShowSearchInput] = useState(false);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const weather = useWeather();
   const isMobile = useIsMobile();
@@ -184,7 +185,8 @@ export const MiMediaGrid = ({
     let filtered = items.filter((item) => {
       const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesGroup = selectedGroup === 'all' || item.group === selectedGroup;
-      return matchesSearch && matchesGroup;
+      const matchesFavorites = !showFavoritesOnly || favorites.has(item.id);
+      return matchesSearch && matchesGroup && matchesFavorites;
     });
 
     switch (sortBy) {
@@ -217,7 +219,7 @@ export const MiMediaGrid = ({
     }
 
     return filtered;
-  }, [items, searchQuery, selectedGroup, sortBy]);
+  }, [items, searchQuery, selectedGroup, sortBy, showFavoritesOnly, favorites]);
 
   const { visibleItems, onScroll, hasMore } = useProgressiveList(filteredItems, {
     initial: 60,
@@ -322,14 +324,13 @@ export const MiMediaGrid = ({
         {/* Bottom Nav - Favorites Filter */}
         <div className="p-4 flex flex-col gap-2">
           <button 
-            onClick={() => {
-              // Toggle favorites filter
-              onToggleFavorite('');
-            }}
-            className="mi-nav-item"
-            title="Show Favorites"
+            onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+              showFavoritesOnly ? 'bg-accent text-white ring-2 ring-accent/30' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
+            title={showFavoritesOnly ? 'Show All' : 'Show Favorites Only'}
           >
-            <Star className="w-6 h-6" />
+            <Heart className={`w-6 h-6 ${showFavoritesOnly ? 'fill-white text-white' : ''}`} />
           </button>
         </div>
       </div>
@@ -419,14 +420,9 @@ export const MiMediaGrid = ({
               </button>
             )}
             {!isMobile && (
-              <>
-                <button className="w-11 h-11 rounded-full bg-card flex items-center justify-center hover:bg-card/80 transition-colors">
-                  <Star className="w-5 h-5 mi-star-filled" />
-                </button>
-                <div className="w-11 h-11 rounded-full bg-primary overflow-hidden flex items-center justify-center ring-2 ring-primary/30">
-                  <User className="w-5 h-5 text-primary-foreground" />
-                </div>
-              </>
+              <div className="w-11 h-11 rounded-full bg-primary overflow-hidden flex items-center justify-center ring-2 ring-primary/30">
+                <User className="w-5 h-5 text-primary-foreground" />
+              </div>
             )}
           </div>
         </div>
