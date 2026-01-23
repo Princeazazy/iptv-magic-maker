@@ -196,6 +196,18 @@ export const getCountryInfo = (group: string): CountryInfo | null => {
   return null;
 };
 
+// Normalize a group name to a canonical country key for merging duplicates
+// Returns the country code if it's a recognized country, otherwise the original group name
+export const normalizeGroupName = (group: string): string => {
+  const countryInfo = getCountryInfo(group);
+  if (countryInfo) {
+    // Return the country code as the canonical key
+    return countryInfo.code;
+  }
+  // Not a country - return the original group name lowercased for consistency
+  return group.toLowerCase().trim();
+};
+
 // Get display name for a group
 export const getDisplayName = (group: string): string => {
   const countryInfo = getCountryInfo(group);
@@ -229,7 +241,64 @@ export const getCategoryEmoji = (group: string): string => {
   if (groupLower.includes('adult') || groupLower.includes('xxx')) return '🔞';
   if (groupLower.includes('religious') || groupLower.includes('islam')) return '🕌';
   if (groupLower.includes('cooking') || groupLower.includes('food')) return '🍳';
+  if (groupLower.includes('premium')) return '⭐';
   return '📺';
+};
+
+// Merge and sort groups, combining duplicate countries
+export const mergeAndSortGroups = (
+  groupData: Map<string, { count: number; firstLogo?: string; originalNames: string[] }>
+): { name: string; displayName: string; count: number; firstLogo?: string; originalNames: string[] }[] => {
+  // Merge groups by normalized name
+  const mergedGroups = new Map<string, { 
+    displayName: string; 
+    count: number; 
+    firstLogo?: string; 
+    originalNames: string[];
+    priority: number;
+  }>();
+
+  for (const [originalName, data] of groupData.entries()) {
+    const normalizedKey = normalizeGroupName(originalName);
+    const countryInfo = getCountryInfo(originalName);
+    
+    const existing = mergedGroups.get(normalizedKey);
+    if (existing) {
+      // Merge with existing
+      existing.count += data.count;
+      existing.originalNames.push(originalName);
+      if (!existing.firstLogo && data.firstLogo) {
+        existing.firstLogo = data.firstLogo;
+      }
+    } else {
+      // Create new entry
+      mergedGroups.set(normalizedKey, {
+        displayName: countryInfo?.name || originalName,
+        count: data.count,
+        firstLogo: data.firstLogo,
+        originalNames: [originalName],
+        priority: countryInfo?.priority || 999,
+      });
+    }
+  }
+
+  // Convert to array and sort
+  return Array.from(mergedGroups.entries())
+    .map(([name, data]) => ({
+      name,
+      displayName: data.displayName,
+      count: data.count,
+      firstLogo: data.firstLogo,
+      originalNames: data.originalNames,
+    }))
+    .sort((a, b) => {
+      const priorityA = getGroupPriority(a.originalNames[0]);
+      const priorityB = getGroupPriority(b.originalNames[0]);
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+      return a.displayName.localeCompare(b.displayName);
+    });
 };
 
 // Sort groups with Arabic first, then USA, then alphabetically
