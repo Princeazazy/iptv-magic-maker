@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Tv, Film, Clapperboard, Trophy, User, RefreshCw, Clock, LogOut, Search, Settings, Mic, Cloud, Sun, CloudRain, Snowflake, CloudLightning } from 'lucide-react';
 import arabiaLogo from '@/assets/arabia-logo-new.png';
 import { useWeather } from '@/hooks/useWeather';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ContinueWatching } from './ContinueWatching';
 
 const WeatherIcon = ({ icon }: { icon: string }) => {
   switch (icon) {
@@ -26,6 +27,7 @@ interface MiHomeScreenProps {
   onCatchUp?: () => void;
   onSearchClick?: () => void;
   onVoiceSearchClick?: () => void;
+  onContinueWatchingSelect?: (channelId: string) => void;
 }
 
 // Mi Player Pro style tile card
@@ -110,9 +112,11 @@ export const MiHomeScreen = ({
   onCatchUp,
   onSearchClick,
   onVoiceSearchClick,
+  onContinueWatchingSelect,
 }: MiHomeScreenProps) => {
   const [time, setTime] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [, forceUpdate] = useState(0);
   const weather = useWeather();
   const isMobile = useIsMobile();
 
@@ -131,6 +135,10 @@ export const MiHomeScreen = ({
 
   const formatTime = () => time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const formatDate = () => time.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+
+  const handleContinueWatchingRemove = useCallback(() => {
+    forceUpdate((n) => n + 1);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
@@ -195,6 +203,12 @@ export const MiHomeScreen = ({
         {isMobile ? (
           /* Mobile Layout - Vertical stack */
           <div className="flex flex-col gap-4 pb-20">
+            {/* Continue Watching */}
+            <ContinueWatching
+              onSelect={(id) => onContinueWatchingSelect?.(id)}
+              onRemove={handleContinueWatchingRemove}
+            />
+
             {/* Live TV - Featured */}
             <TileCard onClick={() => onNavigate('live')} size="large" delay={0} className="min-h-[160px]">
               <div className="flex-1 flex flex-col justify-between">
@@ -271,6 +285,12 @@ export const MiHomeScreen = ({
           <div className="flex gap-6 h-full">
             {/* Left Section - Content Tiles */}
             <div className="flex-1 flex flex-col gap-4">
+              {/* Continue Watching */}
+              <ContinueWatching
+                onSelect={(id) => onContinueWatchingSelect?.(id)}
+                onRemove={handleContinueWatchingRemove}
+              />
+
               {/* Main Grid */}
               <div className="grid grid-cols-3 grid-rows-2 gap-4 flex-1">
                 {/* Live TV - Takes full left column */}
