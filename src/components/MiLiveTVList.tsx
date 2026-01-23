@@ -272,16 +272,8 @@ export const MiLiveTVList = ({
           ))}
         </div>
 
-        {/* Bottom Nav */}
+        {/* Bottom Nav - Favorites Filter */}
         <div className="p-3 flex flex-col gap-2">
-          <button
-            onClick={() => handleGroupSelect('all')}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-              selectedGroup === 'all' && !showFavoritesOnly ? 'bg-card text-foreground ring-2 ring-primary/30' : 'bg-muted text-muted-foreground'
-            }`}
-          >
-            <Tv className="w-5 h-5" />
-          </button>
           <button
             onClick={() => {
               // Toggle favorites filter directly here

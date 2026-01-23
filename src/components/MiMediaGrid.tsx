@@ -314,19 +314,17 @@ export const MiMediaGrid = ({
           ))}
         </div>
 
-        {/* Bottom Nav Icons */}
+        {/* Bottom Nav - Favorites Filter */}
         <div className="p-4 flex flex-col gap-2">
-          <button
-            onClick={() => handleGroupSelect('all')}
-            className={`mi-nav-item ${selectedGroup === 'all' ? 'active' : ''}`}
+          <button 
+            onClick={() => {
+              // Toggle favorites filter
+              onToggleFavorite('');
+            }}
+            className="mi-nav-item"
+            title="Show Favorites"
           >
-            <Tv className="w-6 h-6" />
-          </button>
-          <button className="mi-nav-item">
             <Star className="w-6 h-6" />
-          </button>
-          <button className="mi-nav-item">
-            <User className="w-6 h-6" />
           </button>
         </div>
       </div>
