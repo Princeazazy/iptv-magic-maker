@@ -5,6 +5,7 @@ import { MiHomeScreen } from '@/components/MiHomeScreen';
 import { MiLiveTVList } from '@/components/MiLiveTVList';
 import { MiMediaGrid } from '@/components/MiMediaGrid';
 import { MiMovieDetail } from '@/components/MiMovieDetail';
+import { MiSeriesDetail } from '@/components/MiSeriesDetail';
 import { MiSettingsPage } from '@/components/MiSettingsPage';
 import { MiFullscreenPlayer } from '@/components/MiFullscreenPlayer';
 import { MiniPlayer } from '@/components/MiniPlayer';
@@ -14,7 +15,7 @@ import { BackgroundMusic } from '@/components/BackgroundMusic';
 import { useToast } from '@/hooks/use-toast';
 import arabiaLogo from '@/assets/arabia-logo.png';
 
-type Screen = 'home' | 'live' | 'movies' | 'series' | 'sports' | 'settings' | 'detail';
+type Screen = 'home' | 'live' | 'movies' | 'series' | 'sports' | 'settings' | 'detail' | 'series-detail';
 
 const Index = () => {
   const [playlistVersion, setPlaylistVersion] = useState(0);
@@ -118,18 +119,42 @@ const Index = () => {
   const handleItemSelect = (item: Channel) => {
     setSelectedItem(item);
     setPreviousScreen(currentScreen);
-    setCurrentScreen('detail');
+    // Use series-detail screen for series items
+    if (item.type === 'series') {
+      setCurrentScreen('series-detail');
+    } else {
+      setCurrentScreen('detail');
+    }
   };
 
   const handleSearchItemSelect = (item: Channel) => {
     setSelectedItem(item);
     setPreviousScreen('home');
-    setCurrentScreen('detail');
+    // Use series-detail screen for series items
+    if (item.type === 'series') {
+      setCurrentScreen('series-detail');
+    } else {
+      setCurrentScreen('detail');
+    }
   };
 
   const handlePlayFromDetail = () => {
     if (selectedItem) {
       setCurrentChannel(selectedItem);
+      setIsFullscreen(true);
+    }
+  };
+
+  // Handle playing a specific episode from series detail
+  const handlePlayEpisode = (episodeUrl: string, episodeTitle: string) => {
+    if (selectedItem) {
+      // Create a temporary channel object for the episode
+      const episodeChannel: Channel = {
+        ...selectedItem,
+        url: episodeUrl,
+        name: `${selectedItem.name} - ${episodeTitle}`,
+      };
+      setCurrentChannel(episodeChannel);
       setIsFullscreen(true);
     }
   };
@@ -237,6 +262,20 @@ const Index = () => {
             item={selectedItem}
             onBack={() => setCurrentScreen(previousScreen as Screen)}
             onPlay={handlePlayFromDetail}
+            onToggleFavorite={() => handleToggleFavorite(selectedItem.id)}
+            isFavorite={favorites.has(selectedItem.id)}
+          />
+        );
+      }
+      return null;
+
+    case 'series-detail':
+      if (selectedItem) {
+        return (
+          <MiSeriesDetail
+            item={selectedItem}
+            onBack={() => setCurrentScreen(previousScreen as Screen)}
+            onPlayEpisode={handlePlayEpisode}
             onToggleFavorite={() => handleToggleFavorite(selectedItem.id)}
             isFavorite={favorites.has(selectedItem.id)}
           />
