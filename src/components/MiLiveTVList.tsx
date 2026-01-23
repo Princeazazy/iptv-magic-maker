@@ -406,7 +406,7 @@ export const MiLiveTVList = ({
                       src={channel.logo}
                       alt={channel.name}
                       loading="lazy"
-                      className="w-full h-full object-contain p-2"
+                      className="w-full h-full object-cover"
                       onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
                   ) : (
