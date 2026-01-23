@@ -39,6 +39,8 @@ interface MiFullscreenPlayerProps {
   onNext?: () => void;
   onPrevious?: () => void;
   onToggleFavorite: () => void;
+  allChannels?: Channel[]; // For channel carousel
+  onSelectChannel?: (channel: Channel) => void; // For carousel selection
 }
 
 export const MiFullscreenPlayer = ({
@@ -48,6 +50,8 @@ export const MiFullscreenPlayer = ({
   onNext,
   onPrevious,
   onToggleFavorite,
+  allChannels = [],
+  onSelectChannel,
 }: MiFullscreenPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -591,8 +595,43 @@ export const MiFullscreenPlayer = ({
           </div>
         )}
 
+        {/* Channel Carousel - For Live TV only */}
+        {!isVOD && allChannels.length > 0 && onSelectChannel && (
+          <div className="absolute bottom-24 left-0 right-0 px-4">
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {allChannels.slice(0, 15).map((ch) => {
+                const isActive = ch.id === channel.id;
+                return (
+                  <button
+                    key={ch.id}
+                    onClick={(e) => { e.stopPropagation(); onSelectChannel(ch); }}
+                    className={`flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
+                      isActive 
+                        ? 'bg-primary/30 ring-2 ring-primary' 
+                        : 'bg-white/10 hover:bg-white/20'
+                    }`}
+                  >
+                    {/* Channel Logo */}
+                    <div className="w-24 h-14 rounded-lg bg-black/30 flex items-center justify-center overflow-hidden">
+                      {ch.logo ? (
+                        <img src={ch.logo} alt={ch.name} className="w-full h-full object-contain p-1" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                      ) : (
+                        <span className="text-white font-bold text-lg">{ch.name.charAt(0)}</span>
+                      )}
+                    </div>
+                    {/* Channel Name */}
+                    <span className={`text-xs truncate max-w-24 ${isActive ? 'text-primary font-medium' : 'text-white/80'}`}>
+                      {ch.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Center Controls */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-8">
+        <div className={`absolute left-1/2 -translate-x-1/2 flex items-center gap-8 ${!isVOD && allChannels.length > 0 ? 'bottom-44' : 'bottom-8'}`}>
           {!isVOD && (
             <button onClick={(e) => { e.stopPropagation(); onPrevious?.(); }} className="p-3 rounded-full hover:bg-white/10 transition-colors">
               <SkipBack className="w-8 h-8 text-white" />
@@ -611,7 +650,7 @@ export const MiFullscreenPlayer = ({
         </div>
 
         {/* Bottom Right - Volume */}
-        <div className="absolute bottom-8 right-6">
+        <div className={`absolute right-6 ${!isVOD && allChannels.length > 0 ? 'bottom-44' : 'bottom-8'}`}>
           <div className="relative">
             <button
               onClick={(e) => { e.stopPropagation(); setShowVolumeSlider(!showVolumeSlider); }}

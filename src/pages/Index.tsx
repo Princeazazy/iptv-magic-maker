@@ -224,6 +224,8 @@ const Index = () => {
         onNext={handleNextChannel}
         onPrevious={handlePreviousChannel}
         onToggleFavorite={() => handleToggleFavorite(currentChannel.id)}
+        allChannels={filteredChannelsByCategory}
+        onSelectChannel={(channel) => setCurrentChannel(channel)}
       />
     );
   }

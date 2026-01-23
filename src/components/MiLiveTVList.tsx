@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Search, Star, Tv, Cloud, Sun, CloudRain, Snowflake, CloudLightning, User, Menu, X, Play, Calendar, Heart } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
@@ -66,6 +66,7 @@ export const MiLiveTVList = ({
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [hoveredChannel, setHoveredChannel] = useState<Channel | null>(null);
   const [showEPG, setShowEPG] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const weather = useWeather();
   const isMobile = useIsMobile();
 
@@ -171,6 +172,10 @@ export const MiLiveTVList = ({
   const handleGroupSelect = (groupName: string) => {
     setSelectedGroup(groupName);
     if (isMobile) setSidebarOpen(false);
+    // Reset scroll to top when changing groups
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
   };
 
   // Preview channel (hovered or current)
@@ -373,7 +378,7 @@ export const MiLiveTVList = ({
         </div>
 
         {/* Channel Rows */}
-        <div className="flex-1 overflow-y-auto px-4 py-2 mi-scrollbar" onScroll={onScroll}>
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 py-2 mi-scrollbar" onScroll={onScroll}>
           <AnimatePresence mode="popLayout">
             {visibleChannels.map((channel, index) => (
               <motion.button

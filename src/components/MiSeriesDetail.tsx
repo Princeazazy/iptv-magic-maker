@@ -300,56 +300,44 @@ export const MiSeriesDetail = ({
                 ))}
               </div>
 
-              {/* Episodes Grid */}
+              {/* Episodes List - Clean numbered format */}
               <ScrollArea className="flex-1">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">
-                  {episodes.map((episode) => (
+                <div className="space-y-2 pr-4">
+                  {episodes.map((episode, index) => (
                     <button
                       key={episode.id}
-                      onClick={() => onPlayEpisode(episode.url, `S${selectedSeason}E${episode.episode_num}: ${episode.title}`)}
-                      className="group bg-card rounded-xl overflow-hidden hover:ring-2 hover:ring-primary/50 transition-all text-left"
+                      onClick={() => onPlayEpisode(episode.url, `Episode ${index + 1}`)}
+                      className="group w-full flex items-center gap-4 p-3 bg-card rounded-xl hover:ring-2 hover:ring-primary/50 transition-all text-left"
                     >
-                      {/* Episode Thumbnail */}
-                      <div className="relative aspect-video bg-secondary">
-                        {episode.info?.movie_image ? (
+                      {/* Episode Number */}
+                      <div className="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+                        <span className="text-lg font-bold text-foreground">{index + 1}</span>
+                      </div>
+                      
+                      {/* Episode Thumbnail (if available) */}
+                      {episode.info?.movie_image && (
+                        <div className="w-24 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-secondary">
                           <img
                             src={episode.info.movie_image}
-                            alt={episode.title}
+                            alt={`Episode ${index + 1}`}
                             className="w-full h-full object-cover"
                           />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Tv className="w-10 h-10 text-muted-foreground" />
-                          </div>
-                        )}
-                        {/* Play overlay */}
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
-                            <Play className="w-6 h-6 text-primary-foreground fill-primary-foreground ml-1" />
-                          </div>
                         </div>
-                        {/* Episode number badge */}
-                        <div className="absolute top-2 left-2 px-2 py-1 rounded bg-black/70 text-white text-xs font-medium">
-                          E{episode.episode_num}
-                        </div>
-                        {/* Duration */}
+                      )}
+                      
+                      {/* Episode Info */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-foreground font-medium truncate">
+                          Episode {index + 1}
+                        </h3>
                         {episode.info?.duration && (
-                          <div className="absolute bottom-2 right-2 px-2 py-1 rounded bg-black/70 text-white text-xs">
-                            {episode.info.duration}
-                          </div>
+                          <p className="text-muted-foreground text-sm">{episode.info.duration}</p>
                         )}
                       </div>
                       
-                      {/* Episode Info */}
-                      <div className="p-3">
-                        <h3 className="text-foreground font-medium text-sm truncate">
-                          {episode.title || `Episode ${episode.episode_num}`}
-                        </h3>
-                        {episode.info?.plot && (
-                          <p className="text-muted-foreground text-xs mt-1 line-clamp-2">
-                            {episode.info.plot}
-                          </p>
-                        )}
+                      {/* Play Icon */}
+                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 group-hover:bg-primary transition-colors">
+                        <Play className="w-5 h-5 text-primary group-hover:text-primary-foreground fill-primary group-hover:fill-primary-foreground" />
                       </div>
                     </button>
                   ))}
