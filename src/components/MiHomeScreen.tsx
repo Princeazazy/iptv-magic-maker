@@ -6,7 +6,7 @@ import arabianPalaceBg from '@/assets/arabian-palace-bg.png';
 import { useWeather } from '@/hooks/useWeather';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ContinueWatching } from './ContinueWatching';
-
+import { HomeBottomBar } from './HomeBottomBar';
 const WeatherIcon = ({ icon }: { icon: string }) => {
   switch (icon) {
     case 'sun': return <Sun className="w-5 h-5" />;
@@ -200,7 +200,7 @@ export const MiHomeScreen = ({
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10 flex-1 px-6 md:px-10 pb-8 overflow-y-auto">
+      <main className="relative z-10 flex-1 px-6 md:px-10 pb-32 overflow-y-auto">
         {isMobile ? (
           /* Mobile Layout - Vertical stack */
           <div className="flex flex-col gap-4 pb-20">
@@ -394,6 +394,21 @@ export const MiHomeScreen = ({
           </div>
         )}
       </main>
+
+      {/* Bottom Bar - Desktop only */}
+      {!isMobile && (
+        <HomeBottomBar
+          channelCount={channelCount}
+          movieCount={movieCount}
+          seriesCount={seriesCount}
+          sportsCount={sportsCount}
+          loading={loading}
+          onCategoryClick={(category) => {
+            if (category === 'sports') onNavigate('sports');
+            else if (category === 'news' || category === 'world') onNavigate('live');
+          }}
+        />
+      )}
     </div>
   );
 };
