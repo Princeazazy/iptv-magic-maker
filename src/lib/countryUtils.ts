@@ -76,6 +76,7 @@ const OTHER_COUNTRIES: Record<string, CountryInfo> = {
   'italy': { name: 'Italy', code: 'it', flagUrl: 'https://flagcdn.com/w80/it.png', priority: 54 },
   'pt': { name: 'Portugal', code: 'pt', flagUrl: 'https://flagcdn.com/w80/pt.png', priority: 55 },
   'portugal': { name: 'Portugal', code: 'pt', flagUrl: 'https://flagcdn.com/w80/pt.png', priority: 55 },
+  'portuguese': { name: 'Portugal', code: 'pt', flagUrl: 'https://flagcdn.com/w80/pt.png', priority: 55 },
   'nl': { name: 'Netherlands', code: 'nl', flagUrl: 'https://flagcdn.com/w80/nl.png', priority: 56 },
   'netherlands': { name: 'Netherlands', code: 'nl', flagUrl: 'https://flagcdn.com/w80/nl.png', priority: 56 },
   'be': { name: 'Belgium', code: 'be', flagUrl: 'https://flagcdn.com/w80/be.png', priority: 57 },
@@ -92,6 +93,8 @@ const OTHER_COUNTRIES: Record<string, CountryInfo> = {
   'ukraine': { name: 'Ukraine', code: 'ua', flagUrl: 'https://flagcdn.com/w80/ua.png', priority: 62 },
   'tr': { name: 'Turkey', code: 'tr', flagUrl: 'https://flagcdn.com/w80/tr.png', priority: 63 },
   'turkey': { name: 'Turkey', code: 'tr', flagUrl: 'https://flagcdn.com/w80/tr.png', priority: 63 },
+  'turk': { name: 'Turkey', code: 'tr', flagUrl: 'https://flagcdn.com/w80/tr.png', priority: 63 },
+  'turkish': { name: 'Turkey', code: 'tr', flagUrl: 'https://flagcdn.com/w80/tr.png', priority: 63 },
   'in': { name: 'India', code: 'in', flagUrl: 'https://flagcdn.com/w80/in.png', priority: 64 },
   'india': { name: 'India', code: 'in', flagUrl: 'https://flagcdn.com/w80/in.png', priority: 64 },
   'pk': { name: 'Pakistan', code: 'pk', flagUrl: 'https://flagcdn.com/w80/pk.png', priority: 65 },
@@ -113,7 +116,11 @@ const OTHER_COUNTRIES: Record<string, CountryInfo> = {
   'my': { name: 'Malaysia', code: 'my', flagUrl: 'https://flagcdn.com/w80/my.png', priority: 73 },
   'malaysia': { name: 'Malaysia', code: 'my', flagUrl: 'https://flagcdn.com/w80/my.png', priority: 73 },
   'vn': { name: 'Vietnam', code: 'vn', flagUrl: 'https://flagcdn.com/w80/vn.png', priority: 74 },
-  'vietnam': { name: 'Vietnam', code: 'vn', flagUrl: 'https://flagcdn.com/w80/vn.png', priority: 74 },
+  'vietnam': { name: 'Vietnam', code: 'vn', flagUrl: 'https://flagcdn.com/w80/vi.png', priority: 74 },
+  'lk': { name: 'Sri Lanka', code: 'lk', flagUrl: 'https://flagcdn.com/w80/lk.png', priority: 74 },
+  'sri lanka': { name: 'Sri Lanka', code: 'lk', flagUrl: 'https://flagcdn.com/w80/lk.png', priority: 74 },
+  'srilanka': { name: 'Sri Lanka', code: 'lk', flagUrl: 'https://flagcdn.com/w80/lk.png', priority: 74 },
+  'sirilanka': { name: 'Sri Lanka', code: 'lk', flagUrl: 'https://flagcdn.com/w80/lk.png', priority: 74 },
   'au': { name: 'Australia', code: 'au', flagUrl: 'https://flagcdn.com/w80/au.png', priority: 75 },
   'australia': { name: 'Australia', code: 'au', flagUrl: 'https://flagcdn.com/w80/au.png', priority: 75 },
   'nz': { name: 'New Zealand', code: 'nz', flagUrl: 'https://flagcdn.com/w80/nz.png', priority: 76 },
@@ -142,6 +149,9 @@ const OTHER_COUNTRIES: Record<string, CountryInfo> = {
   'kenya': { name: 'Kenya', code: 'ke', flagUrl: 'https://flagcdn.com/w80/ke.png', priority: 87 },
   'gh': { name: 'Ghana', code: 'gh', flagUrl: 'https://flagcdn.com/w80/gh.png', priority: 88 },
   'ghana': { name: 'Ghana', code: 'gh', flagUrl: 'https://flagcdn.com/w80/gh.png', priority: 88 },
+  'mr': { name: 'Mauritania', code: 'mr', flagUrl: 'https://flagcdn.com/w80/mr.png', priority: 88 },
+  'mauritania': { name: 'Mauritania', code: 'mr', flagUrl: 'https://flagcdn.com/w80/mr.png', priority: 88 },
+  'mouritania': { name: 'Mauritania', code: 'mr', flagUrl: 'https://flagcdn.com/w80/mr.png', priority: 88 },
   'il': { name: 'Israel', code: 'il', flagUrl: 'https://flagcdn.com/w80/il.png', priority: 89 },
   'israel': { name: 'Israel', code: 'il', flagUrl: 'https://flagcdn.com/w80/il.png', priority: 89 },
   'ir': { name: 'Iran', code: 'ir', flagUrl: 'https://flagcdn.com/w80/ir.png', priority: 90 },
@@ -166,6 +176,25 @@ const OTHER_COUNTRIES: Record<string, CountryInfo> = {
   'hungary': { name: 'Hungary', code: 'hu', flagUrl: 'https://flagcdn.com/w80/hu.png', priority: 99 },
   'ro': { name: 'Romania', code: 'ro', flagUrl: 'https://flagcdn.com/w80/ro.png', priority: 100 },
   'romania': { name: 'Romania', code: 'ro', flagUrl: 'https://flagcdn.com/w80/ro.png', priority: 100 },
+  'si': { name: 'Slovenia', code: 'si', flagUrl: 'https://flagcdn.com/w80/si.png', priority: 101 },
+  'slovenia': { name: 'Slovenia', code: 'si', flagUrl: 'https://flagcdn.com/w80/si.png', priority: 101 },
+  'hr': { name: 'Croatia', code: 'hr', flagUrl: 'https://flagcdn.com/w80/hr.png', priority: 102 },
+  'croatia': { name: 'Croatia', code: 'hr', flagUrl: 'https://flagcdn.com/w80/hr.png', priority: 102 },
+  'rs': { name: 'Serbia', code: 'rs', flagUrl: 'https://flagcdn.com/w80/rs.png', priority: 103 },
+  'serbia': { name: 'Serbia', code: 'rs', flagUrl: 'https://flagcdn.com/w80/rs.png', priority: 103 },
+  'ba': { name: 'Bosnia', code: 'ba', flagUrl: 'https://flagcdn.com/w80/ba.png', priority: 104 },
+  'bosnia': { name: 'Bosnia', code: 'ba', flagUrl: 'https://flagcdn.com/w80/ba.png', priority: 104 },
+  'me': { name: 'Montenegro', code: 'me', flagUrl: 'https://flagcdn.com/w80/me.png', priority: 105 },
+  'montenegro': { name: 'Montenegro', code: 'me', flagUrl: 'https://flagcdn.com/w80/me.png', priority: 105 },
+  'mk': { name: 'North Macedonia', code: 'mk', flagUrl: 'https://flagcdn.com/w80/mk.png', priority: 106 },
+  'macedonia': { name: 'North Macedonia', code: 'mk', flagUrl: 'https://flagcdn.com/w80/mk.png', priority: 106 },
+  'al': { name: 'Albania', code: 'al', flagUrl: 'https://flagcdn.com/w80/al.png', priority: 107 },
+  'albania': { name: 'Albania', code: 'al', flagUrl: 'https://flagcdn.com/w80/al.png', priority: 107 },
+  'xk': { name: 'Kosovo', code: 'xk', flagUrl: 'https://flagcdn.com/w80/xk.png', priority: 108 },
+  'kosovo': { name: 'Kosovo', code: 'xk', flagUrl: 'https://flagcdn.com/w80/xk.png', priority: 108 },
+  // Balkan as a region (use Serbia flag as representative)
+  'balkan': { name: 'Balkan', code: 'rs', flagUrl: 'https://flagcdn.com/w80/rs.png', priority: 109 },
+  'balkans': { name: 'Balkan', code: 'rs', flagUrl: 'https://flagcdn.com/w80/rs.png', priority: 109 },
 };
 
 // Merged all countries
@@ -234,10 +263,19 @@ export const normalizeGroupName = (group: string): string => {
   return group.toLowerCase().trim();
 };
 
-// Get display name for a group
+// Helper to properly capitalize words
+const capitalizeWords = (str: string): string => {
+  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+// Get display name for a group (properly capitalized)
 export const getDisplayName = (group: string): string => {
   const countryInfo = getCountryInfo(group);
-  return countryInfo?.name || group;
+  if (countryInfo) {
+    return countryInfo.name;
+  }
+  // Capitalize first letter of each word for non-country groups
+  return capitalizeWords(group.trim());
 };
 
 // Get flag URL for a group
@@ -268,6 +306,7 @@ export const getCategoryEmoji = (group: string): string => {
   if (groupLower.includes('religious') || groupLower.includes('islam')) return '🕌';
   if (groupLower.includes('cooking') || groupLower.includes('food')) return '🍳';
   if (groupLower.includes('premium')) return '⭐';
+  if (groupLower.includes('multichoice') || groupLower.includes('dstv')) return '📡';
   return '📺';
 };
 
