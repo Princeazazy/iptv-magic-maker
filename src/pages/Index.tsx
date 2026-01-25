@@ -117,6 +117,40 @@ const Index = () => {
     setIsFullscreen(true);
   };
 
+  const handleCatchUpNavigate = useCallback((payload: {
+    channelId: string;
+    url?: string;
+    channelName?: string;
+    logo?: string;
+    type?: string;
+    group?: string;
+  }) => {
+    console.log('[CatchUp] Navigate payload:', payload);
+
+    const existing = channels.find((c) => c.id === payload.channelId);
+    const channelToPlay: Channel | null = payload.url
+      ? {
+          ...(existing ?? {
+            id: payload.channelId,
+            name: payload.channelName ?? 'Last played',
+            url: payload.url,
+          }),
+          id: payload.channelId,
+          name: payload.channelName ?? existing?.name ?? 'Last played',
+          url: payload.url,
+          logo: payload.logo ?? existing?.logo,
+          type: (payload.type as Channel['type']) ?? existing?.type,
+          group: payload.group ?? existing?.group,
+        }
+      : existing ?? null;
+
+    if (channelToPlay) {
+      handleChannelSelect(channelToPlay);
+    } else {
+      console.warn('[CatchUp] No matching channel found for:', payload.channelId);
+    }
+  }, [channels]);
+
   const handleItemSelect = (item: Channel) => {
     setSelectedItem(item);
     setPreviousScreen(currentScreen);
@@ -249,13 +283,7 @@ const Index = () => {
             loading={loading}
             onNavigate={handleNavigate}
             onReload={handleReload}
-            onCatchUp={(channelId) => {
-              // Find the channel and play it
-              const channel = channels.find(c => c.id === channelId);
-              if (channel) {
-                handleChannelSelect(channel);
-              }
-            }}
+            onCatchUp={handleCatchUpNavigate}
             onSearchClick={() => setIsSearchOpen(true)}
             onVoiceSearchClick={() => setIsSearchOpen(true)}
           />
@@ -342,7 +370,7 @@ const Index = () => {
             loading={loading}
             onNavigate={handleNavigate}
             onReload={handleReload}
-            onCatchUp={refresh}
+            onCatchUp={handleCatchUpNavigate}
             onSearchClick={() => setIsSearchOpen(true)}
             onVoiceSearchClick={() => setIsSearchOpen(true)}
           />
