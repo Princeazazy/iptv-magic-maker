@@ -119,11 +119,13 @@ export const MiLiveTVList = ({
   }, [channels]);
 
   const filteredChannels = useMemo(() => {
+    const hasSearchQuery = effectiveSearchQuery.trim().length > 0;
+    
     let filtered = channels.filter((channel) => {
       const matchesSearch = channel.name.toLowerCase().includes(effectiveSearchQuery.toLowerCase());
       
-      // For group matching, check if channel's group matches any of the original names for the selected normalized group
-      let matchesGroup = selectedGroup === 'all';
+      // When searching, ignore group filter and search ALL channels
+      let matchesGroup = hasSearchQuery || selectedGroup === 'all';
       if (!matchesGroup) {
         const originalNames = normalizedGroupMap.get(selectedGroup) || [];
         matchesGroup = originalNames.includes(channel.group || 'Uncategorized');
