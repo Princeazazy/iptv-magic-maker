@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Tv, Film, Clapperboard, Trophy, User, RefreshCw, Clock, LogOut, Search, Settings, Mic, Cloud, Sun, CloudRain, Snowflake, CloudLightning } from 'lucide-react';
+import { Tv, Film, Clapperboard, Trophy, User, RefreshCw, Clock, LogOut, Search, Mic, Cloud, Sun, CloudRain, Snowflake, CloudLightning } from 'lucide-react';
 import arabiaLogo from '@/assets/arabia-logo-new.png';
 import arabianPalaceBg from '@/assets/arabian-palace-bg.png';
 import { useWeather } from '@/hooks/useWeather';
@@ -184,12 +184,6 @@ export const MiHomeScreen = ({
               <Search className="w-5 h-5 text-muted-foreground" />
             </button>
           )}
-          <button
-            onClick={() => onNavigate('settings')}
-            className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-card border border-border/30 flex items-center justify-center hover:bg-card/80 transition-colors"
-          >
-            <Settings className="w-5 h-5 text-muted-foreground" />
-          </button>
           <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-primary to-accent overflow-hidden ring-2 ring-primary/30">
             <div className="w-full h-full flex items-center justify-center">
               <span className="text-white font-bold text-lg">A</span>

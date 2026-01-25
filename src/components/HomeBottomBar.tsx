@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tv, Film, Clapperboard, Trophy, TrendingUp, Play, Zap, Globe, Music, Gamepad2, Baby, Newspaper } from 'lucide-react';
+import { getRecentLastPlayed } from '@/hooks/useWatchProgress';
 
 interface HomeBottomBarProps {
   channelCount: number;
@@ -102,6 +103,36 @@ export const HomeBottomBar = ({
   onResumeClick,
 }: HomeBottomBarProps) => {
   const [tickerOffset, setTickerOffset] = useState(0);
+  const [updateKey, setUpdateKey] = useState(0);
+
+  // Generate trending items from real watch history
+  const trendingItems = useMemo(() => {
+    const recentItems = getRecentLastPlayed(8);
+    if (recentItems.length === 0) {
+      return [
+        { icon: '📺', text: 'Start watching to see your trending content' },
+        { icon: '🎬', text: 'Browse movies and series' },
+        { icon: '⚽', text: 'Check out Sports Guide' },
+      ];
+    }
+    
+    return recentItems.map(item => {
+      const icon = item.contentType === 'movie' ? '🎬' : 
+                   item.contentType === 'series' ? '📺' : 
+                   item.contentType === 'sports' ? '⚽' : '🔴';
+      const prefix = item.contentType === 'live' || item.contentType === 'sports' ? 'LIVE: ' : 
+                     item.contentType === 'movie' ? 'Movie: ' : 'Series: ';
+      return { icon, text: `${prefix}${item.channelName}` };
+    });
+  }, [updateKey]);
+
+  // Update trending items every hour
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setUpdateKey(prev => prev + 1);
+    }, 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Animate ticker
   useEffect(() => {
