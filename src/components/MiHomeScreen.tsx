@@ -7,7 +7,7 @@ import { useWeather } from '@/hooks/useWeather';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ContinueWatching } from './ContinueWatching';
 import { HomeBottomBar } from './HomeBottomBar';
-import { getLastPlayed, getRecentWatchProgress } from '@/hooks/useWatchProgress';
+import { getRecentWatchProgress } from '@/hooks/useWatchProgress';
 const WeatherIcon = ({ icon }: { icon: string }) => {
   switch (icon) {
     case 'sun': return <Sun className="w-5 h-5" />;
@@ -26,14 +26,7 @@ interface MiHomeScreenProps {
   loading?: boolean;
   onNavigate: (section: 'live' | 'movies' | 'series' | 'sports' | 'settings') => void;
   onReload?: () => void;
-  onCatchUp?: (payload: {
-    channelId: string;
-    url?: string;
-    channelName?: string;
-    logo?: string;
-    type?: string;
-    group?: string;
-  }) => void;
+  onCatchUp?: () => void;
   onSearchClick?: () => void;
   onVoiceSearchClick?: () => void;
   onContinueWatchingSelect?: (channelId: string) => void;
@@ -130,28 +123,8 @@ export const MiHomeScreen = ({
   const isMobile = useIsMobile();
 
   const handleCatchUp = () => {
-    const last = getLastPlayed();
-    if (last && onCatchUp) {
-      setIsRefreshing(true);
-      console.log('[CatchUp] Using last played:', last);
-      onCatchUp({
-        channelId: last.channelId,
-        url: last.url,
-        channelName: last.channelName,
-        logo: last.logo,
-        type: last.type,
-        group: last.group,
-      });
-      setTimeout(() => setIsRefreshing(false), 500);
-      return;
-    }
-
-    const recentItems = getRecentWatchProgress(1);
-    if (recentItems.length > 0 && onCatchUp) {
-      setIsRefreshing(true);
-      console.log('[CatchUp] Fallback to watch history:', recentItems[0]);
-      onCatchUp({ channelId: recentItems[0].channelId });
-      setTimeout(() => setIsRefreshing(false), 500);
+    if (onCatchUp) {
+      onCatchUp();
     }
   };
 

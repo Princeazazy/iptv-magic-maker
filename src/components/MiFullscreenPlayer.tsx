@@ -92,7 +92,9 @@ export const MiFullscreenPlayer = ({
   const { savedPosition, hasSavedProgress, saveProgress, saveInterval } = useWatchProgress(
     channel.id,
     channel.name,
-    channel.logo
+    channel.logo,
+    channel.url,
+    channel.group
   );
 
   useEffect(() => {

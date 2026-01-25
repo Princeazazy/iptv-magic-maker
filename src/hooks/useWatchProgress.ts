@@ -3,6 +3,8 @@ const SAVE_INTERVAL = 5; // Save every 5 seconds of playback
 const MIN_PROGRESS_TO_SAVE = 10; // Minimum seconds watched to save
 const RESUME_THRESHOLD = 0.95; // Don't resume if > 95% complete
 
+export type ContentType = 'live' | 'movie' | 'series' | 'sports' | 'unknown';
+
 export interface WatchProgress {
   channelId: string;
   channelName: string;
@@ -10,6 +12,9 @@ export interface WatchProgress {
   duration: number;
   timestamp: number; // when it was saved
   logo?: string;
+  url?: string;
+  contentType?: ContentType;
+  group?: string;
 }
 
 const LAST_PLAYED_KEY = 'mi_last_played';
@@ -27,6 +32,18 @@ export interface LastPlayed {
 interface WatchProgressStore {
   [channelId: string]: WatchProgress;
 }
+
+// Determine content type from group/url
+export const getContentType = (group?: string, url?: string): ContentType => {
+  const g = group?.toLowerCase() || '';
+  const u = url?.toLowerCase() || '';
+  
+  if (g.includes('movie') || u.includes('/movie/')) return 'movie';
+  if (g.includes('series') || u.includes('/series/')) return 'series';
+  if (g.includes('sport')) return 'sports';
+  if (g.includes('live') || !g.includes('vod')) return 'live';
+  return 'unknown';
+};
 
 // Get all watch progress entries
 export const getWatchProgress = (): WatchProgressStore => {
@@ -50,10 +67,13 @@ export const saveWatchProgress = (
   channelName: string,
   position: number,
   duration: number,
-  logo?: string
+  logo?: string,
+  url?: string,
+  group?: string
 ): void => {
-  // Don't save if barely started or almost finished
-  if (position < MIN_PROGRESS_TO_SAVE) return;
+  // Don't save if barely started or almost finished (for VOD only)
+  const contentType = getContentType(group, url);
+  if (contentType !== 'live' && position < MIN_PROGRESS_TO_SAVE) return;
   if (duration > 0 && position / duration > RESUME_THRESHOLD) {
     // If finished watching, remove the progress
     removeWatchProgress(channelId);
@@ -69,6 +89,9 @@ export const saveWatchProgress = (
       duration,
       timestamp: Date.now(),
       logo,
+      url,
+      contentType,
+      group,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
   } catch (e) {
@@ -91,6 +114,15 @@ export const removeWatchProgress = (channelId: string): void => {
 export const getRecentWatchProgress = (limit = 10): WatchProgress[] => {
   const store = getWatchProgress();
   return Object.values(store)
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, limit);
+};
+
+// Get recent watch progress filtered by content type
+export const getRecentByType = (type: ContentType, limit = 5): WatchProgress[] => {
+  const store = getWatchProgress();
+  return Object.values(store)
+    .filter((item) => item.contentType === type)
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, limit);
 };
@@ -129,13 +161,15 @@ export const clearAllWatchProgress = (): void => {
 export const useWatchProgress = (
   channelId: string | undefined,
   channelName: string,
-  logo?: string
+  logo?: string,
+  url?: string,
+  group?: string
 ) => {
   const savedProgress = channelId ? getChannelProgress(channelId) : null;
   
   const saveProgress = (position: number, duration: number) => {
     if (!channelId) return;
-    saveWatchProgress(channelId, channelName, position, duration, logo);
+    saveWatchProgress(channelId, channelName, position, duration, logo, url, group);
   };
 
   const clearProgress = () => {
