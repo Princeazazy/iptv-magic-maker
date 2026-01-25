@@ -37,6 +37,11 @@ const Index = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showMiniPlayer, setShowMiniPlayer] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  
+  // Episode navigation state for series
+  const [currentEpisodeList, setCurrentEpisodeList] = useState<Array<{ url: string; title: string }>>([]);
+  const [currentEpisodeIndex, setCurrentEpisodeIndex] = useState(0);
+  
   const { toast } = useToast();
 
   const handleIntroComplete = useCallback(() => {
@@ -187,7 +192,12 @@ const Index = () => {
   };
 
   // Handle playing a specific episode from series detail
-  const handlePlayEpisode = (episodeUrl: string, episodeTitle: string) => {
+  const handlePlayEpisode = useCallback((
+    episodeUrl: string, 
+    episodeTitle: string, 
+    episodeList?: Array<{ url: string; title: string }>,
+    episodeIndex?: number
+  ) => {
     if (selectedItem) {
       // Create a temporary channel object for the episode
       const episodeChannel: Channel = {
@@ -196,9 +206,47 @@ const Index = () => {
         name: `${selectedItem.name} - ${episodeTitle}`,
       };
       setCurrentChannel(episodeChannel);
+      
+      // Track episode list for navigation
+      if (episodeList && episodeIndex !== undefined) {
+        setCurrentEpisodeList(episodeList);
+        setCurrentEpisodeIndex(episodeIndex);
+      }
+      
       setIsFullscreen(true);
     }
-  };
+  }, [selectedItem]);
+
+  // Episode navigation handlers
+  const handleNextEpisode = useCallback(() => {
+    if (currentEpisodeList.length === 0 || !selectedItem) return;
+    const nextIndex = currentEpisodeIndex + 1;
+    if (nextIndex < currentEpisodeList.length) {
+      const nextEpisode = currentEpisodeList[nextIndex];
+      const episodeChannel: Channel = {
+        ...selectedItem,
+        url: nextEpisode.url,
+        name: `${selectedItem.name} - ${nextEpisode.title}`,
+      };
+      setCurrentChannel(episodeChannel);
+      setCurrentEpisodeIndex(nextIndex);
+    }
+  }, [currentEpisodeList, currentEpisodeIndex, selectedItem]);
+
+  const handlePreviousEpisode = useCallback(() => {
+    if (currentEpisodeList.length === 0 || !selectedItem) return;
+    const prevIndex = currentEpisodeIndex - 1;
+    if (prevIndex >= 0) {
+      const prevEpisode = currentEpisodeList[prevIndex];
+      const episodeChannel: Channel = {
+        ...selectedItem,
+        url: prevEpisode.url,
+        name: `${selectedItem.name} - ${prevEpisode.title}`,
+      };
+      setCurrentChannel(episodeChannel);
+      setCurrentEpisodeIndex(prevIndex);
+    }
+  }, [currentEpisodeList, currentEpisodeIndex, selectedItem]);
 
   const handleNextChannel = () => {
     if (!currentChannel) return;
@@ -259,6 +307,10 @@ const Index = () => {
 
   // Fullscreen player overlay
   if (isFullscreen && currentChannel) {
+    const isSeries = currentChannel.type === 'series' || 
+                     currentChannel.group?.toLowerCase().includes('series') ||
+                     currentChannel.url?.includes('/series/');
+    
     return (
       <MiFullscreenPlayer
         channel={currentChannel}
@@ -272,6 +324,11 @@ const Index = () => {
         onToggleFavorite={() => handleToggleFavorite(currentChannel.id)}
         allChannels={filteredChannelsByCategory}
         onSelectChannel={(channel) => setCurrentChannel(channel)}
+        // Series episode navigation
+        onNextEpisode={isSeries ? handleNextEpisode : undefined}
+        onPreviousEpisode={isSeries ? handlePreviousEpisode : undefined}
+        hasNextEpisode={isSeries && currentEpisodeIndex < currentEpisodeList.length - 1}
+        hasPreviousEpisode={isSeries && currentEpisodeIndex > 0}
       />
     );
   }

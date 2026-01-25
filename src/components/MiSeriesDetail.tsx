@@ -55,7 +55,12 @@ interface SeriesInfo {
 interface MiSeriesDetailProps {
   item: Channel;
   onBack: () => void;
-  onPlayEpisode: (episodeUrl: string, episodeTitle: string) => void;
+  onPlayEpisode: (
+    episodeUrl: string, 
+    episodeTitle: string,
+    episodeList?: Array<{ url: string; title: string }>,
+    episodeIndex?: number
+  ) => void;
   onToggleFavorite: () => void;
   isFavorite: boolean;
 }
@@ -303,44 +308,52 @@ export const MiSeriesDetail = ({
               {/* Episodes List - Clean numbered format */}
               <ScrollArea className="flex-1">
                 <div className="space-y-2 pr-4">
-                  {episodes.map((episode, index) => (
-                    <button
-                      key={episode.id}
-                      onClick={() => onPlayEpisode(episode.url, `Episode ${index + 1}`)}
-                      className="group w-full flex items-center gap-4 p-3 bg-card rounded-xl hover:ring-2 hover:ring-primary/50 transition-all text-left"
-                    >
-                      {/* Episode Number */}
-                      <div className="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
-                        <span className="text-lg font-bold text-foreground">{index + 1}</span>
-                      </div>
-                      
-                      {/* Episode Thumbnail (if available) */}
-                      {episode.info?.movie_image && (
-                        <div className="w-24 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-secondary">
-                          <img
-                            src={episode.info.movie_image}
-                            alt={`Episode ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
+                  {episodes.map((episode, index) => {
+                    // Build episode list for navigation
+                    const episodeList = episodes.map((ep, i) => ({
+                      url: ep.url,
+                      title: `Episode ${i + 1}`,
+                    }));
+                    
+                    return (
+                      <button
+                        key={episode.id}
+                        onClick={() => onPlayEpisode(episode.url, `Episode ${index + 1}`, episodeList, index)}
+                        className="group w-full flex items-center gap-4 p-3 bg-card rounded-xl hover:ring-2 hover:ring-primary/50 transition-all text-left"
+                      >
+                        {/* Episode Number */}
+                        <div className="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+                          <span className="text-lg font-bold text-foreground">{index + 1}</span>
                         </div>
-                      )}
-                      
-                      {/* Episode Info */}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-foreground font-medium truncate">
-                          Episode {index + 1}
-                        </h3>
-                        {episode.info?.duration && (
-                          <p className="text-muted-foreground text-sm">{episode.info.duration}</p>
+                        
+                        {/* Episode Thumbnail (if available) */}
+                        {episode.info?.movie_image && (
+                          <div className="w-24 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-secondary">
+                            <img
+                              src={episode.info.movie_image}
+                              alt={`Episode ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
                         )}
-                      </div>
-                      
-                      {/* Play Icon */}
-                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 group-hover:bg-primary transition-colors">
-                        <Play className="w-5 h-5 text-primary group-hover:text-primary-foreground fill-primary group-hover:fill-primary-foreground" />
-                      </div>
-                    </button>
-                  ))}
+                        
+                        {/* Episode Info */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-foreground font-medium truncate">
+                            Episode {index + 1}
+                          </h3>
+                          {episode.info?.duration && (
+                            <p className="text-muted-foreground text-sm">{episode.info.duration}</p>
+                          )}
+                        </div>
+                        
+                        {/* Play Icon */}
+                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 group-hover:bg-primary transition-colors">
+                          <Play className="w-5 h-5 text-primary group-hover:text-primary-foreground fill-primary group-hover:fill-primary-foreground" />
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
                 
                 {episodes.length === 0 && (
