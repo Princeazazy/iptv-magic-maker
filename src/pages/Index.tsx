@@ -13,7 +13,7 @@ import { ArabiaIntro } from '@/components/ArabiaIntro';
 import { GlobalSearchModal } from '@/components/GlobalSearchModal';
 import { BackgroundMusic } from '@/components/BackgroundMusic';
 import { MiCatchUpPage } from '@/components/MiCatchUpPage';
-import { WatchProgress } from '@/hooks/useWatchProgress';
+import { WatchProgress, getChannelProgress } from '@/hooks/useWatchProgress';
 
 import { useToast } from '@/hooks/use-toast';
 import arabiaLogo from '@/assets/arabia-logo.png';
@@ -130,6 +130,24 @@ const Index = () => {
       type: item.contentType === 'movie' ? 'movies' : 
             item.contentType === 'series' ? 'series' : 
             item.contentType === 'sports' ? 'sports' : 'live',
+    };
+    handleChannelSelect(channelToPlay);
+  }, []);
+
+  // Handle playing from Continue Watching sidebar
+  const handleContinueWatchingSelect = useCallback((channelId: string) => {
+    const progress = getChannelProgress(channelId);
+    if (!progress) return;
+
+    const channelToPlay: Channel = {
+      id: progress.channelId,
+      name: progress.channelName,
+      url: progress.url || '',
+      logo: progress.logo,
+      group: progress.group,
+      type: progress.contentType === 'movie' ? 'movies' : 
+            progress.contentType === 'series' ? 'series' : 
+            progress.contentType === 'sports' ? 'sports' : 'live',
     };
     handleChannelSelect(channelToPlay);
   }, []);
@@ -274,6 +292,7 @@ const Index = () => {
             onCatchUp={handleOpenCatchUp}
             onSearchClick={() => setIsSearchOpen(true)}
             onVoiceSearchClick={() => setIsSearchOpen(true)}
+            onContinueWatchingSelect={handleContinueWatchingSelect}
           />
         );
 
@@ -369,6 +388,7 @@ const Index = () => {
             onCatchUp={handleOpenCatchUp}
             onSearchClick={() => setIsSearchOpen(true)}
             onVoiceSearchClick={() => setIsSearchOpen(true)}
+            onContinueWatchingSelect={handleContinueWatchingSelect}
           />
         );
     }
