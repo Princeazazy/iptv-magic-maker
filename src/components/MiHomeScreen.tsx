@@ -286,12 +286,6 @@ export const MiHomeScreen = ({
           <div className="flex gap-6 h-full">
             {/* Left Section - Content Tiles */}
             <div className="flex-1 flex flex-col gap-4">
-              {/* Continue Watching */}
-              <ContinueWatching
-                onSelect={(id) => onContinueWatchingSelect?.(id)}
-                onRemove={handleContinueWatchingRemove}
-              />
-
               {/* Main Grid */}
               <div className="grid grid-cols-3 grid-rows-2 gap-4 flex-1">
                 {/* Live TV - Takes full left column */}
@@ -381,8 +375,17 @@ export const MiHomeScreen = ({
                 <ActionButton icon={LogOut} label="Exit" onClick={() => window.close()} />
               </div>
 
+              {/* Continue Watching - Compact version above time */}
+              <div className="flex-1 overflow-hidden">
+                <ContinueWatching
+                  onSelect={(id) => onContinueWatchingSelect?.(id)}
+                  onRemove={handleContinueWatchingRemove}
+                  compact
+                />
+              </div>
+
               {/* Time & Date - Bottom right */}
-              <div className="mt-auto text-right">
+              <div className="text-right">
                 <div className="flex items-center justify-end gap-2 text-muted-foreground mb-2">
                   <WeatherIcon icon={weather.icon} />
                   <span>{weather.displayTemp}</span>
