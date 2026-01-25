@@ -184,7 +184,8 @@ export const MiMediaGrid = ({
   const filteredItems = useMemo(() => {
     let filtered = items.filter((item) => {
       const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesGroup = selectedGroup === 'all' || item.group === selectedGroup;
+      // When searching, ignore group filter and search ALL items
+      const matchesGroup = searchQuery.trim() ? true : (selectedGroup === 'all' || item.group === selectedGroup);
       const matchesFavorites = !showFavoritesOnly || favorites.has(item.id);
       return matchesSearch && matchesGroup && matchesFavorites;
     });
