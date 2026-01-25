@@ -249,7 +249,13 @@ const Index = () => {
             loading={loading}
             onNavigate={handleNavigate}
             onReload={handleReload}
-            onCatchUp={refresh}
+            onCatchUp={(channelId) => {
+              // Find the channel and play it
+              const channel = channels.find(c => c.id === channelId);
+              if (channel) {
+                handleChannelSelect(channel);
+              }
+            }}
             onSearchClick={() => setIsSearchOpen(true)}
             onVoiceSearchClick={() => setIsSearchOpen(true)}
           />

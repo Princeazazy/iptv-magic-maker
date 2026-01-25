@@ -7,6 +7,7 @@ import { useWeather } from '@/hooks/useWeather';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ContinueWatching } from './ContinueWatching';
 import { HomeBottomBar } from './HomeBottomBar';
+import { getRecentWatchProgress } from '@/hooks/useWatchProgress';
 const WeatherIcon = ({ icon }: { icon: string }) => {
   switch (icon) {
     case 'sun': return <Sun className="w-5 h-5" />;
@@ -25,7 +26,7 @@ interface MiHomeScreenProps {
   loading?: boolean;
   onNavigate: (section: 'live' | 'movies' | 'series' | 'sports' | 'settings') => void;
   onReload?: () => void;
-  onCatchUp?: () => void;
+  onCatchUp?: (channelId: string) => void;
   onSearchClick?: () => void;
   onVoiceSearchClick?: () => void;
   onContinueWatchingSelect?: (channelId: string) => void;
@@ -122,10 +123,11 @@ export const MiHomeScreen = ({
   const isMobile = useIsMobile();
 
   const handleCatchUp = () => {
-    if (onCatchUp) {
+    const recentItems = getRecentWatchProgress(1);
+    if (recentItems.length > 0 && onCatchUp) {
       setIsRefreshing(true);
-      onCatchUp();
-      setTimeout(() => setIsRefreshing(false), 2000);
+      onCatchUp(recentItems[0].channelId);
+      setTimeout(() => setIsRefreshing(false), 500);
     }
   };
 
@@ -217,7 +219,7 @@ export const MiHomeScreen = ({
                   <Tv className="w-7 h-7 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-foreground">Live TV's</h2>
+                  <h2 className="text-2xl font-bold text-foreground">Live TV</h2>
                   <p className="text-muted-foreground text-sm">
                     {loading ? '...' : `+${channelCount.toLocaleString()} Channels`}
                   </p>
@@ -295,7 +297,7 @@ export const MiHomeScreen = ({
                       <Tv className="w-8 h-8 text-primary" />
                     </div>
                     <div>
-                      <h2 className="text-3xl font-bold text-foreground">Live TV's</h2>
+                      <h2 className="text-3xl font-bold text-foreground">Live TV</h2>
                       <p className="text-muted-foreground">
                         {loading ? '...' : `+${channelCount.toLocaleString()} Channels`}
                       </p>
