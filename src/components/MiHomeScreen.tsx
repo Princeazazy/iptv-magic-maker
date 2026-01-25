@@ -26,7 +26,14 @@ interface MiHomeScreenProps {
   loading?: boolean;
   onNavigate: (section: 'live' | 'movies' | 'series' | 'sports' | 'settings') => void;
   onReload?: () => void;
-  onCatchUp?: (channelId: string) => void;
+  onCatchUp?: (payload: {
+    channelId: string;
+    url?: string;
+    channelName?: string;
+    logo?: string;
+    type?: string;
+    group?: string;
+  }) => void;
   onSearchClick?: () => void;
   onVoiceSearchClick?: () => void;
   onContinueWatchingSelect?: (channelId: string) => void;
@@ -126,7 +133,15 @@ export const MiHomeScreen = ({
     const last = getLastPlayed();
     if (last && onCatchUp) {
       setIsRefreshing(true);
-      onCatchUp(last.channelId);
+      console.log('[CatchUp] Using last played:', last);
+      onCatchUp({
+        channelId: last.channelId,
+        url: last.url,
+        channelName: last.channelName,
+        logo: last.logo,
+        type: last.type,
+        group: last.group,
+      });
       setTimeout(() => setIsRefreshing(false), 500);
       return;
     }
@@ -134,7 +149,8 @@ export const MiHomeScreen = ({
     const recentItems = getRecentWatchProgress(1);
     if (recentItems.length > 0 && onCatchUp) {
       setIsRefreshing(true);
-      onCatchUp(recentItems[0].channelId);
+      console.log('[CatchUp] Fallback to watch history:', recentItems[0]);
+      onCatchUp({ channelId: recentItems[0].channelId });
       setTimeout(() => setIsRefreshing(false), 500);
     }
   };
