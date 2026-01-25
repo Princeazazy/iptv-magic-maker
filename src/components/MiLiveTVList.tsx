@@ -42,7 +42,7 @@ const getCategoryTitle = (category: string): string => {
     case 'movies': return 'Movies';
     case 'series': return 'Series';
     case 'sports': return 'Sports Guide';
-    default: return "Live TV's";
+    default: return "Live TV";
   }
 };
 
