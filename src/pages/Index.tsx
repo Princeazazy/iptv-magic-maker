@@ -12,11 +12,13 @@ import { MiniPlayer } from '@/components/MiniPlayer';
 import { ArabiaIntro } from '@/components/ArabiaIntro';
 import { GlobalSearchModal } from '@/components/GlobalSearchModal';
 import { BackgroundMusic } from '@/components/BackgroundMusic';
+import { MiCatchUpPage } from '@/components/MiCatchUpPage';
+import { WatchProgress } from '@/hooks/useWatchProgress';
 
 import { useToast } from '@/hooks/use-toast';
 import arabiaLogo from '@/assets/arabia-logo.png';
 
-type Screen = 'home' | 'live' | 'movies' | 'series' | 'sports' | 'settings' | 'detail' | 'series-detail';
+type Screen = 'home' | 'live' | 'movies' | 'series' | 'sports' | 'settings' | 'detail' | 'series-detail' | 'catchup';
 
 const Index = () => {
   const [playlistVersion, setPlaylistVersion] = useState(0);
@@ -117,39 +119,25 @@ const Index = () => {
     setIsFullscreen(true);
   };
 
-  const handleCatchUpNavigate = useCallback((payload: {
-    channelId: string;
-    url?: string;
-    channelName?: string;
-    logo?: string;
-    type?: string;
-    group?: string;
-  }) => {
-    console.log('[CatchUp] Navigate payload:', payload);
+  // Handle playing from CatchUp page
+  const handleCatchUpSelect = useCallback((item: WatchProgress) => {
+    const channelToPlay: Channel = {
+      id: item.channelId,
+      name: item.channelName,
+      url: item.url || '',
+      logo: item.logo,
+      group: item.group,
+      type: item.contentType === 'movie' ? 'movies' : 
+            item.contentType === 'series' ? 'series' : 
+            item.contentType === 'sports' ? 'sports' : 'live',
+    };
+    handleChannelSelect(channelToPlay);
+  }, []);
 
-    const existing = channels.find((c) => c.id === payload.channelId);
-    const channelToPlay: Channel | null = payload.url
-      ? {
-          ...(existing ?? {
-            id: payload.channelId,
-            name: payload.channelName ?? 'Last played',
-            url: payload.url,
-          }),
-          id: payload.channelId,
-          name: payload.channelName ?? existing?.name ?? 'Last played',
-          url: payload.url,
-          logo: payload.logo ?? existing?.logo,
-          type: (payload.type as Channel['type']) ?? existing?.type,
-          group: payload.group ?? existing?.group,
-        }
-      : existing ?? null;
-
-    if (channelToPlay) {
-      handleChannelSelect(channelToPlay);
-    } else {
-      console.warn('[CatchUp] No matching channel found for:', payload.channelId);
-    }
-  }, [channels]);
+  // Navigate to CatchUp page
+  const handleOpenCatchUp = useCallback(() => {
+    setCurrentScreen('catchup');
+  }, []);
 
   const handleItemSelect = (item: Channel) => {
     setSelectedItem(item);
@@ -283,9 +271,17 @@ const Index = () => {
             loading={loading}
             onNavigate={handleNavigate}
             onReload={handleReload}
-            onCatchUp={handleCatchUpNavigate}
+            onCatchUp={handleOpenCatchUp}
             onSearchClick={() => setIsSearchOpen(true)}
             onVoiceSearchClick={() => setIsSearchOpen(true)}
+          />
+        );
+
+      case 'catchup':
+        return (
+          <MiCatchUpPage
+            onSelect={handleCatchUpSelect}
+            onBack={() => setCurrentScreen('home')}
           />
         );
 
@@ -370,7 +366,7 @@ const Index = () => {
             loading={loading}
             onNavigate={handleNavigate}
             onReload={handleReload}
-            onCatchUp={handleCatchUpNavigate}
+            onCatchUp={handleOpenCatchUp}
             onSearchClick={() => setIsSearchOpen(true)}
             onVoiceSearchClick={() => setIsSearchOpen(true)}
           />
