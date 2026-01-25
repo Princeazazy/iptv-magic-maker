@@ -316,22 +316,34 @@ export const MiFullscreenPlayer = ({
       }
 
       if (t - lastSaveTimeRef.current >= saveInterval) {
-        // VOD: save with real duration
-        if (isVOD && finiteDuration) {
-          saveProgress(t, d);
+        // VOD: some IPTV VOD streams do not expose a finite duration (HLS live-like playlists)
+        // Still save position (duration=0) so Catch Up/Resume works.
+        if (isVOD) {
+          saveProgress(t, finiteDuration ? d : 0);
           lastSaveTimeRef.current = t;
+          return;
         }
 
-        // Live: save with duration 0 so it still appears in Continue Watching
-        if (!isVOD) {
-          saveProgress(t, 0);
-          lastSaveTimeRef.current = t;
-        }
+        // Live: save with duration 0 so it appears in Catch Up even without VOD duration.
+        saveProgress(t, 0);
+        lastSaveTimeRef.current = t;
       }
     };
 
     video.addEventListener('timeupdate', updateTime);
-    return () => video.removeEventListener('timeupdate', updateTime);
+    return () => {
+      video.removeEventListener('timeupdate', updateTime);
+
+      // Final save on exit/unmount (covers cases where user watched < saveInterval seconds)
+      const t = video.currentTime || 0;
+      const d = video.duration;
+      const finiteDuration = !!d && Number.isFinite(d);
+
+      if (t > 0.5) {
+        if (isVOD) saveProgress(t, finiteDuration ? d : 0);
+        else saveProgress(t, 0);
+      }
+    };
   }, [isVOD, saveProgress, saveInterval]);
 
   useEffect(() => {

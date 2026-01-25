@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Play, Clock, Tv, Film, Clapperboard, ArrowLeft, Trophy } from 'lucide-react';
-import { WatchProgress, getRecentByType } from '@/hooks/useWatchProgress';
+import { WatchProgress, getRecentByType, getRecentPlayedAsProgressByType } from '@/hooks/useWatchProgress';
 
 interface MiCatchUpPageProps {
   onSelect: (item: WatchProgress) => void;
@@ -8,10 +8,28 @@ interface MiCatchUpPageProps {
 }
 
 export const MiCatchUpPage = ({ onSelect, onBack }: MiCatchUpPageProps) => {
-  const liveChannels = getRecentByType('live', 5);
-  const movies = getRecentByType('movie', 5);
-  const series = getRecentByType('series', 5);
-  const sports = getRecentByType('sports', 5);
+  const mergeUnique = (primary: WatchProgress[], fallback: WatchProgress[], limit: number) => {
+    const seen = new Set(primary.map((x) => x.channelId));
+    const merged = [...primary, ...fallback.filter((x) => !seen.has(x.channelId))];
+    return merged.slice(0, limit);
+  };
+
+  // Live/Sports: use "last played" list so it updates immediately even if you channel-surf.
+  const liveChannels = getRecentPlayedAsProgressByType('live', 5);
+  const sports = getRecentPlayedAsProgressByType('sports', 5);
+
+  // Movies/Series: prefer true watch-progress (resume), but fall back to "last played"
+  // for providers that don't expose duration or when the user exits quickly.
+  const movies = mergeUnique(
+    getRecentByType('movie', 5),
+    getRecentPlayedAsProgressByType('movie', 5),
+    5
+  );
+  const series = mergeUnique(
+    getRecentByType('series', 5),
+    getRecentPlayedAsProgressByType('series', 5),
+    5
+  );
 
   const formatDuration = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);

@@ -18,6 +18,7 @@ export interface WatchProgress {
 }
 
 const LAST_PLAYED_KEY = 'mi_last_played';
+const MAX_LAST_PLAYED = 50;
 
 export interface LastPlayed {
   channelId: string;
@@ -26,8 +27,33 @@ export interface LastPlayed {
   logo?: string;
   type?: string;
   group?: string;
+  contentType?: ContentType;
   timestamp: number;
 }
+
+type LastPlayedStore = LastPlayed[];
+
+const readLastPlayedStore = (): LastPlayedStore => {
+  try {
+    const stored = localStorage.getItem(LAST_PLAYED_KEY);
+    if (!stored) return [];
+    const parsed = JSON.parse(stored);
+    if (Array.isArray(parsed)) return parsed as LastPlayedStore;
+    // Back-compat: previous versions stored a single object
+    if (parsed && typeof parsed === 'object') return [parsed as LastPlayed];
+    return [];
+  } catch {
+    return [];
+  }
+};
+
+const writeLastPlayedStore = (items: LastPlayedStore) => {
+  try {
+    localStorage.setItem(LAST_PLAYED_KEY, JSON.stringify(items));
+  } catch {
+    // ignore
+  }
+};
 
 interface WatchProgressStore {
   [channelId: string]: WatchProgress;
@@ -131,9 +157,16 @@ export const saveLastPlayed = (input: Omit<LastPlayed, 'timestamp'>) => {
   try {
     const payload: LastPlayed = {
       ...input,
+      contentType: input.contentType ?? getContentType(input.group, input.url),
       timestamp: Date.now(),
     };
-    localStorage.setItem(LAST_PLAYED_KEY, JSON.stringify(payload));
+
+    const current = readLastPlayedStore();
+    const deduped = current.filter(
+      (x) => x.channelId !== payload.channelId && x.url !== payload.url
+    );
+    const next = [payload, ...deduped].slice(0, MAX_LAST_PLAYED);
+    writeLastPlayedStore(next);
   } catch {
     // ignore
   }
@@ -141,11 +174,43 @@ export const saveLastPlayed = (input: Omit<LastPlayed, 'timestamp'>) => {
 
 export const getLastPlayed = (): LastPlayed | null => {
   try {
-    const stored = localStorage.getItem(LAST_PLAYED_KEY);
-    return stored ? (JSON.parse(stored) as LastPlayed) : null;
+    const store = readLastPlayedStore();
+    return store[0] || null;
   } catch {
     return null;
   }
+};
+
+export const getRecentLastPlayed = (limit = 10): LastPlayed[] => {
+  const store = readLastPlayedStore();
+  return store
+    .slice()
+    .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+    .slice(0, limit);
+};
+
+export const getRecentLastPlayedByType = (type: ContentType, limit = 5): LastPlayed[] => {
+  const store = readLastPlayedStore();
+  return store
+    .filter((item) => (item.contentType ?? getContentType(item.group, item.url)) === type)
+    .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+    .slice(0, limit);
+};
+
+export const lastPlayedToWatchProgress = (item: LastPlayed): WatchProgress => ({
+  channelId: item.channelId,
+  channelName: item.channelName,
+  position: 0,
+  duration: 0,
+  timestamp: item.timestamp,
+  logo: item.logo,
+  url: item.url,
+  contentType: item.contentType ?? getContentType(item.group, item.url),
+  group: item.group,
+});
+
+export const getRecentPlayedAsProgressByType = (type: ContentType, limit = 5): WatchProgress[] => {
+  return getRecentLastPlayedByType(type, limit).map(lastPlayedToWatchProgress);
 };
 
 // Clear all watch progress
