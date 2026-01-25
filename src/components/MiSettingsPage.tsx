@@ -19,6 +19,11 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import arabiaLogo from '@/assets/arabia-logo-new.png';
 import { useWeather } from '@/hooks/useWeather';
+import { getParentalControls, saveParentalControls, type ParentalControlSettings } from '@/lib/parentalControls';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Slider } from '@/components/ui/slider';
 
 const WeatherIcon = ({ icon }: { icon: string }) => {
   switch (icon) {
@@ -38,6 +43,9 @@ interface MiSettingsPageProps {
 export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps) => {
   const [time, setTime] = useState(new Date());
   const [showPlaylistDialog, setShowPlaylistDialog] = useState(false);
+  const [showParentalDialog, setShowParentalDialog] = useState(false);
+  const [parentalSettings, setParentalSettings] = useState<ParentalControlSettings>(getParentalControls());
+  const [passwordInput, setPasswordInput] = useState('');
   const [playlistUrl, setPlaylistUrl] = useState('');
   const [localPlaylistName, setLocalPlaylistName] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -167,6 +175,17 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
     setTimeout(() => window.location.reload(), 1000);
   };
 
+  const handleSaveParentalControls = () => {
+    if (parentalSettings.enabled && !passwordInput && !parentalSettings.password) {
+      toast.error('Please set a password');
+      return;
+    }
+    const updatedSettings = { ...parentalSettings, password: passwordInput || parentalSettings.password };
+    saveParentalControls(updatedSettings);
+    toast.success('Parental controls updated');
+    setShowParentalDialog(false);
+  };
+
   const accountData = {
     status: 'Active',
     macAddress: '8f:f7:2f:95:d1',
@@ -242,11 +261,17 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
           {/* Right Panel - Action Buttons */}
           <div className="w-full md:w-80 flex flex-col gap-3">
             {/* Parent Control */}
-            <button className="w-full flex items-center gap-4 px-6 py-5 bg-card rounded-2xl border border-border/30 hover:bg-card/80 transition-colors text-left">
+            <button 
+              onClick={() => setShowParentalDialog(true)}
+              className="w-full flex items-center gap-4 px-6 py-5 bg-card rounded-2xl border border-border/30 hover:bg-card/80 transition-colors text-left"
+            >
               <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
                 <Shield className="w-6 h-6 text-muted-foreground" />
               </div>
-              <span className="text-foreground font-medium text-lg">Parent Control</span>
+              <div className="flex-1">
+                <span className="text-foreground font-medium text-lg block">Parental Controls</span>
+                {parentalSettings.enabled && <span className="text-accent text-sm">Active</span>}
+              </div>
             </button>
 
             {/* Change Playlist */}
@@ -338,6 +363,124 @@ export const MiSettingsPage = ({ onBack, onPlaylistChange }: MiSettingsPageProps
               <button onClick={handleSavePlaylist} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors">
                 <Check className="w-5 h-5" />
                 <span>Save URL</span>
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Parental Controls Dialog */}
+      <Dialog open={showParentalDialog} onOpenChange={setShowParentalDialog}>
+        <DialogContent className="bg-card border-border/30 max-w-2xl max-h-[90vh] overflow-y-auto mi-scrollbar">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold text-foreground flex items-center gap-2">
+              <Shield className="w-5 h-5 text-primary" />
+              Parental Controls
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+              <div>
+                <Label className="text-base font-medium">Enable Parental Controls</Label>
+                <p className="text-sm text-muted-foreground">Restrict content and set time limits</p>
+              </div>
+              <Switch
+                checked={parentalSettings.enabled}
+                onCheckedChange={(checked) => setParentalSettings(prev => ({ ...prev, enabled: checked }))}
+              />
+            </div>
+
+            {parentalSettings.enabled && (
+              <>
+                <div className="space-y-3 p-4 border border-border/30 rounded-lg">
+                  <Label className="font-medium">Password</Label>
+                  <Input
+                    type="password"
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    placeholder={parentalSettings.password ? 'Change password' : 'Set password (min 4 chars)'}
+                    className="bg-secondary border-border/50"
+                  />
+                </div>
+
+                <div className="space-y-3 p-4 border border-border/30 rounded-lg">
+                  <Label className="font-medium">Hide Content Types</Label>
+                  <div className="space-y-3">
+                    {[
+                      { key: 'movies', label: 'Movies', icon: '🎬' },
+                      { key: 'series', label: 'Series', icon: '📺' },
+                      { key: 'live', label: 'Live TV', icon: '🔴' },
+                      { key: 'sports', label: 'Sports', icon: '⚽' },
+                    ].map(({ key, label, icon }) => (
+                      <div key={key} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`hide-${key}`}
+                          checked={parentalSettings.hiddenContent[key as keyof typeof parentalSettings.hiddenContent]}
+                          onCheckedChange={(checked) =>
+                            setParentalSettings(prev => ({
+                              ...prev,
+                              hiddenContent: { ...prev.hiddenContent, [key]: checked }
+                            }))
+                          }
+                        />
+                        <label htmlFor={`hide-${key}`} className="text-sm font-medium flex items-center gap-2">
+                          <span>{icon}</span> Hide {label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-3 p-4 border border-border/30 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <Label className="font-medium">Daily Time Limit</Label>
+                    <Switch
+                      checked={parentalSettings.timeLimit.enabled}
+                      onCheckedChange={(checked) =>
+                        setParentalSettings(prev => ({
+                          ...prev,
+                          timeLimit: { ...prev.timeLimit, enabled: checked }
+                        }))
+                      }
+                    />
+                  </div>
+                  {parentalSettings.timeLimit.enabled && (
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Limit per day:</span>
+                        <span className="text-sm font-medium">{parentalSettings.timeLimit.dailyLimitMinutes} min</span>
+                      </div>
+                      <Slider
+                        value={[parentalSettings.timeLimit.dailyLimitMinutes]}
+                        onValueChange={([value]) =>
+                          setParentalSettings(prev => ({
+                            ...prev,
+                            timeLimit: { ...prev.timeLimit, dailyLimitMinutes: value }
+                          }))
+                        }
+                        min={15}
+                        max={480}
+                        step={15}
+                      />
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowParentalDialog(false)}
+                className="flex-1 px-6 py-3 bg-secondary rounded-xl hover:bg-secondary/80 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveParentalControls}
+                className="flex-1 px-6 py-3 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors"
+              >
+                Save Controls
               </button>
             </div>
           </div>
