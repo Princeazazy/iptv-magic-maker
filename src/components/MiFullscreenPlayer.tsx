@@ -16,6 +16,8 @@ import {
   CloudLightning,
   ChevronLeft,
   RotateCcw,
+  Rewind,
+  FastForward,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Channel } from '@/hooks/useIPTV';
@@ -41,6 +43,11 @@ interface MiFullscreenPlayerProps {
   onToggleFavorite: () => void;
   allChannels?: Channel[]; // For channel carousel
   onSelectChannel?: (channel: Channel) => void; // For carousel selection
+  // Series episode navigation
+  onNextEpisode?: () => void;
+  onPreviousEpisode?: () => void;
+  hasNextEpisode?: boolean;
+  hasPreviousEpisode?: boolean;
 }
 
 export const MiFullscreenPlayer = ({
@@ -52,6 +59,10 @@ export const MiFullscreenPlayer = ({
   onToggleFavorite,
   allChannels = [],
   onSelectChannel,
+  onNextEpisode,
+  onPreviousEpisode,
+  hasNextEpisode = false,
+  hasPreviousEpisode = false,
 }: MiFullscreenPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -88,6 +99,29 @@ export const MiFullscreenPlayer = ({
     channel.group?.toLowerCase().includes('vod') ||
     channel.url?.includes('/movie/') ||
     channel.url?.includes('/series/');
+
+  const isSeries = channel.group?.toLowerCase().includes('series') ||
+    channel.url?.includes('/series/') ||
+    channel.type === 'series';
+
+  const isMovie = channel.group?.toLowerCase().includes('movie') ||
+    channel.url?.includes('/movie/') ||
+    channel.type === 'movies';
+
+  // Skip 10 seconds forward/backward
+  const handleSkipForward = useCallback(() => {
+    const video = videoRef.current;
+    if (video) {
+      video.currentTime = Math.min(video.currentTime + 10, video.duration || video.currentTime + 10);
+    }
+  }, []);
+
+  const handleSkipBackward = useCallback(() => {
+    const video = videoRef.current;
+    if (video) {
+      video.currentTime = Math.max(video.currentTime - 10, 0);
+    }
+  }, []);
 
   const { savedPosition, hasSavedProgress, saveProgress, saveInterval } = useWatchProgress(
     channel.id,
@@ -636,17 +670,68 @@ export const MiFullscreenPlayer = ({
         )}
 
         {/* Center Controls */}
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-8 bottom-8">
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-6 bottom-8">
+          {/* Live TV: Previous/Next channel */}
           {!isVOD && (
             <button onClick={(e) => { e.stopPropagation(); onPrevious?.(); }} className="p-3 rounded-full hover:bg-white/10 transition-colors">
               <SkipBack className="w-8 h-8 text-white" />
             </button>
           )}
 
+          {/* Series: Previous Episode */}
+          {isSeries && hasPreviousEpisode && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); onPreviousEpisode?.(); }} 
+              className="p-3 rounded-full hover:bg-white/10 transition-colors flex flex-col items-center"
+              title="Previous Episode"
+            >
+              <SkipBack className="w-6 h-6 text-white" />
+              <span className="text-white/70 text-[10px] mt-0.5">Prev Ep</span>
+            </button>
+          )}
+
+          {/* VOD: Skip backward 10s */}
+          {isVOD && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); handleSkipBackward(); }} 
+              className="p-3 rounded-full hover:bg-white/10 transition-colors flex flex-col items-center"
+              title="Rewind 10s"
+            >
+              <Rewind className="w-7 h-7 text-white" />
+              <span className="text-white/70 text-[10px] mt-0.5">10s</span>
+            </button>
+          )}
+
+          {/* Play/Pause */}
           <button onClick={(e) => { e.stopPropagation(); togglePlay(); }} className="w-16 h-16 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center backdrop-blur-sm transition-colors">
             {isPlaying ? <Pause className="w-8 h-8 text-white" /> : <Play className="w-8 h-8 text-white ml-1" />}
           </button>
 
+          {/* VOD: Skip forward 10s */}
+          {isVOD && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); handleSkipForward(); }} 
+              className="p-3 rounded-full hover:bg-white/10 transition-colors flex flex-col items-center"
+              title="Forward 10s"
+            >
+              <FastForward className="w-7 h-7 text-white" />
+              <span className="text-white/70 text-[10px] mt-0.5">10s</span>
+            </button>
+          )}
+
+          {/* Series: Next Episode */}
+          {isSeries && hasNextEpisode && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); onNextEpisode?.(); }} 
+              className="p-3 rounded-full hover:bg-white/10 transition-colors flex flex-col items-center"
+              title="Next Episode"
+            >
+              <SkipForward className="w-6 h-6 text-white" />
+              <span className="text-white/70 text-[10px] mt-0.5">Next Ep</span>
+            </button>
+          )}
+
+          {/* Live TV: Next channel */}
           {!isVOD && (
             <button onClick={(e) => { e.stopPropagation(); onNext?.(); }} className="p-3 rounded-full hover:bg-white/10 transition-colors">
               <SkipForward className="w-8 h-8 text-white" />
@@ -654,29 +739,31 @@ export const MiFullscreenPlayer = ({
           )}
         </div>
 
-        {/* Bottom Right - Volume */}
-        <div className="absolute right-6 bottom-8">
-          <div className="relative">
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowVolumeSlider(!showVolumeSlider); }}
-              onMouseEnter={() => setShowVolumeSlider(true)}
-              className="w-12 h-12 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-            >
-              {isMuted || volume === 0 ? <VolumeX className="w-5 h-5 text-white" /> : <Volume2 className="w-5 h-5 text-white" />}
-            </button>
+        {/* Bottom Right - Volume (only for Live TV) */}
+        {!isVOD && (
+          <div className="absolute right-6 bottom-8">
+            <div className="relative">
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowVolumeSlider(!showVolumeSlider); }}
+                onMouseEnter={() => setShowVolumeSlider(true)}
+                className="w-12 h-12 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+              >
+                {isMuted || volume === 0 ? <VolumeX className="w-5 h-5 text-white" /> : <Volume2 className="w-5 h-5 text-white" />}
+              </button>
 
-            {showVolumeSlider && (
-              <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-10 h-32 bg-card/90 backdrop-blur-sm rounded-full p-3 flex flex-col items-center" onMouseLeave={() => setShowVolumeSlider(false)}>
-                <Volume2 className="w-4 h-4 text-white/80 mb-2" />
-                <div className="flex-1 w-1 bg-muted rounded-full relative">
-                  <div className="absolute bottom-0 w-full bg-primary rounded-full" style={{ height: `${volume}%` }} />
-                  <input type="range" min="0" max="100" value={volume} onChange={(e) => handleVolumeChange(parseInt(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" style={{ writingMode: 'vertical-lr', direction: 'rtl' }} />
+              {showVolumeSlider && (
+                <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-10 h-32 bg-card/90 backdrop-blur-sm rounded-full p-3 flex flex-col items-center" onMouseLeave={() => setShowVolumeSlider(false)}>
+                  <Volume2 className="w-4 h-4 text-white/80 mb-2" />
+                  <div className="flex-1 w-1 bg-muted rounded-full relative">
+                    <div className="absolute bottom-0 w-full bg-primary rounded-full" style={{ height: `${volume}%` }} />
+                    <input type="range" min="0" max="100" value={volume} onChange={(e) => handleVolumeChange(parseInt(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" style={{ writingMode: 'vertical-lr', direction: 'rtl' }} />
+                  </div>
+                  <VolumeX className="w-4 h-4 text-white/60 mt-2" />
                 </div>
-                <VolumeX className="w-4 h-4 text-white/60 mt-2" />
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Back Button - Top left corner */}
         <button
