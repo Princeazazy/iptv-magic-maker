@@ -5,9 +5,10 @@ import { WatchProgress, getRecentWatchProgress, removeWatchProgress } from '@/ho
 interface ContinueWatchingProps {
   onSelect: (channelId: string) => void;
   onRemove?: (channelId: string) => void;
+  compact?: boolean;
 }
 
-export const ContinueWatching = ({ onSelect, onRemove }: ContinueWatchingProps) => {
+export const ContinueWatching = ({ onSelect, onRemove, compact = false }: ContinueWatchingProps) => {
   const recentItems = getRecentWatchProgress(8);
 
   if (recentItems.length === 0) return null;
@@ -29,6 +30,64 @@ export const ContinueWatching = ({ onSelect, onRemove }: ContinueWatchingProps) 
     removeWatchProgress(channelId);
     onRemove?.(channelId);
   };
+
+  // Compact mode shows vertical list, normal shows horizontal scroll
+  if (compact) {
+    return (
+      <div className="flex flex-col gap-2">
+        <h3 className="text-sm font-medium text-muted-foreground">Continue Watching</h3>
+        <div className="flex flex-col gap-2 overflow-y-auto max-h-[200px] mi-scrollbar">
+          {recentItems.slice(0, 4).map((item, index) => (
+            <motion.button
+              key={item.channelId}
+              onClick={() => onSelect(item.channelId)}
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="flex items-center gap-3 p-2 rounded-lg bg-card/60 hover:bg-card transition-all group"
+            >
+              {/* Thumbnail */}
+              <div className="relative w-14 h-10 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                {item.logo ? (
+                  <img
+                    src={item.logo}
+                    alt={item.channelName}
+                    className="w-full h-full object-contain p-1"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20">
+                    <span className="text-xs font-bold text-muted-foreground">
+                      {item.channelName.charAt(0)}
+                    </span>
+                  </div>
+                )}
+                {/* Progress bar */}
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black/50">
+                  <div
+                    className="h-full bg-primary"
+                    style={{ width: `${getProgressPercentage(item)}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Info */}
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-xs font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                  {item.channelName}
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                  {formatDuration(item.position)} left
+                </p>
+              </div>
+
+              {/* Play icon */}
+              <Play className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+            </motion.button>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mb-6">
