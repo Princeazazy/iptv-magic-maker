@@ -7,7 +7,7 @@ import { useWeather } from '@/hooks/useWeather';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ContinueWatching } from './ContinueWatching';
 import { HomeBottomBar } from './HomeBottomBar';
-import { getRecentWatchProgress } from '@/hooks/useWatchProgress';
+import { getLastPlayed, getRecentWatchProgress } from '@/hooks/useWatchProgress';
 const WeatherIcon = ({ icon }: { icon: string }) => {
   switch (icon) {
     case 'sun': return <Sun className="w-5 h-5" />;
@@ -123,6 +123,14 @@ export const MiHomeScreen = ({
   const isMobile = useIsMobile();
 
   const handleCatchUp = () => {
+    const last = getLastPlayed();
+    if (last && onCatchUp) {
+      setIsRefreshing(true);
+      onCatchUp(last.channelId);
+      setTimeout(() => setIsRefreshing(false), 500);
+      return;
+    }
+
     const recentItems = getRecentWatchProgress(1);
     if (recentItems.length > 0 && onCatchUp) {
       setIsRefreshing(true);

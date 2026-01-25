@@ -20,7 +20,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { Channel } from '@/hooks/useIPTV';
 import { useWeather } from '@/hooks/useWeather';
-import { useWatchProgress } from '@/hooks/useWatchProgress';
+import { useWatchProgress, saveLastPlayed } from '@/hooks/useWatchProgress';
 
 const WeatherIcon = ({ icon }: { icon: string }) => {
   switch (icon) {
@@ -94,6 +94,18 @@ export const MiFullscreenPlayer = ({
     channel.name,
     channel.logo
   );
+
+  useEffect(() => {
+    if (!channel.url) return;
+    saveLastPlayed({
+      channelId: channel.id,
+      channelName: channel.name,
+      url: channel.url,
+      logo: channel.logo,
+      type: channel.type,
+      group: channel.group,
+    });
+  }, [channel.id, channel.url]);
 
   const functionConfig = useMemo(() => {
     const supabaseUrl = (supabase as any).supabaseUrl as string | undefined;
@@ -287,17 +299,30 @@ export const MiFullscreenPlayer = ({
     if (!video) return;
 
     const updateTime = () => {
-      const t = video.currentTime;
+      const t = video.currentTime || 0;
       const hours = Math.floor(t / 3600);
       const minutes = Math.floor((t % 3600) / 60);
       const seconds = Math.floor(t % 60);
       setCurrentTime(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
 
-      if (video.duration && isFinite(video.duration)) {
-        setProgress((video.currentTime / video.duration) * 100);
-        setDuration(video.duration);
-        if (isVOD && t - lastSaveTimeRef.current >= saveInterval) {
-          saveProgress(t, video.duration);
+      const d = video.duration;
+      const finiteDuration = !!d && Number.isFinite(d);
+
+      if (finiteDuration) {
+        setProgress((t / d) * 100);
+        setDuration(d);
+      }
+
+      if (t - lastSaveTimeRef.current >= saveInterval) {
+        // VOD: save with real duration
+        if (isVOD && finiteDuration) {
+          saveProgress(t, d);
+          lastSaveTimeRef.current = t;
+        }
+
+        // Live: save with duration 0 so it still appears in Continue Watching
+        if (!isVOD) {
+          saveProgress(t, 0);
           lastSaveTimeRef.current = t;
         }
       }

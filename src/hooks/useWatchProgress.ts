@@ -12,6 +12,18 @@ export interface WatchProgress {
   logo?: string;
 }
 
+const LAST_PLAYED_KEY = 'mi_last_played';
+
+export interface LastPlayed {
+  channelId: string;
+  channelName: string;
+  url: string;
+  logo?: string;
+  type?: string;
+  group?: string;
+  timestamp: number;
+}
+
 interface WatchProgressStore {
   [channelId: string]: WatchProgress;
 }
@@ -81,6 +93,27 @@ export const getRecentWatchProgress = (limit = 10): WatchProgress[] => {
   return Object.values(store)
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, limit);
+};
+
+export const saveLastPlayed = (input: Omit<LastPlayed, 'timestamp'>) => {
+  try {
+    const payload: LastPlayed = {
+      ...input,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(LAST_PLAYED_KEY, JSON.stringify(payload));
+  } catch {
+    // ignore
+  }
+};
+
+export const getLastPlayed = (): LastPlayed | null => {
+  try {
+    const stored = localStorage.getItem(LAST_PLAYED_KEY);
+    return stored ? (JSON.parse(stored) as LastPlayed) : null;
+  } catch {
+    return null;
+  }
 };
 
 // Clear all watch progress
