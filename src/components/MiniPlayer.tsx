@@ -119,6 +119,17 @@ export const MiniPlayer = ({ channel, onExpand, onClose }: MiniPlayerProps) => {
         muted={isMuted}
       />
 
+      {/* Channel Logo Badge */}
+      {channel.logo && (
+        <div className="absolute bottom-2 left-2 w-10 h-10 rounded-lg bg-black/60 backdrop-blur-sm overflow-hidden border border-white/10">
+          <img
+            src={channel.logo}
+            alt={channel.name}
+            className="w-full h-full object-contain p-1"
+          />
+        </div>
+      )}
+
       {/* Error overlay */}
       {error && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/80">
