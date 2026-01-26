@@ -268,10 +268,9 @@ export const MiHomeScreen = ({
             </TileCard>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-3 gap-3 mt-2">
+            <div className="grid grid-cols-2 gap-3 mt-2">
               <ActionButton icon={User} label="Account" onClick={() => onNavigate('settings')} />
-              <ActionButton icon={RefreshCw} label="Reload" onClick={onReload} />
-              <ActionButton icon={LogOut} label="Exit" onClick={() => window.close()} />
+              <ActionButton icon={RefreshCw} label="Refresh All" onClick={onReload} />
             </div>
           </div>
         ) : (
@@ -364,8 +363,7 @@ export const MiHomeScreen = ({
               {/* Action Buttons */}
               <div className="flex flex-col gap-2">
                 <ActionButton icon={User} label="Account" onClick={() => onNavigate('settings')} />
-                <ActionButton icon={RefreshCw} label="Reload" onClick={onReload} />
-                <ActionButton icon={LogOut} label="Exit" onClick={() => window.close()} />
+                <ActionButton icon={RefreshCw} label="Refresh All" onClick={onReload} />
               </div>
 
               {/* Continue Watching - Compact version above time */}
