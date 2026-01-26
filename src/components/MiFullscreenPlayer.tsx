@@ -669,10 +669,12 @@ export const MiFullscreenPlayer = ({
             </button>
           )}
 
-          {/* Play/Pause */}
-          <button onClick={(e) => { e.stopPropagation(); togglePlay(); }} className="w-16 h-16 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center backdrop-blur-sm transition-colors">
-            {isPlaying ? <Pause className="w-8 h-8 text-white" /> : <Play className="w-8 h-8 text-white ml-1" />}
-          </button>
+          {/* Play/Pause - VOD only */}
+          {isVOD && (
+            <button onClick={(e) => { e.stopPropagation(); togglePlay(); }} className="w-16 h-16 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center backdrop-blur-sm transition-colors">
+              {isPlaying ? <Pause className="w-8 h-8 text-white" /> : <Play className="w-8 h-8 text-white ml-1" />}
+            </button>
+          )}
 
           {/* VOD: Skip forward 10s */}
           {isVOD && (
