@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Maximize2, Play, Pause } from 'lucide-react';
+import { X, Maximize2 } from 'lucide-react';
 import Hls from 'hls.js';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,7 +15,6 @@ interface MiniPlayerProps {
 export const MiniPlayer = ({ channel, onExpand, onClose }: MiniPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
-  const [isPlaying, setIsPlaying] = useState(true);
   const [error, setError] = useState<string | null>(null);
   // Always start unmuted on native, muted on web for autoplay
   const isMuted = !Capacitor.isNativePlatform();
@@ -60,7 +59,7 @@ export const MiniPlayer = ({ channel, onExpand, onClose }: MiniPlayerProps) => {
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         video.muted = isMuted;
-        video.play().catch(() => setIsPlaying(false));
+        video.play().catch(() => {});
       });
 
       hls.on(Hls.Events.ERROR, (_, data) => {
@@ -72,12 +71,12 @@ export const MiniPlayer = ({ channel, onExpand, onClose }: MiniPlayerProps) => {
       // Native HLS (Safari)
       video.src = sourceUrl;
       video.muted = isMuted;
-      video.play().catch(() => setIsPlaying(false));
+      video.play().catch(() => {});
     } else {
       // Direct playback
       video.src = sourceUrl;
       video.muted = isMuted;
-      video.play().catch(() => setIsPlaying(false));
+      video.play().catch(() => {});
     }
 
     return () => {
@@ -87,18 +86,6 @@ export const MiniPlayer = ({ channel, onExpand, onClose }: MiniPlayerProps) => {
       }
     };
   }, [channel.url, channel.isLocal, streamProxyUrl, isMuted]);
-
-  const togglePlay = () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (isPlaying) {
-      video.pause();
-    } else {
-      video.play().catch(() => {});
-    }
-    setIsPlaying(!isPlaying);
-  };
 
 
   return (
@@ -153,22 +140,8 @@ export const MiniPlayer = ({ channel, onExpand, onClose }: MiniPlayerProps) => {
           </button>
         </div>
 
-        {/* Bottom - Controls */}
-        <div className="absolute bottom-0 left-0 right-0 p-2 flex items-center justify-between">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              togglePlay();
-            }}
-            className="w-7 h-7 rounded-full bg-primary/80 flex items-center justify-center hover:bg-primary transition-colors"
-          >
-            {isPlaying ? (
-              <Pause className="w-3 h-3 text-white" />
-            ) : (
-              <Play className="w-3 h-3 text-white ml-0.5" />
-            )}
-          </button>
-
+        {/* Bottom - Expand button only */}
+        <div className="absolute bottom-0 left-0 right-0 p-2 flex items-center justify-end">
           <button
             onClick={(e) => {
               e.stopPropagation();
