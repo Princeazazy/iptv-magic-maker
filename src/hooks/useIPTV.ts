@@ -314,7 +314,7 @@ export const useIPTV = (m3uUrl?: string) => {
                 name: cleanChannelName(ch.name),
                 url: ch.url || '',
                 logo: ch.logo || undefined,
-                group: ch.group || 'Live TV',
+                group: cleanChannelName(ch.group || 'Live TV'),
                 type: ch.type || 'live',
                 // Preserve extended metadata
                 stream_id: ch.stream_id,
@@ -455,7 +455,7 @@ const parseM3U = (content: string): Channel[] => {
       const nameMatch = line.split(',').pop();
 
       const name = cleanChannelName(nameMatch?.trim() || 'Unknown Channel');
-      const group = groupMatch ? groupMatch[1] : 'Uncategorized';
+      const group = cleanChannelName(groupMatch ? groupMatch[1] : 'Uncategorized');
 
       currentChannel = {
         id: `channel-${channels.length}`,
