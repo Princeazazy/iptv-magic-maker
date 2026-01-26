@@ -311,13 +311,23 @@ const Index = () => {
                      currentChannel.group?.toLowerCase().includes('series') ||
                      currentChannel.url?.includes('/series/');
     
+    const isLiveTV = currentChannel.type === 'live' || 
+                     currentChannel.type === 'sports' || 
+                     (!currentChannel.type && !currentChannel.url?.includes('/movie/') && !currentChannel.url?.includes('/series/'));
+    
     return (
       <MiFullscreenPlayer
         channel={currentChannel}
         isFavorite={favorites.has(currentChannel.id)}
         onClose={() => {
           setIsFullscreen(false);
-          setShowMiniPlayer(true); // Show mini player when closing fullscreen
+          // Only show mini player for Live TV, not for movies/series
+          if (isLiveTV) {
+            setShowMiniPlayer(true);
+          } else {
+            setShowMiniPlayer(false);
+            setCurrentChannel(null);
+          }
         }}
         onNext={handleNextChannel}
         onPrevious={handlePreviousChannel}
