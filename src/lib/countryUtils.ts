@@ -9,16 +9,17 @@ export interface CountryInfo {
 }
 
 // Arabic-speaking countries (priority 1-20)
+// Egypt is priority 1 (first in list)
 const ARABIC_COUNTRIES: Record<string, CountryInfo> = {
-  'ar': { name: 'Arabic', code: 'sa', flagUrl: 'https://flagcdn.com/w80/sa.png', priority: 1 },
-  'arabic': { name: 'Arabic', code: 'sa', flagUrl: 'https://flagcdn.com/w80/sa.png', priority: 1 },
-  'sa': { name: 'Saudi Arabia', code: 'sa', flagUrl: 'https://flagcdn.com/w80/sa.png', priority: 2 },
-  'saudi': { name: 'Saudi Arabia', code: 'sa', flagUrl: 'https://flagcdn.com/w80/sa.png', priority: 2 },
-  'ae': { name: 'UAE', code: 'ae', flagUrl: 'https://flagcdn.com/w80/ae.png', priority: 3 },
-  'uae': { name: 'UAE', code: 'ae', flagUrl: 'https://flagcdn.com/w80/ae.png', priority: 3 },
-  'emirates': { name: 'UAE', code: 'ae', flagUrl: 'https://flagcdn.com/w80/ae.png', priority: 3 },
-  'eg': { name: 'Egypt', code: 'eg', flagUrl: 'https://flagcdn.com/w80/eg.png', priority: 4 },
-  'egypt': { name: 'Egypt', code: 'eg', flagUrl: 'https://flagcdn.com/w80/eg.png', priority: 4 },
+  'eg': { name: 'Egypt', code: 'eg', flagUrl: 'https://flagcdn.com/w80/eg.png', priority: 1 },
+  'egypt': { name: 'Egypt', code: 'eg', flagUrl: 'https://flagcdn.com/w80/eg.png', priority: 1 },
+  'ar': { name: 'Arabic', code: 'sa', flagUrl: 'https://flagcdn.com/w80/sa.png', priority: 2 },
+  'arabic': { name: 'Arabic', code: 'sa', flagUrl: 'https://flagcdn.com/w80/sa.png', priority: 2 },
+  'sa': { name: 'Saudi Arabia', code: 'sa', flagUrl: 'https://flagcdn.com/w80/sa.png', priority: 3 },
+  'saudi': { name: 'Saudi Arabia', code: 'sa', flagUrl: 'https://flagcdn.com/w80/sa.png', priority: 3 },
+  'ae': { name: 'UAE', code: 'ae', flagUrl: 'https://flagcdn.com/w80/ae.png', priority: 4 },
+  'uae': { name: 'UAE', code: 'ae', flagUrl: 'https://flagcdn.com/w80/ae.png', priority: 4 },
+  'emirates': { name: 'UAE', code: 'ae', flagUrl: 'https://flagcdn.com/w80/ae.png', priority: 4 },
   'jo': { name: 'Jordan', code: 'jo', flagUrl: 'https://flagcdn.com/w80/jo.png', priority: 5 },
   'jordan': { name: 'Jordan', code: 'jo', flagUrl: 'https://flagcdn.com/w80/jo.png', priority: 5 },
   'lb': { name: 'Lebanon', code: 'lb', flagUrl: 'https://flagcdn.com/w80/lb.png', priority: 6 },

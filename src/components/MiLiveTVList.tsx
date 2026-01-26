@@ -57,7 +57,7 @@ export const MiLiveTVList = ({
   onBack,
   category = 'live',
 }: MiLiveTVListProps) => {
-  const [selectedGroup, setSelectedGroup] = useState<string>('all');
+  const [selectedGroup, setSelectedGroup] = useState<string>('egypt');
   const [sortBy, setSortBy] = useState<string>('number');
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [time, setTime] = useState(new Date());
