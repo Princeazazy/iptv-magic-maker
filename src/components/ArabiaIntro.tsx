@@ -125,7 +125,6 @@ export const ArabiaIntro = ({ onComplete }: ArabiaIntroProps) => {
         ref={videoRef}
         className="w-full h-full object-contain"
         playsInline
-        muted
         preload="auto"
         autoPlay
       >
