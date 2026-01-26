@@ -454,45 +454,6 @@ export const MiLiveTVList = ({
         </div>
       </div>
 
-      {/* Right Panel - Now Playing Preview (Desktop only) */}
-      {!isMobile && previewChannel && (
-        <div className="w-80 flex-shrink-0 border-l border-border/30 bg-background/50 flex flex-col">
-          {/* Preview Image */}
-          <div className="relative aspect-video bg-muted overflow-hidden">
-            {previewChannel.logo ? (
-              <img
-                src={previewChannel.logo}
-                alt={previewChannel.name}
-                className="w-full h-full object-contain p-8 bg-muted"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20">
-                <span className="text-5xl font-bold text-muted-foreground">{previewChannel.name.charAt(0)}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Channel Info */}
-          <div className="p-4 flex-1">
-            <p className="text-muted-foreground text-sm mb-1">Now Playing</p>
-            <h2 className="text-xl font-bold text-foreground mb-2">{previewChannel.name}</h2>
-            <p className="text-muted-foreground text-sm line-clamp-3">
-              {previewChannel.group || 'Live TV'} - High quality streaming content from your playlist.
-            </p>
-          </div>
-
-          {/* Progress / Time */}
-          <div className="p-4 border-t border-border/30">
-            <div className="flex justify-between text-sm text-muted-foreground mb-2">
-              <span>01:52:37</span>
-              <span>02:10:46</span>
-            </div>
-            <div className="h-1 bg-muted rounded-full overflow-hidden">
-              <div className="h-full w-3/4 bg-primary rounded-full" />
-            </div>
-          </div>
-        </div>
-      )}
       </div>
     </div>
   );
