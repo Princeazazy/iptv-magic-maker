@@ -28,6 +28,11 @@ export interface Channel {
   backdrop_path?: string[];
 }
 
+// Clean channel name by replacing underscores with spaces
+const cleanChannelName = (name: string): string => {
+  return name.replace(/_/g, ' ').trim();
+};
+
 // Clear old localStorage cache on module load
 clearLegacyCache();
 
@@ -35,6 +40,7 @@ clearLegacyCache();
 const convertLocalChannels = (localChannels: LocalChannel[]): Channel[] => {
   return localChannels.map(ch => ({
     ...ch,
+    name: cleanChannelName(ch.name),
     isLocal: true, // Mark as local - player will skip proxy
   }));
 };
@@ -305,7 +311,7 @@ export const useIPTV = (m3uUrl?: string) => {
               .filter((ch: any) => ch.name && (ch.url || ch.type === 'series'))
               .map((ch: any, idx: number) => ({
                 id: `channel-${idx}`,
-                name: ch.name,
+                name: cleanChannelName(ch.name),
                 url: ch.url || '',
                 logo: ch.logo || undefined,
                 group: ch.group || 'Live TV',
@@ -448,7 +454,7 @@ const parseM3U = (content: string): Channel[] => {
       const groupMatch = line.match(/group-title="([^"]*)"/);
       const nameMatch = line.split(',').pop();
 
-      const name = nameMatch?.trim() || 'Unknown Channel';
+      const name = cleanChannelName(nameMatch?.trim() || 'Unknown Channel');
       const group = groupMatch ? groupMatch[1] : 'Uncategorized';
 
       currentChannel = {
