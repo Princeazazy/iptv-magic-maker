@@ -4,8 +4,6 @@ import Hls from 'hls.js';
 import {
   Play,
   Pause,
-  Volume2,
-  VolumeX,
   SkipBack,
   SkipForward,
   Star,
@@ -69,12 +67,8 @@ export const MiFullscreenPlayer = ({
   const hlsRef = useRef<Hls | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(() => !Capacitor.isNativePlatform());
-  const [volume, setVolume] = useState(70);
-  const [hasUserInteracted, setHasUserInteracted] = useState(false);
 
   const [showControls, setShowControls] = useState(true);
-  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [currentTime, setCurrentTime] = useState('00:00:00');
   const [time, setTime] = useState(new Date());
   const weather = useWeather();
@@ -198,8 +192,9 @@ export const MiFullscreenPlayer = ({
       const playableUrl = getPlayableUrl(sourceUrl);
       const isHls = sourceUrl.includes('.m3u8');
 
-      video.muted = isMuted;
-      video.volume = volume / 100;
+      // Always unmuted at full volume
+      video.muted = false;
+      video.volume = 1;
       video.removeAttribute('src');
       video.load();
 
@@ -296,7 +291,7 @@ export const MiFullscreenPlayer = ({
         hlsRef.current = null;
       }
     };
-  }, [channel.url, functionConfig.streamProxyUrl, isMuted, volume]);
+  }, [channel.url, functionConfig.streamProxyUrl]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -305,7 +300,6 @@ export const MiFullscreenPlayer = ({
 
     const onPlaying = () => { setIsPlaying(true); setError(null); };
     const onPause = () => setIsPlaying(false);
-    const onPointerDown = () => setHasUserInteracted(true);
     const onVideoError = () => {
       const mediaError = video.error;
       setError(mediaError ? `Playback error: ${mediaError.code}` : 'Playback error');
@@ -314,21 +308,13 @@ export const MiFullscreenPlayer = ({
     video.addEventListener('playing', onPlaying);
     video.addEventListener('pause', onPause);
     video.addEventListener('error', onVideoError);
-    container?.addEventListener('pointerdown', onPointerDown);
 
     return () => {
       video.removeEventListener('playing', onPlaying);
       video.removeEventListener('pause', onPause);
       video.removeEventListener('error', onVideoError);
-      container?.removeEventListener('pointerdown', onPointerDown);
     };
   }, []);
-
-  useEffect(() => {
-    if (!hasUserInteracted) return;
-    const video = videoRef.current;
-    if (video?.paused) video.play().catch(() => { });
-  }, [hasUserInteracted]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -465,7 +451,6 @@ export const MiFullscreenPlayer = ({
       clearTimeout(timeout);
       timeout = setTimeout(() => {
         setShowControls(false);
-        setShowVolumeSlider(false);
       }, 4000);
     };
 
@@ -499,22 +484,6 @@ export const MiFullscreenPlayer = ({
     });
   };
 
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
-
-
-  const handleVolumeChange = (newVolume: number) => {
-    setVolume(newVolume);
-    if (videoRef.current) {
-      videoRef.current.volume = newVolume / 100;
-      setIsMuted(newVolume === 0);
-    }
-  };
-
   return (
     <div
       ref={containerRef}
@@ -524,13 +493,11 @@ export const MiFullscreenPlayer = ({
       }}
       className="fixed inset-0 z-50 bg-black cursor-pointer"
     >
-      {/* Video */}
       <video
         ref={videoRef}
         className="w-full h-full object-contain"
         autoPlay
         playsInline
-        muted={isMuted}
         crossOrigin="anonymous"
       />
 
@@ -738,32 +705,6 @@ export const MiFullscreenPlayer = ({
             </button>
           )}
         </div>
-
-        {/* Bottom Right - Volume (only for Live TV) */}
-        {!isVOD && (
-          <div className="absolute right-6 bottom-8">
-            <div className="relative">
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowVolumeSlider(!showVolumeSlider); }}
-                onMouseEnter={() => setShowVolumeSlider(true)}
-                className="w-12 h-12 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-              >
-                {isMuted || volume === 0 ? <VolumeX className="w-5 h-5 text-white" /> : <Volume2 className="w-5 h-5 text-white" />}
-              </button>
-
-              {showVolumeSlider && (
-                <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-10 h-32 bg-card/90 backdrop-blur-sm rounded-full p-3 flex flex-col items-center" onMouseLeave={() => setShowVolumeSlider(false)}>
-                  <Volume2 className="w-4 h-4 text-white/80 mb-2" />
-                  <div className="flex-1 w-1 bg-muted rounded-full relative">
-                    <div className="absolute bottom-0 w-full bg-primary rounded-full" style={{ height: `${volume}%` }} />
-                    <input type="range" min="0" max="100" value={volume} onChange={(e) => handleVolumeChange(parseInt(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" style={{ writingMode: 'vertical-lr', direction: 'rtl' }} />
-                  </div>
-                  <VolumeX className="w-4 h-4 text-white/60 mt-2" />
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Back Button - Top left corner */}
         <button
