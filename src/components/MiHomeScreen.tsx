@@ -144,7 +144,7 @@ export const MiHomeScreen = ({
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
       {/* Background Image - Arabian Palace */}
       <div 
-        className="absolute inset-0 bg-cover bg-center opacity-40"
+        className="absolute inset-0 bg-cover bg-center opacity-60"
         style={{ backgroundImage: `url(${arabianPalaceBg})` }}
       />
       <div className="absolute inset-0 bg-gradient-to-br from-background/90 via-background/80 to-background/70" />
