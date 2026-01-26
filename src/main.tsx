@@ -32,4 +32,20 @@ window.addEventListener("error", (event) => {
   }
 });
 
+// Lock screen orientation to landscape on supported devices
+const lockLandscape = async () => {
+  try {
+    if (screen.orientation && 'lock' in screen.orientation) {
+      await (screen.orientation as any).lock('landscape');
+    }
+  } catch (e) {
+    // Orientation lock not supported or not allowed
+    console.log('Orientation lock not available');
+  }
+};
+
+// Attempt to lock orientation on first user interaction
+document.addEventListener('click', lockLandscape, { once: true });
+document.addEventListener('touchstart', lockLandscape, { once: true });
+
 createRoot(document.getElementById("root")!).render(<App />);

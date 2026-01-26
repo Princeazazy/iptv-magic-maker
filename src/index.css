@@ -599,3 +599,17 @@
   opacity: 1;
   transition: width 0s, height 0s, opacity 0s;
 }
+
+/* Force landscape orientation on mobile devices */
+@media screen and (orientation: portrait) {
+  html {
+    transform: rotate(90deg);
+    transform-origin: left top;
+    width: 100vh;
+    height: 100vw;
+    overflow-x: hidden;
+    position: absolute;
+    top: 100%;
+    left: 0;
+  }
+}
