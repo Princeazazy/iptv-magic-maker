@@ -105,8 +105,7 @@ export const ArabiaIntro = ({ onComplete }: ArabiaIntroProps) => {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[100] bg-black flex items-center justify-center cursor-pointer overflow-hidden"
-      onClick={handleTap}
+      className="fixed inset-0 z-[100] bg-black flex items-center justify-center overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -127,52 +126,10 @@ export const ArabiaIntro = ({ onComplete }: ArabiaIntroProps) => {
         playsInline
         preload="auto"
         autoPlay
+        muted
       >
         <source src={introVideo} type="video/mp4" />
       </video>
-
-      {/* Loading state - simple spinner */}
-      <AnimatePresence>
-        {state === 'loading' && (
-          <motion.div 
-            className="absolute inset-0 flex items-center justify-center bg-black/50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <div className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Tap to start overlay - simplified */}
-      <AnimatePresence>
-        {state === 'blocked' && (
-          <motion.div 
-            className="absolute inset-0 flex items-center justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-20 h-20 rounded-full border-2 border-primary/50 flex items-center justify-center">
-                <div
-                  className="w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-l-[12px] border-l-primary ml-1"
-                />
-              </div>
-              <p className="text-white/60 text-sm">Tap anywhere to start</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Skip button - simple hover */}
-      <button
-        onClick={handleSkip}
-        className="absolute bottom-8 right-8 px-6 py-2.5 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 text-white/80 text-sm font-medium hover:bg-white/10 hover:text-white transition-colors duration-200"
-      >
-        Skip
-      </button>
     </motion.div>
   );
 };
