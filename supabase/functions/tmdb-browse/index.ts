@@ -37,16 +37,13 @@ serve(async (req) => {
   try {
     const TMDB_API_KEY = Deno.env.get('TMDB_API_KEY');
     if (!TMDB_API_KEY) {
-      // Use v3 read access token (public, rate-limited)
       throw new Error('TMDB_API_KEY is not configured');
     }
 
     const { action, category, page = 1, query, id, mediaType } = await req.json();
 
-    const headers = {
-      'Authorization': `Bearer ${TMDB_API_KEY}`,
-      'Content-Type': 'application/json',
-    };
+    // Use v3 API key format (append to URL)
+    const apiKeyParam = `api_key=${TMDB_API_KEY}`;
 
     let endpoint = '';
     let results: any[] = [];
@@ -54,26 +51,26 @@ serve(async (req) => {
     switch (action) {
       case 'trending':
         // Get trending movies and TV shows
-        endpoint = `${TMDB_BASE}/trending/all/week?page=${page}`;
+        endpoint = `${TMDB_BASE}/trending/all/week?${apiKeyParam}&page=${page}`;
         break;
 
       case 'movies':
         // Get movies by category
         switch (category) {
           case 'popular':
-            endpoint = `${TMDB_BASE}/movie/popular?page=${page}`;
+            endpoint = `${TMDB_BASE}/movie/popular?${apiKeyParam}&page=${page}`;
             break;
           case 'top_rated':
-            endpoint = `${TMDB_BASE}/movie/top_rated?page=${page}`;
+            endpoint = `${TMDB_BASE}/movie/top_rated?${apiKeyParam}&page=${page}`;
             break;
           case 'now_playing':
-            endpoint = `${TMDB_BASE}/movie/now_playing?page=${page}`;
+            endpoint = `${TMDB_BASE}/movie/now_playing?${apiKeyParam}&page=${page}`;
             break;
           case 'upcoming':
-            endpoint = `${TMDB_BASE}/movie/upcoming?page=${page}`;
+            endpoint = `${TMDB_BASE}/movie/upcoming?${apiKeyParam}&page=${page}`;
             break;
           default:
-            endpoint = `${TMDB_BASE}/movie/popular?page=${page}`;
+            endpoint = `${TMDB_BASE}/movie/popular?${apiKeyParam}&page=${page}`;
         }
         break;
 
@@ -81,19 +78,19 @@ serve(async (req) => {
         // Get TV shows by category
         switch (category) {
           case 'popular':
-            endpoint = `${TMDB_BASE}/tv/popular?page=${page}`;
+            endpoint = `${TMDB_BASE}/tv/popular?${apiKeyParam}&page=${page}`;
             break;
           case 'top_rated':
-            endpoint = `${TMDB_BASE}/tv/top_rated?page=${page}`;
+            endpoint = `${TMDB_BASE}/tv/top_rated?${apiKeyParam}&page=${page}`;
             break;
           case 'on_the_air':
-            endpoint = `${TMDB_BASE}/tv/on_the_air?page=${page}`;
+            endpoint = `${TMDB_BASE}/tv/on_the_air?${apiKeyParam}&page=${page}`;
             break;
           case 'airing_today':
-            endpoint = `${TMDB_BASE}/tv/airing_today?page=${page}`;
+            endpoint = `${TMDB_BASE}/tv/airing_today?${apiKeyParam}&page=${page}`;
             break;
           default:
-            endpoint = `${TMDB_BASE}/tv/popular?page=${page}`;
+            endpoint = `${TMDB_BASE}/tv/popular?${apiKeyParam}&page=${page}`;
         }
         break;
 
@@ -102,7 +99,7 @@ serve(async (req) => {
         if (!query) {
           throw new Error('Search query is required');
         }
-        endpoint = `${TMDB_BASE}/search/multi?query=${encodeURIComponent(query)}&page=${page}`;
+        endpoint = `${TMDB_BASE}/search/multi?${apiKeyParam}&query=${encodeURIComponent(query)}&page=${page}`;
         break;
 
       case 'details':
@@ -110,14 +107,14 @@ serve(async (req) => {
         if (!id || !mediaType) {
           throw new Error('ID and mediaType are required');
         }
-        endpoint = `${TMDB_BASE}/${mediaType}/${id}?append_to_response=videos,credits,similar`;
+        endpoint = `${TMDB_BASE}/${mediaType}/${id}?${apiKeyParam}&append_to_response=videos,credits,similar`;
         break;
 
       case 'genres':
         // Get genre lists for both movies and TV
         const [movieGenres, tvGenres] = await Promise.all([
-          fetch(`${TMDB_BASE}/genre/movie/list`, { headers }).then(r => r.json()),
-          fetch(`${TMDB_BASE}/genre/tv/list`, { headers }).then(r => r.json()),
+          fetch(`${TMDB_BASE}/genre/movie/list?${apiKeyParam}`).then(r => r.json()),
+          fetch(`${TMDB_BASE}/genre/tv/list?${apiKeyParam}`).then(r => r.json()),
         ]);
         
         return new Response(JSON.stringify({
@@ -132,15 +129,15 @@ serve(async (req) => {
         // Discover content by genre
         const genreParam = category ? `&with_genres=${category}` : '';
         endpoint = mediaType === 'tv' 
-          ? `${TMDB_BASE}/discover/tv?page=${page}${genreParam}&sort_by=popularity.desc`
-          : `${TMDB_BASE}/discover/movie?page=${page}${genreParam}&sort_by=popularity.desc`;
+          ? `${TMDB_BASE}/discover/tv?${apiKeyParam}&page=${page}${genreParam}&sort_by=popularity.desc`
+          : `${TMDB_BASE}/discover/movie?${apiKeyParam}&page=${page}${genreParam}&sort_by=popularity.desc`;
         break;
 
       default:
         throw new Error(`Unknown action: ${action}`);
     }
 
-    const response = await fetch(endpoint, { headers });
+    const response = await fetch(endpoint);
     
     if (!response.ok) {
       const errorText = await response.text();
