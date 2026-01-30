@@ -28,9 +28,13 @@ export interface Channel {
   backdrop_path?: string[];
 }
 
-// Clean channel name by replacing underscores with spaces
+// Clean channel name by replacing underscores and dashes with spaces, removing prefixes
 const cleanChannelName = (name: string): string => {
-  return name.replace(/_/g, ' ').trim();
+  return name
+    .replace(/^[A-Z]{2,3}[-|]\s*\|?\s*/i, '') // Remove country prefixes like "AR-|", "UK |", etc.
+    .replace(/[_-]/g, ' ') // Replace underscores and dashes with spaces
+    .replace(/\s+/g, ' ') // Collapse multiple spaces
+    .trim();
 };
 
 // Clear old localStorage cache on module load
