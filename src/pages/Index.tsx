@@ -281,15 +281,99 @@ const Index = () => {
     window.location.reload();
   }, []);
 
-  // Handle TMDB item selection - open detail modal
-  const handleTMDBSelect = useCallback((item: TMDBItem) => {
-    setSelectedTMDBItem(item);
-  }, []);
+  // Normalize title for matching
+  const normalizeTitle = useCallback((title: string) => 
+    title.toLowerCase()
+      .replace(/[^a-z0-9\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim(), []);
 
-  // Handle playing IPTV match from TMDB modal
+  // Find best IPTV match for a TMDB item
+  const findIPTVMatch = useCallback((tmdbTitle: string, tmdbYear: string | undefined, mediaType: 'movie' | 'tv') => {
+    const searchTitle = normalizeTitle(tmdbTitle);
+    
+    // Filter by content type
+    const contentPool = channels.filter(ch => {
+      if (mediaType === 'tv') {
+        return ch.type === 'series' || ch.url?.includes('/series/');
+      } else {
+        return ch.type === 'movies' || ch.url?.includes('/movie/');
+      }
+    });
+    
+    // Score and rank matches
+    let bestMatch: Channel | null = null;
+    let bestScore = 0;
+    
+    for (const channel of contentPool) {
+      const channelTitle = normalizeTitle(channel.name);
+      let score = 0;
+      
+      // Exact match
+      if (channelTitle === searchTitle) {
+        score = 100;
+      }
+      // Contains full title
+      else if (channelTitle.includes(searchTitle) || searchTitle.includes(channelTitle)) {
+        score = 80;
+      }
+      // Word matching
+      else {
+        const searchWords = searchTitle.split(' ').filter(w => w.length > 2);
+        const channelWords = channelTitle.split(' ');
+        const matchedWords = searchWords.filter(sw => 
+          channelWords.some(cw => cw.includes(sw) || sw.includes(cw))
+        );
+        if (searchWords.length > 0) {
+          score = (matchedWords.length / searchWords.length) * 60;
+        }
+      }
+      
+      // Year bonus
+      if (tmdbYear && channel.name.includes(tmdbYear)) {
+        score += 15;
+      }
+      
+      if (score > bestScore && score >= 40) {
+        bestScore = score;
+        bestMatch = channel;
+      }
+    }
+    
+    return bestMatch;
+  }, [channels, normalizeTitle]);
+
+  // Handle TMDB item selection - navigate to detail page
+  const handleTMDBSelect = useCallback((item: TMDBItem) => {
+    // Find matching IPTV content
+    const match = findIPTVMatch(item.title, item.year, item.mediaType);
+    
+    if (match) {
+      // Navigate to appropriate detail page
+      setSelectedItem(match);
+      setPreviousScreen('home');
+      if (item.mediaType === 'tv' || match.type === 'series') {
+        setCurrentScreen('series-detail');
+      } else {
+        setCurrentScreen('detail');
+      }
+    } else {
+      // No match found - show TMDB modal as fallback
+      setSelectedTMDBItem(item);
+    }
+  }, [findIPTVMatch]);
+
+  // Handle playing IPTV match from TMDB modal (fallback)
   const handlePlayIPTVFromTMDB = useCallback((channel: Channel) => {
     setSelectedTMDBItem(null);
-    handleChannelSelect(channel);
+    // Navigate to detail page instead of playing directly
+    setSelectedItem(channel);
+    setPreviousScreen('home');
+    if (channel.type === 'series' || channel.url?.includes('/series/')) {
+      setCurrentScreen('series-detail');
+    } else {
+      setCurrentScreen('detail');
+    }
   }, []);
 
   // Show intro video first (once per session)
