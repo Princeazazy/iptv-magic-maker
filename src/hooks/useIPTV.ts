@@ -28,14 +28,26 @@ export interface Channel {
   backdrop_path?: string[];
 }
 
-// Clean channel name by replacing underscores and dashes with spaces, removing prefixes
+// Clean channel name by replacing underscores/dashes with spaces and stripping common IPTV prefixes
+// Examples: "AR:Al_Kahera_Wal_Nas" -> "Al Kahera Wal Nas", "UK-| BBC_News" -> "BBC News"
 const cleanChannelName = (name: string): string => {
   return name
-    .replace(/^[A-Z]{2,3}[-|]\s*\|?\s*/i, '') // Remove country prefixes like "AR-|", "UK |", etc.
-    .replace(/[_-]/g, ' ') // Replace underscores and dashes with spaces
-    .replace(/\s+/g, ' ') // Collapse multiple spaces
+    // Remove leading country-ish prefixes (AR:, UK-|, EG |, etc.)
+    .replace(/^\s*[A-Z]{2,3}\s*[:\-|]\s*\|?\s*/i, '')
+    // Replace underscores/dashes with spaces
+    .replace(/[_-]/g, ' ')
+    // Collapse multiple spaces
+    .replace(/\s+/g, ' ')
     .trim();
 };
+
+const normalizeChannel = (ch: Channel): Channel => ({
+  ...ch,
+  name: cleanChannelName(ch.name),
+  group: ch.group ? cleanChannelName(ch.group) : ch.group,
+});
+
+const normalizeChannels = (chs: Channel[]): Channel[] => chs.map(normalizeChannel);
 
 // Clear old localStorage cache on module load
 clearLegacyCache();
@@ -83,8 +95,9 @@ export const useIPTV = (m3uUrl?: string) => {
     const loadCache = async () => {
       const cached = await getCachedChannels();
       if (cached && cached.length > 0 && channels.length === 0) {
+        const normalized = normalizeChannels(cached);
         console.log(`Loaded ${cached.length} channels from IndexedDB cache`);
-        setChannels(cached);
+        setChannels(normalized);
         setLoading(false);
       }
       cacheLoaded.current = true;
