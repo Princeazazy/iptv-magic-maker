@@ -8,6 +8,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ContinueWatching } from './ContinueWatching';
 import { HomeBottomBar } from './HomeBottomBar';
 import { getRecentWatchProgress } from '@/hooks/useWatchProgress';
+import { TMDBBrowseSection } from './TMDBBrowseSection';
+import { TMDBItem } from '@/hooks/useTMDB';
 const WeatherIcon = ({ icon }: { icon: string }) => {
   switch (icon) {
     case 'sun': return <Sun className="w-5 h-5" />;
@@ -30,6 +32,7 @@ interface MiHomeScreenProps {
   onSearchClick?: () => void;
   onVoiceSearchClick?: () => void;
   onContinueWatchingSelect?: (channelId: string) => void;
+  onTMDBSelect?: (item: TMDBItem) => void;
 }
 
 // Mi Player Pro style tile card
@@ -115,6 +118,7 @@ export const MiHomeScreen = ({
   onSearchClick,
   onVoiceSearchClick,
   onContinueWatchingSelect,
+  onTMDBSelect,
 }: MiHomeScreenProps) => {
   const [time, setTime] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -272,6 +276,11 @@ export const MiHomeScreen = ({
               <ActionButton icon={User} label="Account" onClick={() => onNavigate('settings')} />
               <ActionButton icon={RefreshCw} label="Refresh All" onClick={onReload} />
             </div>
+            
+            {/* TMDB Browse Section */}
+            <div className="mt-6">
+              <TMDBBrowseSection onSelectItem={onTMDBSelect} />
+            </div>
           </div>
         ) : (
           /* Desktop Layout - Mi Player Pro Grid */
@@ -355,6 +364,11 @@ export const MiHomeScreen = ({
                     </div>
                   </div>
                 </TileCard>
+              </div>
+              
+              {/* TMDB Browse Section */}
+              <div className="mt-6">
+                <TMDBBrowseSection onSelectItem={onTMDBSelect} />
               </div>
             </div>
 
