@@ -2,6 +2,15 @@ import { motion } from 'framer-motion';
 import { Play, X } from 'lucide-react';
 import { WatchProgress, getRecentWatchProgress, removeWatchProgress } from '@/hooks/useWatchProgress';
 
+// Clean channel name by removing IPTV prefixes and replacing underscores/dashes
+const cleanName = (name: string): string => {
+  return name
+    .replace(/^\s*[A-Z]{2,3}\s*[:\-|]\s*\|?\s*/i, '')
+    .replace(/[_-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
 interface ContinueWatchingProps {
   onSelect: (channelId: string) => void;
   onRemove?: (channelId: string) => void;
@@ -57,7 +66,7 @@ export const ContinueWatching = ({ onSelect, onRemove, compact = false }: Contin
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20">
                     <span className="text-xs font-bold text-muted-foreground">
-                      {item.channelName.charAt(0)}
+                      {cleanName(item.channelName).charAt(0)}
                     </span>
                   </div>
                 )}
@@ -73,7 +82,7 @@ export const ContinueWatching = ({ onSelect, onRemove, compact = false }: Contin
               {/* Info */}
               <div className="flex-1 min-w-0 text-left">
                 <p className="text-xs font-medium text-foreground truncate group-hover:text-primary transition-colors">
-                  {item.channelName}
+                  {cleanName(item.channelName)}
                 </p>
                 <p className="text-[10px] text-muted-foreground">
                   {formatDuration(item.position)} left
@@ -111,9 +120,9 @@ export const ContinueWatching = ({ onSelect, onRemove, compact = false }: Contin
                   className="w-full h-full object-contain p-4 bg-muted"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+              <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                   <span className="text-3xl font-bold text-muted-foreground">
-                    {item.channelName.charAt(0)}
+                    {cleanName(item.channelName).charAt(0)}
                   </span>
                 </div>
               )}
@@ -145,7 +154,7 @@ export const ContinueWatching = ({ onSelect, onRemove, compact = false }: Contin
             {/* Title & Time */}
             <div className="text-left">
               <h3 className="text-foreground font-medium text-sm truncate group-hover:text-primary transition-colors">
-                {item.channelName}
+                {cleanName(item.channelName)}
               </h3>
               <p className="text-muted-foreground text-xs">
                 {formatDuration(item.position)} / {formatDuration(item.duration)}
