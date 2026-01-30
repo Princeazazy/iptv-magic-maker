@@ -13,6 +13,7 @@ import { ArabiaIntro } from '@/components/ArabiaIntro';
 import { GlobalSearchModal } from '@/components/GlobalSearchModal';
 import { BackgroundMusic } from '@/components/BackgroundMusic';
 import { MiCatchUpPage } from '@/components/MiCatchUpPage';
+import { TMDBDetailModal } from '@/components/TMDBDetailModal';
 import { WatchProgress, getChannelProgress } from '@/hooks/useWatchProgress';
 import { TMDBItem } from '@/hooks/useTMDB';
 
@@ -38,6 +39,7 @@ const Index = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showMiniPlayer, setShowMiniPlayer] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [selectedTMDBItem, setSelectedTMDBItem] = useState<TMDBItem | null>(null);
   
   // Episode navigation state for series
   const [currentEpisodeList, setCurrentEpisodeList] = useState<Array<{ url: string; title: string }>>([]);
@@ -279,14 +281,16 @@ const Index = () => {
     window.location.reload();
   }, []);
 
-  // Handle TMDB item selection - show info toast for now
+  // Handle TMDB item selection - open detail modal
   const handleTMDBSelect = useCallback((item: TMDBItem) => {
-    toast({
-      title: item.title,
-      description: `${item.mediaType === 'tv' ? 'TV Show' : 'Movie'} • ${item.year || 'Unknown year'} • ⭐ ${item.rating?.toFixed(1) || 'N/A'}`,
-      duration: 3000,
-    });
-  }, [toast]);
+    setSelectedTMDBItem(item);
+  }, []);
+
+  // Handle playing IPTV match from TMDB modal
+  const handlePlayIPTVFromTMDB = useCallback((channel: Channel) => {
+    setSelectedTMDBItem(null);
+    handleChannelSelect(channel);
+  }, []);
 
   // Show intro video first (once per session)
   if (showIntro) {
@@ -509,6 +513,16 @@ const Index = () => {
         onChannelSelect={handleChannelSelect}
         onItemSelect={handleSearchItemSelect}
       />
+      
+      {/* TMDB Detail Modal */}
+      {selectedTMDBItem && (
+        <TMDBDetailModal
+          item={selectedTMDBItem}
+          allChannels={channels}
+          onClose={() => setSelectedTMDBItem(null)}
+          onPlayIPTV={handlePlayIPTVFromTMDB}
+        />
+      )}
     </>
   );
 };

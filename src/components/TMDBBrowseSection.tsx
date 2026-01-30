@@ -1,22 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Star, ChevronRight, Film, Tv, TrendingUp, Loader2 } from 'lucide-react';
+import { Play, Star, ChevronLeft, ChevronRight, Film, Tv, TrendingUp, Loader2 } from 'lucide-react';
 import { useTMDB, TMDBItem } from '@/hooks/useTMDB';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 interface TMDBBrowseSectionProps {
   onSelectItem?: (item: TMDBItem) => void;
 }
 
+const ITEMS_PER_PAGE = 6;
+
 const MediaCard = ({ item, onClick, index }: { item: TMDBItem; onClick?: () => void; index: number }) => (
   <motion.button
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: index * 0.05, duration: 0.3 }}
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ delay: index * 0.05, duration: 0.2 }}
     whileHover={{ scale: 1.05, y: -5 }}
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
-    className="flex-shrink-0 w-[140px] md:w-[160px] group relative"
+    className="flex-shrink-0 w-full group relative"
   >
     {/* Poster */}
     <div className="aspect-[2/3] rounded-xl overflow-hidden bg-card border border-border/30 relative">
@@ -75,61 +76,90 @@ const CategoryRow = ({
   icon: Icon, 
   items, 
   onSelectItem,
-  onViewAll,
   loading 
 }: { 
   title: string; 
   icon: typeof Film;
   items: TMDBItem[]; 
   onSelectItem?: (item: TMDBItem) => void;
-  onViewAll?: () => void;
   loading?: boolean;
-}) => (
-  <div className="space-y-3">
-    <div className="flex items-center justify-between px-1">
-      <div className="flex items-center gap-2">
-        <Icon className="w-5 h-5 text-primary" />
-        <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+}) => {
+  const [currentPage, setCurrentPage] = useState(0);
+  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+  
+  const visibleItems = items.slice(
+    currentPage * ITEMS_PER_PAGE,
+    (currentPage + 1) * ITEMS_PER_PAGE
+  );
+
+  const handlePrev = () => {
+    setCurrentPage((prev) => Math.max(0, prev - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1));
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
+          <Icon className="w-5 h-5 text-primary" />
+          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+          {!loading && items.length > 0 && (
+            <span className="text-xs text-muted-foreground">
+              ({currentPage + 1}/{totalPages})
+            </span>
+          )}
+        </div>
+        
+        {/* Arrow Navigation */}
+        {!loading && items.length > ITEMS_PER_PAGE && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrev}
+              disabled={currentPage === 0}
+              className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronLeft className="w-4 h-4 text-foreground" />
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={currentPage >= totalPages - 1}
+              className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronRight className="w-4 h-4 text-foreground" />
+            </button>
+          </div>
+        )}
       </div>
-      {onViewAll && (
-        <button 
-          onClick={onViewAll}
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
-        >
-          View All
-          <ChevronRight className="w-4 h-4" />
-        </button>
-      )}
-    </div>
-    
-    {loading ? (
-      <div className="flex items-center justify-center h-[200px]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    ) : items.length > 0 ? (
-      <ScrollArea className="w-full">
-        <div className="flex gap-3 pb-4">
-          {items.map((item, index) => (
+      
+      {loading ? (
+        <div className="flex items-center justify-center h-[200px]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      ) : items.length > 0 ? (
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+          {visibleItems.map((item, index) => (
             <MediaCard
-              key={`${item.id}-${item.mediaType}`}
+              key={`${item.id}-${item.mediaType}-${currentPage}`}
               item={item}
               index={index}
               onClick={() => onSelectItem?.(item)}
             />
           ))}
         </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
-    ) : (
-      <div className="flex items-center justify-center h-[200px] text-muted-foreground">
-        No content available
-      </div>
-    )}
-  </div>
-);
+      ) : (
+        <div className="flex items-center justify-center h-[200px] text-muted-foreground">
+          No content available
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const TMDBBrowseSection = ({ onSelectItem }: TMDBBrowseSectionProps) => {
-  const { getTrending, getMovies, getTVShows, loading, error } = useTMDB();
+  const { getTrending, getMovies, getTVShows, error } = useTMDB();
   const [trending, setTrending] = useState<TMDBItem[]>([]);
   const [popularMovies, setPopularMovies] = useState<TMDBItem[]>([]);
   const [popularTV, setPopularTV] = useState<TMDBItem[]>([]);
@@ -148,9 +178,9 @@ export const TMDBBrowseSection = ({ onSelectItem }: TMDBBrowseSectionProps) => {
         getTVShows('popular').finally(() => setLoadingState(s => ({ ...s, tv: false }))),
       ]);
       
-      setTrending(trendingData.slice(0, 15));
-      setPopularMovies(moviesData.results.slice(0, 15));
-      setPopularTV(tvData.results.slice(0, 15));
+      setTrending(trendingData.slice(0, 18));
+      setPopularMovies(moviesData.results.slice(0, 18));
+      setPopularTV(tvData.results.slice(0, 18));
     };
     
     loadContent();
@@ -173,7 +203,7 @@ export const TMDBBrowseSection = ({ onSelectItem }: TMDBBrowseSectionProps) => {
         </div>
         <div>
           <h2 className="text-xl font-bold text-foreground">Browse Movies & Series</h2>
-          <p className="text-sm text-muted-foreground">Discover trending content from TMDB</p>
+          <p className="text-sm text-muted-foreground">Discover trending content • Click to view details & trailers</p>
         </div>
       </div>
       
