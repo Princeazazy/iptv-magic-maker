@@ -5,6 +5,7 @@ import { useWeather } from '@/hooks/useWeather';
 import { supabase } from '@/integrations/supabase/client';
 import { getStoredPlaylistUrl } from '@/lib/playlistStorage';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useTMDB, TMDBDetailedItem } from '@/hooks/useTMDB';
 
 const WeatherIcon = ({ icon }: { icon: string }) => {
   switch (icon) {
@@ -78,11 +79,39 @@ export const MiSeriesDetail = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSeason, setSelectedSeason] = useState<number>(1);
+  const [tmdbData, setTmdbData] = useState<TMDBDetailedItem | null>(null);
+  const { search: tmdbSearch, getDetails } = useTMDB();
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Fetch TMDB data based on item name
+  useEffect(() => {
+    const fetchTMDBData = async () => {
+      try {
+        const cleanName = item.name
+          .replace(/[-_]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .replace(/\(\d{4}\)/g, '')
+          .trim();
+        
+        const searchResults = await tmdbSearch(cleanName, 1);
+        
+        if (searchResults.results.length > 0) {
+          // Prioritize TV results for series
+          const tvResult = searchResults.results.find(r => r.mediaType === 'tv') || searchResults.results[0];
+          const details = await getDetails(tvResult.id, tvResult.mediaType);
+          setTmdbData(details);
+        }
+      } catch (error) {
+        console.error('Failed to fetch TMDB data:', error);
+      }
+    };
+
+    fetchTMDBData();
+  }, [item.name, tmdbSearch, getDetails]);
 
   // Fetch series info with seasons/episodes
   useEffect(() => {
@@ -141,21 +170,21 @@ export const MiSeriesDetail = ({
     fetchSeriesInfo();
   }, [item.series_id]);
 
-  // Get poster URL - use backdrop or logo
-  const posterUrl = seriesInfo?.info?.cover || item.backdrop_path?.[0] || item.logo || 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400&h=600&fit=crop';
+  // Get poster URL - prefer TMDB, fall back to seriesInfo then item
+  const posterUrl = tmdbData?.posterUrl || tmdbData?.poster || seriesInfo?.info?.cover || item.backdrop_path?.[0] || item.logo || 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400&h=600&fit=crop';
 
   const currentSeason = seriesInfo?.seasons?.find(s => s.season_number === selectedSeason);
   const episodes = currentSeason?.episodes || [];
 
-  // Parse metadata
+  // Parse metadata - use TMDB as primary source, fall back to seriesInfo then item
   const metadata = {
-    genre: seriesInfo?.info?.genre || item.genre || 'Drama',
-    rating: seriesInfo?.info?.rating || item.rating || '8.0',
-    languages: 'EN+FR',
+    genre: tmdbData?.genres?.map(g => g.name).join(', ') || seriesInfo?.info?.genre || item.genre || 'Unknown',
+    rating: tmdbData?.rating?.toFixed(1) || seriesInfo?.info?.rating || item.rating || 'N/A',
+    languages: 'EN',
     director: seriesInfo?.info?.director || item.director || 'Unknown',
-    ageRating: '+16',
-    plot: seriesInfo?.info?.plot || item.plot || `${item.name} is a popular TV series with multiple seasons of exciting content.`,
-    year: seriesInfo?.info?.releaseDate?.split('-')[0] || item.year || '2024',
+    ageRating: '+13',
+    plot: tmdbData?.overview || seriesInfo?.info?.plot || item.plot || 'No description available.',
+    year: tmdbData?.year || seriesInfo?.info?.releaseDate?.split('-')[0] || item.year || 'Unknown',
     cast: seriesInfo?.info?.cast || item.cast || '',
   };
 

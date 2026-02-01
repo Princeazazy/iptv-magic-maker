@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, Play, Star, Clock, Globe, Calendar, User, Cloud, Sun, CloudRain, Snowflake, CloudLightning, Search, Film } from 'lucide-react';
+import { ChevronLeft, Play, Star, Clock, Globe, Calendar, User, Cloud, Sun, CloudRain, Snowflake, CloudLightning, Search, Film, Loader2 } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
 import { useWeather } from '@/hooks/useWeather';
+import { useTMDB, TMDBDetailedItem } from '@/hooks/useTMDB';
 
 const WeatherIcon = ({ icon }: { icon: string }) => {
   switch (icon) {
@@ -29,27 +30,60 @@ export const MiMovieDetail = ({
   isFavorite,
 }: MiMovieDetailProps) => {
   const [time, setTime] = useState(new Date());
+  const [tmdbData, setTmdbData] = useState<TMDBDetailedItem | null>(null);
+  const [isLoadingTMDB, setIsLoadingTMDB] = useState(true);
   const weather = useWeather();
+  const { search, getDetails } = useTMDB();
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Parse metadata from channel data
+  // Fetch TMDB data based on item name
+  useEffect(() => {
+    const fetchTMDBData = async () => {
+      setIsLoadingTMDB(true);
+      try {
+        // Clean the item name for better search results
+        const cleanName = item.name
+          .replace(/[-_]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .replace(/\(\d{4}\)/g, '')
+          .trim();
+        
+        const searchResults = await search(cleanName, 1);
+        
+        if (searchResults.results.length > 0) {
+          // Get the first movie result (prioritize movies over TV)
+          const movieResult = searchResults.results.find(r => r.mediaType === 'movie') || searchResults.results[0];
+          const details = await getDetails(movieResult.id, movieResult.mediaType);
+          setTmdbData(details);
+        }
+      } catch (error) {
+        console.error('Failed to fetch TMDB data:', error);
+      } finally {
+        setIsLoadingTMDB(false);
+      }
+    };
+
+    fetchTMDBData();
+  }, [item.name, search, getDetails]);
+
+  // Use TMDB data if available, otherwise fall back to item data
   const metadata = {
-    genre: item.genre || 'SuperHero, Comedy',
-    rating: item.rating || '6.5',
-    duration: item.duration || '02:10:46',
-    languages: 'EN+FR',
-    director: item.director || 'Greta Gerwig, Raymond Kirk',
-    ageRating: '+18',
-    plot: item.plot || `${item.name} is a 2023 fantasy comedy film directed by Greta Gerwig from a screenplay she wrote with Noah Baumbach. Based on the eponymous fashion dolls by Mattel, it is the first live-action film after numerous computer-animated films and specials. The film stars Margot Robbie as the title character and Ryan Gosling as Ken, and follows the pair on a journey of self-discovery through both the fantasy world and the real world. The supporting cast includes America Ferrera, Michael Cera, Kate McKinnon, Issa Rae, Rhea Perlman, and Will Ferrell.`,
-    year: item.year || '2023',
+    genre: tmdbData?.genres?.map(g => g.name).join(', ') || item.genre || 'Unknown',
+    rating: tmdbData?.rating?.toFixed(1) || item.rating || 'N/A',
+    duration: tmdbData?.runtime ? `${Math.floor(tmdbData.runtime / 60)}h ${tmdbData.runtime % 60}m` : item.duration || 'Unknown',
+    languages: 'EN',
+    director: item.director || 'Unknown',
+    ageRating: '+13',
+    plot: tmdbData?.overview || item.plot || 'No description available.',
+    year: tmdbData?.year || item.year || 'Unknown',
   };
 
-  // Get poster URL - use backdrop or logo
-  const posterUrl = item.backdrop_path?.[0] || item.logo || 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400&h=600&fit=crop';
+  // Get poster URL - prefer TMDB, fall back to item data
+  const posterUrl = tmdbData?.posterUrl || tmdbData?.poster || item.backdrop_path?.[0] || item.logo || 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400&h=600&fit=crop';
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
