@@ -183,7 +183,15 @@ export const TMDBBrowseSection = ({ onSelectItem }: TMDBBrowseSectionProps) => {
       setPopularTV(tvData.results.slice(0, 18));
     };
     
+    // Initial load
     loadContent();
+    
+    // Auto-refresh every 30 minutes
+    const refreshInterval = setInterval(() => {
+      loadContent();
+    }, 30 * 60 * 1000);
+    
+    return () => clearInterval(refreshInterval);
   }, [getTrending, getMovies, getTVShows]);
 
   if (error) {
