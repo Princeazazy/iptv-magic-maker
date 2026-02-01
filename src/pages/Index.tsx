@@ -309,32 +309,41 @@ const Index = () => {
       const channelTitle = normalizeTitle(channel.name);
       let score = 0;
       
-      // Exact match
+      // Exact match (highest priority)
       if (channelTitle === searchTitle) {
         score = 100;
       }
-      // Contains full title
-      else if (channelTitle.includes(searchTitle) || searchTitle.includes(channelTitle)) {
-        score = 80;
+      // Channel title starts with or equals search title
+      else if (channelTitle.startsWith(searchTitle + ' ') || channelTitle === searchTitle) {
+        score = 95;
       }
-      // Word matching
+      // Search title is contained as a complete phrase in channel title
+      else if (channelTitle.includes(searchTitle)) {
+        score = 85;
+      }
+      // Word-by-word matching (stricter)
       else {
         const searchWords = searchTitle.split(' ').filter(w => w.length > 2);
-        const channelWords = channelTitle.split(' ');
-        const matchedWords = searchWords.filter(sw => 
-          channelWords.some(cw => cw.includes(sw) || sw.includes(cw))
-        );
-        if (searchWords.length > 0) {
-          score = (matchedWords.length / searchWords.length) * 60;
+        const channelWords = channelTitle.split(' ').filter(w => w.length > 2);
+        
+        // Count exact word matches
+        const exactMatches = searchWords.filter(sw => 
+          channelWords.some(cw => cw === sw)
+        ).length;
+        
+        // Require at least 70% of search words to match exactly
+        if (searchWords.length > 0 && exactMatches / searchWords.length >= 0.7) {
+          score = (exactMatches / searchWords.length) * 75;
         }
       }
       
-      // Year bonus
-      if (tmdbYear && channel.name.includes(tmdbYear)) {
-        score += 15;
+      // Year bonus (only if score is already decent)
+      if (score >= 60 && tmdbYear && channel.name.includes(tmdbYear)) {
+        score += 10;
       }
       
-      if (score > bestScore && score >= 40) {
+      // Higher threshold - require 60+ score for a match
+      if (score > bestScore && score >= 60) {
         bestScore = score;
         bestMatch = channel;
       }
