@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Star, Film, Tv, TrendingUp, Loader2 } from 'lucide-react';
 import { useTMDB, TMDBItem } from '@/hooks/useTMDB';
@@ -6,6 +6,8 @@ import { useTMDB, TMDBItem } from '@/hooks/useTMDB';
 interface TMDBBrowseSectionProps {
   onSelectItem?: (item: TMDBItem) => void;
 }
+
+const ITEMS_PER_PAGE = 6;
 
 const MediaCard = ({ item, onClick, index }: { item: TMDBItem; onClick?: () => void; index: number }) => (
   <motion.button
@@ -82,50 +84,36 @@ const CategoryRow = ({
   onSelectItem?: (item: TMDBItem) => void;
   loading?: boolean;
 }) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [focusedIndex, setFocusedIndex] = useState(0);
-
-  const scrollToIndex = (index: number) => {
-    if (!scrollRef.current) return;
-    const container = scrollRef.current;
-    const children = container.children;
-    if (children[index]) {
-      const child = children[index] as HTMLElement;
-      const containerWidth = container.offsetWidth;
-      const childLeft = child.offsetLeft;
-      const childWidth = child.offsetWidth;
-      const scrollLeft = childLeft - (containerWidth / 2) + (childWidth / 2);
-      container.scrollTo({ left: Math.max(0, scrollLeft), behavior: 'smooth' });
-    }
-  };
+  const [currentPage, setCurrentPage] = useState(0);
+  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+  
+  const visibleItems = items.slice(
+    currentPage * ITEMS_PER_PAGE,
+    (currentPage + 1) * ITEMS_PER_PAGE
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (items.length === 0) return;
-    
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
-      const newIndex = Math.max(0, focusedIndex - 1);
-      setFocusedIndex(newIndex);
-      scrollToIndex(newIndex);
+      setCurrentPage((prev) => Math.max(0, prev - 1));
     } else if (e.key === 'ArrowRight') {
       e.preventDefault();
-      const newIndex = Math.min(items.length - 1, focusedIndex + 1);
-      setFocusedIndex(newIndex);
-      scrollToIndex(newIndex);
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      onSelectItem?.(items[focusedIndex]);
+      setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1));
     }
   };
 
   return (
-    <div className="space-y-3">
+    <div 
+      className="space-y-3 focus:outline-none" 
+      tabIndex={0} 
+      onKeyDown={handleKeyDown}
+    >
       <div className="flex items-center gap-2 px-1">
         <Icon className="w-5 h-5 text-primary" />
         <h3 className="text-lg font-semibold text-foreground">{title}</h3>
         {!loading && items.length > 0 && (
           <span className="text-xs text-muted-foreground">
-            ({items.length} items)
+            ({currentPage + 1}/{totalPages})
           </span>
         )}
       </div>
@@ -135,24 +123,14 @@ const CategoryRow = ({
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       ) : items.length > 0 ? (
-        <div
-          ref={scrollRef}
-          tabIndex={0}
-          onKeyDown={handleKeyDown}
-          className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 focus:outline-none scroll-smooth"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {items.map((item, index) => (
-            <div 
-              key={`${item.id}-${item.mediaType}`} 
-              className={`flex-shrink-0 w-[140px] md:w-[160px] ${focusedIndex === index ? 'ring-2 ring-primary ring-offset-2 ring-offset-background rounded-xl' : ''}`}
-            >
-              <MediaCard
-                item={item}
-                index={index}
-                onClick={() => onSelectItem?.(item)}
-              />
-            </div>
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+          {visibleItems.map((item, index) => (
+            <MediaCard
+              key={`${item.id}-${item.mediaType}-${currentPage}`}
+              item={item}
+              index={index}
+              onClick={() => onSelectItem?.(item)}
+            />
           ))}
         </div>
       ) : (
