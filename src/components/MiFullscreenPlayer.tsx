@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo, useState, useCallback } from 'react';
+import { useRef, useEffect, useMemo, useState, useCallback, memo } from 'react';
 import { Capacitor } from '@capacitor/core';
 import Hls from 'hls.js';
 import {
@@ -7,11 +7,6 @@ import {
   SkipBack,
   SkipForward,
   Star,
-  Cloud,
-  Sun,
-  CloudRain,
-  Snowflake,
-  CloudLightning,
   ChevronLeft,
   RotateCcw,
   Rewind,
@@ -21,16 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Channel } from '@/hooks/useIPTV';
 import { useWeather } from '@/hooks/useWeather';
 import { useWatchProgress, saveLastPlayed } from '@/hooks/useWatchProgress';
-
-const WeatherIcon = ({ icon }: { icon: string }) => {
-  switch (icon) {
-    case 'sun': return <Sun className="w-5 h-5" />;
-    case 'rain': return <CloudRain className="w-5 h-5" />;
-    case 'snow': return <Snowflake className="w-5 h-5" />;
-    case 'storm': return <CloudLightning className="w-5 h-5" />;
-    default: return <Cloud className="w-5 h-5" />;
-  }
-};
+import { WeatherIcon } from './shared/WeatherIcon';
 
 interface MiFullscreenPlayerProps {
   channel: Channel;
