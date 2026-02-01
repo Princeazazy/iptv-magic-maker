@@ -7,8 +7,6 @@ interface TMDBBrowseSectionProps {
   onSelectItem?: (item: TMDBItem) => void;
 }
 
-const ITEMS_PER_PAGE = 6;
-
 const MediaCard = ({ item, onClick, index }: { item: TMDBItem; onClick?: () => void; index: number }) => (
   <motion.button
     initial={{ opacity: 0, scale: 0.9 }}
@@ -84,36 +82,14 @@ const CategoryRow = ({
   onSelectItem?: (item: TMDBItem) => void;
   loading?: boolean;
 }) => {
-  const [currentPage, setCurrentPage] = useState(0);
-  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
-  
-  const visibleItems = items.slice(
-    currentPage * ITEMS_PER_PAGE,
-    (currentPage + 1) * ITEMS_PER_PAGE
-  );
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowLeft') {
-      e.preventDefault();
-      setCurrentPage((prev) => Math.max(0, prev - 1));
-    } else if (e.key === 'ArrowRight') {
-      e.preventDefault();
-      setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1));
-    }
-  };
-
   return (
-    <div 
-      className="space-y-3 focus:outline-none" 
-      tabIndex={0} 
-      onKeyDown={handleKeyDown}
-    >
+    <div className="space-y-3">
       <div className="flex items-center gap-2 px-1">
         <Icon className="w-5 h-5 text-primary" />
         <h3 className="text-lg font-semibold text-foreground">{title}</h3>
         {!loading && items.length > 0 && (
           <span className="text-xs text-muted-foreground">
-            ({currentPage + 1}/{totalPages})
+            ({items.length} items)
           </span>
         )}
       </div>
@@ -123,14 +99,23 @@ const CategoryRow = ({
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       ) : items.length > 0 ? (
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-          {visibleItems.map((item, index) => (
-            <MediaCard
-              key={`${item.id}-${item.mediaType}-${currentPage}`}
-              item={item}
-              index={index}
-              onClick={() => onSelectItem?.(item)}
-            />
+        <div 
+          className="flex gap-3 overflow-x-auto pb-2 scroll-smooth"
+          style={{ 
+            scrollbarWidth: 'none', 
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
+          <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
+          {items.map((item, index) => (
+            <div key={`${item.id}-${item.mediaType}`} className="flex-shrink-0 w-[140px] md:w-[160px]">
+              <MediaCard
+                item={item}
+                index={index}
+                onClick={() => onSelectItem?.(item)}
+              />
+            </div>
           ))}
         </div>
       ) : (
