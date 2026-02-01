@@ -1,21 +1,12 @@
-import { useState, useEffect } from 'react';
-import { ChevronLeft, Play, Star, Clock, Globe, Calendar, User, Cloud, Sun, CloudRain, Snowflake, CloudLightning, Search, Tv, Loader2 } from 'lucide-react';
+import { useState, useEffect, memo } from 'react';
+import { ChevronLeft, Play, Star, Clock, Globe, Calendar, User, Search, Tv, Loader2 } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
 import { useWeather } from '@/hooks/useWeather';
 import { supabase } from '@/integrations/supabase/client';
 import { getStoredPlaylistUrl } from '@/lib/playlistStorage';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTMDB, TMDBDetailedItem } from '@/hooks/useTMDB';
-
-const WeatherIcon = ({ icon }: { icon: string }) => {
-  switch (icon) {
-    case 'sun': return <Sun className="w-5 h-5" />;
-    case 'rain': return <CloudRain className="w-5 h-5" />;
-    case 'snow': return <Snowflake className="w-5 h-5" />;
-    case 'storm': return <CloudLightning className="w-5 h-5" />;
-    default: return <Cloud className="w-5 h-5" />;
-  }
-};
+import { WeatherIcon } from './shared/WeatherIcon';
 
 interface Episode {
   id: string;

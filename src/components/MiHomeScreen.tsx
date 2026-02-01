@@ -1,24 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { motion } from 'framer-motion';
-import { Tv, Film, Clapperboard, Trophy, User, RefreshCw, Clock, LogOut, Search, Mic, Cloud, Sun, CloudRain, Snowflake, CloudLightning } from 'lucide-react';
+import { Tv, Film, Clapperboard, Trophy, User, RefreshCw, Clock, Search, Mic } from 'lucide-react';
 import arabiaLogo from '@/assets/arabia-logo-new.png';
 import arabianPalaceBg from '@/assets/arabian-palace-bg.png';
 import { useWeather } from '@/hooks/useWeather';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ContinueWatching } from './ContinueWatching';
 import { HomeBottomBar } from './HomeBottomBar';
-import { getRecentWatchProgress } from '@/hooks/useWatchProgress';
 import { TMDBBrowseSection } from './TMDBBrowseSection';
 import { TMDBItem } from '@/hooks/useTMDB';
-const WeatherIcon = ({ icon }: { icon: string }) => {
-  switch (icon) {
-    case 'sun': return <Sun className="w-5 h-5" />;
-    case 'rain': return <CloudRain className="w-5 h-5" />;
-    case 'snow': return <Snowflake className="w-5 h-5" />;
-    case 'storm': return <CloudLightning className="w-5 h-5" />;
-    default: return <Cloud className="w-5 h-5" />;
-  }
-};
+import { WeatherIcon } from './shared/WeatherIcon';
 
 interface MiHomeScreenProps {
   channelCount: number;

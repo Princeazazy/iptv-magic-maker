@@ -1,12 +1,13 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, memo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Search, Star, Tv, Cloud, Sun, CloudRain, Snowflake, CloudLightning, User, Menu, X, Play, Calendar, Heart } from 'lucide-react';
+import { ChevronLeft, Search, Star, Tv, Menu, X, Play, Calendar, Heart } from 'lucide-react';
 import { Channel } from '@/hooks/useIPTV';
 import { useProgressiveList } from '@/hooks/useProgressiveList';
 import { useWeather } from '@/hooks/useWeather';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { getCountryInfo, getCountryFlagUrl, getDisplayName, getCategoryEmoji, mergeAndSortGroups, normalizeGroupName } from '@/lib/countryUtils';
+import { getCountryInfo, getCountryFlagUrl, getCategoryEmoji, mergeAndSortGroups, normalizeGroupName } from '@/lib/countryUtils';
 import { EPGGuide } from './EPGGuide';
+import { WeatherIcon } from './shared/WeatherIcon';
 import {
   Select,
   SelectContent,
@@ -14,16 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-const WeatherIcon = ({ icon }: { icon: string }) => {
-  switch (icon) {
-    case 'sun': return <Sun className="w-5 h-5" />;
-    case 'rain': return <CloudRain className="w-5 h-5" />;
-    case 'snow': return <Snowflake className="w-5 h-5" />;
-    case 'storm': return <CloudLightning className="w-5 h-5" />;
-    default: return <Cloud className="w-5 h-5" />;
-  }
-};
 
 interface MiLiveTVListProps {
   channels: Channel[];
