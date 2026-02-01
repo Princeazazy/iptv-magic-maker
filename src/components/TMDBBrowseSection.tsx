@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Star, Film, Tv, TrendingUp, Loader2 } from 'lucide-react';
+import { Play, Star, ChevronLeft, ChevronRight, Film, Tv, TrendingUp, Loader2 } from 'lucide-react';
 import { useTMDB, TMDBItem } from '@/hooks/useTMDB';
 
 interface TMDBBrowseSectionProps {
   onSelectItem?: (item: TMDBItem) => void;
 }
+
+const ITEMS_PER_PAGE = 6;
 
 const MediaCard = ({ item, onClick, index }: { item: TMDBItem; onClick?: () => void; index: number }) => (
   <motion.button
@@ -82,15 +84,53 @@ const CategoryRow = ({
   onSelectItem?: (item: TMDBItem) => void;
   loading?: boolean;
 }) => {
+  const [currentPage, setCurrentPage] = useState(0);
+  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+  
+  const visibleItems = items.slice(
+    currentPage * ITEMS_PER_PAGE,
+    (currentPage + 1) * ITEMS_PER_PAGE
+  );
+
+  const handlePrev = () => {
+    setCurrentPage((prev) => Math.max(0, prev - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1));
+  };
+
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 px-1">
-        <Icon className="w-5 h-5 text-primary" />
-        <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-        {!loading && items.length > 0 && (
-          <span className="text-xs text-muted-foreground">
-            ({items.length} items)
-          </span>
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
+          <Icon className="w-5 h-5 text-primary" />
+          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+          {!loading && items.length > 0 && (
+            <span className="text-xs text-muted-foreground">
+              ({currentPage + 1}/{totalPages})
+            </span>
+          )}
+        </div>
+        
+        {/* Arrow Navigation */}
+        {!loading && items.length > ITEMS_PER_PAGE && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrev}
+              disabled={currentPage === 0}
+              className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronLeft className="w-4 h-4 text-foreground" />
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={currentPage >= totalPages - 1}
+              className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronRight className="w-4 h-4 text-foreground" />
+            </button>
+          </div>
         )}
       </div>
       
@@ -99,23 +139,14 @@ const CategoryRow = ({
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       ) : items.length > 0 ? (
-        <div 
-          className="flex gap-3 overflow-x-auto pb-2 scroll-smooth"
-          style={{ 
-            scrollbarWidth: 'none', 
-            msOverflowStyle: 'none',
-            WebkitOverflowScrolling: 'touch'
-          }}
-        >
-          <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
-          {items.map((item, index) => (
-            <div key={`${item.id}-${item.mediaType}`} className="flex-shrink-0 w-[140px] md:w-[160px]">
-              <MediaCard
-                item={item}
-                index={index}
-                onClick={() => onSelectItem?.(item)}
-              />
-            </div>
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+          {visibleItems.map((item, index) => (
+            <MediaCard
+              key={`${item.id}-${item.mediaType}-${currentPage}`}
+              item={item}
+              index={index}
+              onClick={() => onSelectItem?.(item)}
+            />
           ))}
         </div>
       ) : (
