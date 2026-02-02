@@ -18,12 +18,13 @@ interface UseAppNavigationReturn {
   currentEpisodeList: Array<{ url: string; title: string }>;
   currentEpisodeIndex: number;
   favorites: Set<string>;
+  selectedMediaGroup: string;
   setCurrentScreen: (screen: Screen) => void;
   setIsSearchOpen: (open: boolean) => void;
   setSelectedTMDBItem: (item: TMDBItem | null) => void;
   handleNavigate: (section: 'live' | 'movies' | 'series' | 'sports' | 'settings' | 'home') => void;
   handleChannelSelect: (channel: Channel) => void;
-  handleItemSelect: (item: Channel, currentScreen: Screen) => void;
+  handleItemSelect: (item: Channel, currentScreen: Screen, selectedGroup?: string) => void;
   handleSearchItemSelect: (item: Channel) => void;
   handlePlayFromDetail: () => void;
   handlePlayEpisode: (episodeUrl: string, episodeTitle: string, episodeList?: Array<{ url: string; title: string }>, episodeIndex?: number) => void;
@@ -51,6 +52,7 @@ export const useAppNavigation = (): UseAppNavigationReturn => {
     const saved = localStorage.getItem('iptv-favorites');
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
+  const [selectedMediaGroup, setSelectedMediaGroup] = useState<string>('all');
 
   const { toast } = useToast();
 
@@ -68,9 +70,12 @@ export const useAppNavigation = (): UseAppNavigationReturn => {
     setIsFullscreen(true);
   }, []);
 
-  const handleItemSelect = useCallback((item: Channel, screen: Screen) => {
+  const handleItemSelect = useCallback((item: Channel, screen: Screen, selectedGroup?: string) => {
     setSelectedItem(item);
     setPreviousScreen(screen);
+    if (selectedGroup) {
+      setSelectedMediaGroup(selectedGroup);
+    }
     setCurrentScreen(item.type === 'series' ? 'series-detail' : 'detail');
   }, []);
 
@@ -207,6 +212,7 @@ export const useAppNavigation = (): UseAppNavigationReturn => {
     currentEpisodeList,
     currentEpisodeIndex,
     favorites,
+    selectedMediaGroup,
     setCurrentScreen,
     setIsSearchOpen,
     setSelectedTMDBItem,

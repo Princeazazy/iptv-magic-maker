@@ -96,10 +96,11 @@ const getCategoryEmoji = (group: string): string => {
 interface MiMediaGridProps {
   items: Channel[];
   favorites: Set<string>;
-  onItemSelect: (item: Channel) => void;
+  onItemSelect: (item: Channel, selectedGroup: string) => void;
   onToggleFavorite: (itemId: string) => void;
   onBack: () => void;
   category: 'movies' | 'series';
+  initialSelectedGroup?: string;
 }
 
 export const MiMediaGrid = ({
@@ -109,8 +110,9 @@ export const MiMediaGrid = ({
   onToggleFavorite,
   onBack,
   category,
+  initialSelectedGroup,
 }: MiMediaGridProps) => {
-  const [selectedGroup, setSelectedGroup] = useState<string>('all');
+  const [selectedGroup, setSelectedGroup] = useState<string>(initialSelectedGroup || 'all');
   const [sortBy, setSortBy] = useState<string>('number');
   const [time] = useState(new Date());
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -121,22 +123,27 @@ export const MiMediaGrid = ({
   const weather = useWeather();
   const isMobile = useIsMobile();
 
-  // Smart sorting for groups - prioritize by year, then Arabic, then seasonal, then alphabetical
+  // Smart sorting for groups - prioritize Egyptian for series, then year, then Arabic, then seasonal
   const getGroupSortPriority = (groupName: string): number => {
     const g = groupName.toLowerCase();
     
-    // Extract year if present
+    // For SERIES: Egyptian content gets TOP priority (1-10)
+    if (category === 'series') {
+      if (groupName.includes('مصر') || g.includes('egypt') || g.includes('egyptian')) return 1;
+    }
+    
+    // Extract year if present (priority 11-60)
     const yearMatch = g.match(/\b(19|20)\d{2}\b/);
     if (yearMatch) {
       const year = parseInt(yearMatch[0]);
-      // Future/latest years get priority 1-50 (2026=1, 2025=2, etc.)
-      return 2030 - year;
+      // Future/latest years get priority 11-60 (2026=11, 2025=12, etc.)
+      return 2040 - year;
     }
     
-    // Arabic content priority 51-60
-    if (g.includes('arab') || groupName.includes('عربي') || groupName.includes('افلام عربي')) return 51;
-    if (groupName.includes('مصر') || g.includes('egypt')) return 52;
-    if (groupName.includes('خليج') || g.includes('khalij')) return 53;
+    // Arabic content priority 61-70
+    if (g.includes('arab') || groupName.includes('عربي') || groupName.includes('افلام عربي')) return 61;
+    if (groupName.includes('مصر') || g.includes('egypt')) return 62;
+    if (groupName.includes('خليج') || g.includes('khalij')) return 63;
     
     // Seasonal content priority 100-110
     if (g.includes('ramadan') || groupName.includes('رمضان')) return 100;
@@ -439,13 +446,13 @@ export const MiMediaGrid = ({
             {visibleItems.map((item) => (
               <div
                 key={item.id}
-                onClick={() => onItemSelect(item)}
+                onClick={() => onItemSelect(item, selectedGroup)}
                 className="group text-left cursor-pointer"
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
-                    onItemSelect(item);
+                    onItemSelect(item, selectedGroup);
                   }
                 }}
               >
