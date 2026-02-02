@@ -235,10 +235,15 @@ const getStreamingServiceInfo = (group: string): CountryInfo | null => {
     return STREAMING_SERVICES[groupLower];
   }
   
-  // Check if group STARTS with streaming service name (e.g., "AMAZON ACTION", "NETFLIX MOVIES")
-  for (const [key, info] of Object.entries(STREAMING_SERVICES)) {
-    if (groupLower.startsWith(key)) {
-      return info;
+  // Check if group CONTAINS streaming service name as a word (e.g., "SA | AMAZON ACTION", "AR NETFLIX MOVIES")
+  // Priority order: longer keys first to match "amazon prime" before "amazon"
+  const sortedKeys = Object.keys(STREAMING_SERVICES).sort((a, b) => b.length - a.length);
+  
+  for (const key of sortedKeys) {
+    // Check if key appears as a whole word anywhere in the group name
+    const keyRegex = new RegExp(`\\b${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    if (keyRegex.test(groupLower)) {
+      return STREAMING_SERVICES[key];
     }
   }
   
