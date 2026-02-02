@@ -112,7 +112,7 @@ export const MiMediaGrid = ({
   category,
   initialSelectedGroup,
 }: MiMediaGridProps) => {
-  const [selectedGroup, setSelectedGroup] = useState<string>(initialSelectedGroup || 'all');
+  const [selectedGroup, setSelectedGroup] = useState<string>(initialSelectedGroup || '');
   const [sortBy, setSortBy] = useState<string>('number');
   const [time] = useState(new Date());
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -189,11 +189,20 @@ export const MiMediaGrid = ({
       .map(([name, data]) => ({ name, count: data.count, firstLogo: data.firstLogo }));
   }, [items]);
 
+  // Set selectedGroup to the first group in the sorted list if not already set
+  useEffect(() => {
+    if (!selectedGroup && groups.length > 0) {
+      setSelectedGroup(groups[0].name);
+    }
+  }, [groups, selectedGroup]);
+
   const filteredItems = useMemo(() => {
     let filtered = items.filter((item) => {
       const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
       // When searching, ignore group filter and search ALL items
-      const matchesGroup = searchQuery.trim() ? true : (selectedGroup === 'all' || item.group === selectedGroup);
+      // Use first group if selectedGroup is empty
+      const effectiveGroup = selectedGroup || (groups.length > 0 ? groups[0].name : 'all');
+      const matchesGroup = searchQuery.trim() ? true : (effectiveGroup === 'all' || item.group === effectiveGroup);
       const matchesFavorites = !showFavoritesOnly || favorites.has(item.id);
       return matchesSearch && matchesGroup && matchesFavorites;
     });
