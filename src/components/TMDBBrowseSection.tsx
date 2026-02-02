@@ -111,7 +111,7 @@ const PlaylistCard = ({ channel, onClick, index }: { channel: Channel; onClick?:
         </div>
         
         <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-emerald-500/80 backdrop-blur-sm">
-          <span className="text-[10px] font-bold text-white uppercase">عربي</span>
+          <span className="text-[10px] font-bold text-white uppercase">Arabic</span>
         </div>
       </div>
       
@@ -322,42 +322,43 @@ export const TMDBBrowseSection = ({ onSelectItem, channels = [], onChannelSelect
            groupLower.includes('wwe');
   };
 
-  // Ramadan 2026 Egyptian Series - from "رمضان 2026 مسلسلات مصرية" group
+  // Ramadan 2026 Egyptian Series
   const ramadanShows = useMemo(() => {
     const ramadanContent = channels.filter(ch => {
       const group = ch.group || '';
-      // Match the exact group name pattern: رمضان 2026 مسلسلات مصرية
       const isRamadan2026Egypt = group.includes('رمضان 2026 مسلسلات مصرية') ||
-                                 group.includes('مسلسلات مصرية') && group.includes('2026');
+                                 (group.includes('مسلسلات مصرية') && group.includes('2026'));
       return isRamadan2026Egypt && !isSportsContent(ch);
     });
 
     return ramadanContent.slice(0, 24);
   }, [channels]);
 
-  // Latest Arabic Series - from Arabic Series 2026 only
+  // Latest Arabic Series - from AR SER 2026 groups
   const arabicSeries = useMemo(() => {
     const arabicContent = channels.filter(ch => {
-      const groupLower = ch.group?.toLowerCase() || '';
-      const isTargetGroup = groupLower.includes('arabic series 2026') || 
-                           groupLower.includes('مسلسلات عربي 2026') ||
-                           groupLower.includes('مسلسلات عربية 2026');
+      const group = ch.group || '';
+      const groupLower = group.toLowerCase();
+      const isTargetGroup = groupLower.includes('ar ser 2026') || 
+                           groupLower.includes('arabic series 2026') ||
+                           group.includes('مسلسلات عربي 2026') ||
+                           group.includes('مسلسلات عربية 2026');
       return isTargetGroup && !isSportsContent(ch);
     });
 
     return arabicContent.slice(0, 24);
   }, [channels]);
 
-  // Latest Arabic Movies - from Arabic Movies 2025 AND 2026 combined
+  // Latest Arabic Movies - from AR MOV 2025 AND AR MOV 2026 combined
   const arabicMovies = useMemo(() => {
     const arabicContent = channels.filter(ch => {
-      const groupLower = ch.group?.toLowerCase() || '';
-      const isTargetGroup = groupLower.includes('arabic movies 2026') || 
+      const group = ch.group || '';
+      const groupLower = group.toLowerCase();
+      const isTargetGroup = groupLower.includes('ar mov 2026') || 
+                           groupLower.includes('ar mov 2025') ||
+                           groupLower.includes('arabic movies 2026') || 
                            groupLower.includes('arabic movies 2025') ||
-                           groupLower.includes('افلام عربي 2026') ||
-                           groupLower.includes('افلام عربي 2025') ||
-                           groupLower.includes('افلام عربية 2026') ||
-                           groupLower.includes('افلام عربية 2025');
+                           group.includes('أفلام عربية') && (group.includes('2026') || group.includes('2025'));
       return isTargetGroup && !isSportsContent(ch);
     });
 
@@ -415,7 +416,7 @@ export const TMDBBrowseSection = ({ onSelectItem, channels = [], onChannelSelect
         {/* Ramadan 2026 Egyptian Series */}
         {ramadanShows.length > 0 && (
           <PlaylistRow
-            title="رمضان 2026 مسلسلات مصرية | Ramadan 2026"
+            title="Ramadan 2026 Series"
             icon={Moon}
             channels={ramadanShows}
             onChannelSelect={onChannelSelect}
@@ -425,7 +426,7 @@ export const TMDBBrowseSection = ({ onSelectItem, channels = [], onChannelSelect
         {/* Latest Arabic Series 2026 */}
         {arabicSeries.length > 0 && (
           <PlaylistRow
-            title="أحدث المسلسلات العربية | Latest Arabic Series"
+            title="Latest Arabic Series"
             icon={Tv}
             channels={arabicSeries}
             onChannelSelect={onChannelSelect}
@@ -435,7 +436,7 @@ export const TMDBBrowseSection = ({ onSelectItem, channels = [], onChannelSelect
         {/* Latest Arabic Movies 2025-2026 */}
         {arabicMovies.length > 0 && (
           <PlaylistRow
-            title="أحدث الأفلام العربية | Latest Arabic Movies"
+            title="Latest Arabic Movies"
             icon={Film}
             channels={arabicMovies}
             onChannelSelect={onChannelSelect}
