@@ -24,61 +24,82 @@ export const TMDBDetailModal = ({ item, allChannels, onClose, onPlayIPTV }: TMDB
     loadDetails();
   }, [item.id, item.mediaType, getDetails]);
 
-  // Find matching IPTV content by title similarity
+  // Find matching IPTV content by title similarity - improved algorithm
   const matchingChannels = useMemo(() => {
     if (!allChannels.length) return [];
     
+    // More aggressive normalization - remove articles too
     const normalizeTitle = (title: string) => 
       title.toLowerCase()
+        .replace(/^(the|a|an)\s+/i, '')
         .replace(/[^a-z0-9\s]/g, '')
         .replace(/\s+/g, ' ')
         .trim();
     
     const searchTitle = normalizeTitle(item.title);
+    const searchTitleFull = item.title.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
     const searchYear = item.year;
     
-    // Filter VOD content only (movies/series)
+    // Include all VOD content - more lenient filtering
     const vodContent = allChannels.filter(ch => 
       ch.type === 'movies' || ch.type === 'series' || 
-      ch.url?.includes('/movie/') || ch.url?.includes('/series/')
+      ch.url?.includes('/movie/') || ch.url?.includes('/series/') ||
+      ch.group?.toLowerCase().includes('movie') ||
+      ch.group?.toLowerCase().includes('vod') ||
+      ch.group?.toLowerCase().includes('film') ||
+      ch.group?.toLowerCase().includes('series')
     );
     
     // Score and rank matches
     const scored = vodContent.map(channel => {
       const channelTitle = normalizeTitle(channel.name);
+      const channelTitleFull = channel.name.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
       let score = 0;
       
       // Exact match
-      if (channelTitle === searchTitle) {
+      if (channelTitle === searchTitle || channelTitleFull === searchTitleFull) {
         score = 100;
       }
       // Contains full title
-      else if (channelTitle.includes(searchTitle) || searchTitle.includes(channelTitle)) {
+      else if (channelTitle.includes(searchTitle) || channelTitleFull.includes(searchTitleFull)) {
+        score = 85;
+      }
+      // Search contains channel (e.g., "Avatar" matches channel "Avatar 2009")
+      else if (searchTitle.includes(channelTitle) && channelTitle.length > 3) {
         score = 80;
       }
       // Word matching
       else {
         const searchWords = searchTitle.split(' ').filter(w => w.length > 2);
-        const channelWords = channelTitle.split(' ');
-        const matchedWords = searchWords.filter(sw => 
-          channelWords.some(cw => cw.includes(sw) || sw.includes(cw))
-        );
-        score = (matchedWords.length / searchWords.length) * 60;
+        const channelWords = channelTitle.split(' ').filter(w => w.length > 2);
+        
+        if (searchWords.length > 0 && channelWords.length > 0) {
+          const matchedWords = searchWords.filter(sw => 
+            channelWords.some(cw => cw === sw || cw.includes(sw) || sw.includes(cw))
+          );
+          const matchRatio = matchedWords.length / searchWords.length;
+          if (matchRatio >= 0.5) {
+            score = matchRatio * 70;
+          }
+        }
       }
       
       // Year bonus
-      if (searchYear && channel.name.includes(searchYear)) {
+      if (score > 0 && searchYear && channel.name.includes(searchYear)) {
         score += 15;
       }
       
       return { channel, score };
     });
     
-    return scored
-      .filter(s => s.score >= 40)
+    const matches = scored
+      .filter(s => s.score >= 35)
       .sort((a, b) => b.score - a.score)
-      .slice(0, 5)
-      .map(s => s.channel);
+      .slice(0, 5);
+    
+    console.log(`TMDB Modal Match: "${item.title}" found ${matches.length} matches:`, matches.map(m => `${m.channel.name} (${m.score})`));
+    
+    return matches.map(s => s.channel);
   }, [allChannels, item.title, item.year]);
 
   const trailerUrl = details?.trailer?.key 
