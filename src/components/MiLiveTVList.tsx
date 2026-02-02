@@ -5,7 +5,7 @@ import { Channel } from '@/hooks/useIPTV';
 import { useProgressiveList } from '@/hooks/useProgressiveList';
 import { useWeather } from '@/hooks/useWeather';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { getCountryInfo, getCountryFlagUrl, getCategoryEmoji, mergeAndSortGroups, normalizeGroupName } from '@/lib/countryUtils';
+import { getCountryInfo, getCountryFlagUrl, getCategoryEmoji, mergeAndSortGroups, normalizeGroupName, translateGroupName } from '@/lib/countryUtils';
 import { EPGGuide } from './EPGGuide';
 import { WeatherIcon } from './shared/WeatherIcon';
 import {
@@ -265,7 +265,7 @@ export const MiLiveTVList = ({
               </div>
               <div className="flex-1 text-left min-w-0">
                 <p className={`text-sm truncate ${selectedGroup === group.name ? 'font-semibold' : ''}`}>
-                  {group.displayName}
+                  {translateGroupName(group.displayName)}
                 </p>
                 {selectedGroup === group.name && (
                   <p className="text-xs text-muted-foreground">{group.count} Channels</p>

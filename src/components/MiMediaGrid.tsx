@@ -4,6 +4,7 @@ import { Channel } from '@/hooks/useIPTV';
 import { useProgressiveList } from '@/hooks/useProgressiveList';
 import { useWeather } from '@/hooks/useWeather';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { translateGroupName } from '@/lib/countryUtils';
 import {
   Select,
   SelectContent,
@@ -312,7 +313,7 @@ export const MiMediaGrid = ({
               </div>
               <div className="flex-1 text-left">
                 <p className={`text-sm truncate ${selectedGroup === group.name ? 'font-semibold text-foreground' : ''}`}>
-                  {group.name}
+                  {translateGroupName(group.name)}
                 </p>
                 {selectedGroup === group.name && (
                   <p className="text-xs text-muted-foreground">{group.count} {title}</p>

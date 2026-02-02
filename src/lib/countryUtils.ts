@@ -381,3 +381,46 @@ export const sortGroupsByPriority = (groups: { name: string; count: number }[]):
     return a.name.localeCompare(b.name);
   });
 };
+
+// Translate Arabic group names to English for display
+export const translateGroupName = (groupName: string): string => {
+  const translations: Record<string, string> = {
+    // Movies
+    'أفلام عربية': 'Arabic Movies',
+    'افلام عربي': 'Arabic Movies',
+    'افلام عربية': 'Arabic Movies',
+    'أفلام عربية حديثة': 'New Arabic Movies',
+    'اجنبية مترجمة': 'Foreign Subtitled',
+    'افلام اجنبية': 'Foreign Movies',
+    'من عام': 'From Year',
+    // Series  
+    'مسلسلات عربية': 'Arabic Series',
+    'مسلسلات عربي': 'Arabic Series',
+    'مسلسلات مصرية': 'Egyptian Series',
+    'مسلسلات خليجية': 'Gulf Series',
+    'مسلسلات تركية': 'Turkish Series',
+    'مسلسلات اجنبية': 'Foreign Series',
+    // Ramadan
+    'رمضان': 'Ramadan',
+    'مسلسلات رمضان': 'Ramadan Series',
+    // Genres
+    'كوميدي': 'Comedy',
+    'رعب': 'Horror',
+    'رومانسي': 'Romance',
+    'دراما': 'Drama',
+    'انمي': 'Anime',
+    'اطفال': 'Kids',
+    'وثائقي': 'Documentary',
+    'كرتون': 'Cartoon',
+  };
+
+  let translated = groupName;
+  
+  for (const [arabic, english] of Object.entries(translations)) {
+    if (groupName.includes(arabic)) {
+      translated = translated.replace(arabic, english);
+    }
+  }
+  
+  return translated;
+};
