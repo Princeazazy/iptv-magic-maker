@@ -175,11 +175,17 @@ export const MiLiveTVList = ({
   // Preview channel (hovered or current)
   const previewChannel = hoveredChannel || currentChannel;
 
-  // Get logo for groups - use country flag for countries, first channel logo for others
+  // Get logo for groups - use country flag for countries, first channel logo for streaming services and others
   const getGroupLogo = (group: { name: string; displayName: string; firstLogo?: string; originalNames: string[] }): string | null => {
-    // For countries, ALWAYS return the flag URL - never use channel logos for countries
     const countryInfo = getCountryInfo(group.displayName);
-    if (countryInfo) {
+    
+    // For streaming services, ALWAYS use first channel logo (no flags)
+    if (countryInfo?.isStreamingService) {
+      return group.firstLogo || null;
+    }
+    
+    // For countries, ALWAYS return the flag URL - never use channel logos for countries
+    if (countryInfo && countryInfo.flagUrl) {
       return countryInfo.flagUrl;
     }
     
@@ -189,7 +195,7 @@ export const MiLiveTVList = ({
       if (flag) return flag;
     }
     
-    // For non-country groups (e.g., "Netflix", "MBC HD", "Jawwy TV"), use the first channel's logo
+    // For non-country groups (e.g., "MBC HD", "Jawwy TV"), use the first channel's logo
     if (group.firstLogo) {
       return group.firstLogo;
     }

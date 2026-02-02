@@ -9,25 +9,25 @@ export interface CountryInfo {
   isStreamingService?: boolean;
 }
 
-// Streaming services - these should NEVER be mixed with countries (priority -10 to -1)
+// Streaming services - these should NEVER be mixed with countries (priority 1000+ to appear at bottom)
 const STREAMING_SERVICES: Record<string, CountryInfo> = {
-  'amazon': { name: 'Amazon', code: 'amazon', flagUrl: '', priority: -10, isStreamingService: true },
-  'amazon prime': { name: 'Amazon Prime', code: 'amazon', flagUrl: '', priority: -10, isStreamingService: true },
-  'prime video': { name: 'Prime Video', code: 'amazon', flagUrl: '', priority: -10, isStreamingService: true },
-  'netflix': { name: 'Netflix', code: 'netflix', flagUrl: '', priority: -9, isStreamingService: true },
-  'disney': { name: 'Disney+', code: 'disney', flagUrl: '', priority: -8, isStreamingService: true },
-  'disney+': { name: 'Disney+', code: 'disney', flagUrl: '', priority: -8, isStreamingService: true },
-  'hbo': { name: 'HBO', code: 'hbo', flagUrl: '', priority: -7, isStreamingService: true },
-  'hbo max': { name: 'HBO Max', code: 'hbo', flagUrl: '', priority: -7, isStreamingService: true },
-  'apple tv': { name: 'Apple TV+', code: 'appletv', flagUrl: '', priority: -6, isStreamingService: true },
-  'apple tv+': { name: 'Apple TV+', code: 'appletv', flagUrl: '', priority: -6, isStreamingService: true },
-  'hulu': { name: 'Hulu', code: 'hulu', flagUrl: '', priority: -5, isStreamingService: true },
-  'paramount': { name: 'Paramount+', code: 'paramount', flagUrl: '', priority: -4, isStreamingService: true },
-  'paramount+': { name: 'Paramount+', code: 'paramount', flagUrl: '', priority: -4, isStreamingService: true },
-  'peacock': { name: 'Peacock', code: 'peacock', flagUrl: '', priority: -3, isStreamingService: true },
-  'max': { name: 'Max', code: 'max', flagUrl: '', priority: -2, isStreamingService: true },
-  'starz': { name: 'Starz', code: 'starz', flagUrl: '', priority: -1, isStreamingService: true },
-  'showtime': { name: 'Showtime', code: 'showtime', flagUrl: '', priority: -1, isStreamingService: true },
+  'amazon': { name: 'Amazon', code: 'amazon', flagUrl: '', priority: 1000, isStreamingService: true },
+  'amazon prime': { name: 'Amazon Prime', code: 'amazon', flagUrl: '', priority: 1000, isStreamingService: true },
+  'prime video': { name: 'Prime Video', code: 'amazon', flagUrl: '', priority: 1000, isStreamingService: true },
+  'netflix': { name: 'Netflix', code: 'netflix', flagUrl: '', priority: 1001, isStreamingService: true },
+  'disney': { name: 'Disney+', code: 'disney', flagUrl: '', priority: 1002, isStreamingService: true },
+  'disney+': { name: 'Disney+', code: 'disney', flagUrl: '', priority: 1002, isStreamingService: true },
+  'hbo': { name: 'HBO', code: 'hbo', flagUrl: '', priority: 1003, isStreamingService: true },
+  'hbo max': { name: 'HBO Max', code: 'hbo', flagUrl: '', priority: 1003, isStreamingService: true },
+  'apple tv': { name: 'Apple TV+', code: 'appletv', flagUrl: '', priority: 1004, isStreamingService: true },
+  'apple tv+': { name: 'Apple TV+', code: 'appletv', flagUrl: '', priority: 1004, isStreamingService: true },
+  'hulu': { name: 'Hulu', code: 'hulu', flagUrl: '', priority: 1005, isStreamingService: true },
+  'paramount': { name: 'Paramount+', code: 'paramount', flagUrl: '', priority: 1006, isStreamingService: true },
+  'paramount+': { name: 'Paramount+', code: 'paramount', flagUrl: '', priority: 1006, isStreamingService: true },
+  'peacock': { name: 'Peacock', code: 'peacock', flagUrl: '', priority: 1007, isStreamingService: true },
+  'max': { name: 'Max', code: 'max', flagUrl: '', priority: 1008, isStreamingService: true },
+  'starz': { name: 'Starz', code: 'starz', flagUrl: '', priority: 1009, isStreamingService: true },
+  'showtime': { name: 'Showtime', code: 'showtime', flagUrl: '', priority: 1010, isStreamingService: true },
 };
 
 // Arabic-speaking countries (priority 1-20)
