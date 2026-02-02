@@ -1,12 +1,34 @@
 // Comprehensive country mapping with priority ordering
-// Arabic-speaking countries first, then USA, then by alphabet
+// Streaming services first (priority -10 to -1), then Arabic-speaking countries, then USA, then by alphabet
 
 export interface CountryInfo {
   name: string;
   code: string;
   flagUrl: string;
-  priority: number; // Lower = higher priority
+  priority: number; // Lower = higher priority (negative numbers for streaming services)
+  isStreamingService?: boolean;
 }
+
+// Streaming services - these should NEVER be mixed with countries (priority -10 to -1)
+const STREAMING_SERVICES: Record<string, CountryInfo> = {
+  'amazon': { name: 'Amazon', code: 'amazon', flagUrl: '', priority: -10, isStreamingService: true },
+  'amazon prime': { name: 'Amazon Prime', code: 'amazon', flagUrl: '', priority: -10, isStreamingService: true },
+  'prime video': { name: 'Prime Video', code: 'amazon', flagUrl: '', priority: -10, isStreamingService: true },
+  'netflix': { name: 'Netflix', code: 'netflix', flagUrl: '', priority: -9, isStreamingService: true },
+  'disney': { name: 'Disney+', code: 'disney', flagUrl: '', priority: -8, isStreamingService: true },
+  'disney+': { name: 'Disney+', code: 'disney', flagUrl: '', priority: -8, isStreamingService: true },
+  'hbo': { name: 'HBO', code: 'hbo', flagUrl: '', priority: -7, isStreamingService: true },
+  'hbo max': { name: 'HBO Max', code: 'hbo', flagUrl: '', priority: -7, isStreamingService: true },
+  'apple tv': { name: 'Apple TV+', code: 'appletv', flagUrl: '', priority: -6, isStreamingService: true },
+  'apple tv+': { name: 'Apple TV+', code: 'appletv', flagUrl: '', priority: -6, isStreamingService: true },
+  'hulu': { name: 'Hulu', code: 'hulu', flagUrl: '', priority: -5, isStreamingService: true },
+  'paramount': { name: 'Paramount+', code: 'paramount', flagUrl: '', priority: -4, isStreamingService: true },
+  'paramount+': { name: 'Paramount+', code: 'paramount', flagUrl: '', priority: -4, isStreamingService: true },
+  'peacock': { name: 'Peacock', code: 'peacock', flagUrl: '', priority: -3, isStreamingService: true },
+  'max': { name: 'Max', code: 'max', flagUrl: '', priority: -2, isStreamingService: true },
+  'starz': { name: 'Starz', code: 'starz', flagUrl: '', priority: -1, isStreamingService: true },
+  'showtime': { name: 'Showtime', code: 'showtime', flagUrl: '', priority: -1, isStreamingService: true },
+};
 
 // Arabic-speaking countries (priority 1-20)
 // Egypt is priority 1 (first in list)
@@ -198,14 +220,42 @@ const OTHER_COUNTRIES: Record<string, CountryInfo> = {
   'balkans': { name: 'Balkan', code: 'rs', flagUrl: 'https://flagcdn.com/w80/rs.png', priority: 109 },
 };
 
-// Merged all countries
+// Merged all countries (not including streaming services - checked separately)
 const ALL_COUNTRIES = { ...ARABIC_COUNTRIES, ...USA_ENTRY, ...OTHER_COUNTRIES };
+
+// All categories including streaming services
+const ALL_CATEGORIES = { ...STREAMING_SERVICES, ...ALL_COUNTRIES };
+
+// Check if a group name matches a streaming service (must check BEFORE countries)
+const getStreamingServiceInfo = (group: string): CountryInfo | null => {
+  const groupLower = group.toLowerCase().trim();
+  
+  // Direct match
+  if (STREAMING_SERVICES[groupLower]) {
+    return STREAMING_SERVICES[groupLower];
+  }
+  
+  // Check if group STARTS with streaming service name (e.g., "AMAZON ACTION", "NETFLIX MOVIES")
+  for (const [key, info] of Object.entries(STREAMING_SERVICES)) {
+    if (groupLower.startsWith(key)) {
+      return info;
+    }
+  }
+  
+  return null;
+};
 
 // Get country info from group name
 export const getCountryInfo = (group: string): CountryInfo | null => {
   const groupLower = group.toLowerCase().trim();
 
-  // Direct match first (highest priority)
+  // FIRST: Check for streaming services - they should NEVER match as countries
+  const streamingService = getStreamingServiceInfo(group);
+  if (streamingService) {
+    return streamingService;
+  }
+
+  // Direct match for countries
   if (ALL_COUNTRIES[groupLower]) {
     return ALL_COUNTRIES[groupLower];
   }
@@ -291,11 +341,21 @@ export const getGroupPriority = (group: string): number => {
   return countryInfo?.priority || 999; // Non-country groups go last
 };
 
-// Category emoji for non-country groups
+// Category emoji for non-country groups and streaming services
 export const getCategoryEmoji = (group: string): string => {
   const groupLower = group.toLowerCase();
+  // Streaming services first
+  if (groupLower.includes('amazon') || groupLower.includes('prime video')) return '📦';
   if (groupLower.includes('netflix')) return '🎬';
-  if (groupLower.includes('hbo')) return '🎭';
+  if (groupLower.includes('disney')) return '🏰';
+  if (groupLower.includes('hbo') || groupLower === 'max') return '🎭';
+  if (groupLower.includes('apple tv')) return '🍎';
+  if (groupLower.includes('hulu')) return '💚';
+  if (groupLower.includes('paramount')) return '⛰️';
+  if (groupLower.includes('peacock')) return '🦚';
+  if (groupLower.includes('starz')) return '⭐';
+  if (groupLower.includes('showtime')) return '🎪';
+  // General categories
   if (groupLower.includes('sport')) return '🏆';
   if (groupLower.includes('news')) return '📰';
   if (groupLower.includes('movie') || groupLower.includes('vod')) return '🎥';
