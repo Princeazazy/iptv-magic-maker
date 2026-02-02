@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Star, Film, Tv, TrendingUp, Loader2 } from 'lucide-react';
 import { useTMDB, TMDBItem } from '@/hooks/useTMDB';
 
 interface TMDBBrowseSectionProps {
   onSelectItem?: (item: TMDBItem) => void;
 }
+
+const ITEMS_PER_PAGE = 6;
 
 const MediaCard = ({ item, onClick, index }: { item: TMDBItem; onClick?: () => void; index: number }) => (
   <motion.button
@@ -82,41 +84,52 @@ const CategoryRow = ({
   onSelectItem?: (item: TMDBItem) => void;
   loading?: boolean;
 }) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [currentPage, setCurrentPage] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
   
-  // Auto-scroll effect
+  const visibleItems = items.slice(
+    currentPage * ITEMS_PER_PAGE,
+    (currentPage + 1) * ITEMS_PER_PAGE
+  );
+
+  // Auto-cycle through pages
   useEffect(() => {
-    if (!scrollRef.current || items.length === 0 || isPaused) return;
+    if (items.length <= ITEMS_PER_PAGE || isPaused) return;
     
-    const container = scrollRef.current;
-    let animationId: number;
-    let scrollSpeed = 0.5; // pixels per frame
+    const interval = setInterval(() => {
+      setCurrentPage((prev) => (prev + 1) % totalPages);
+    }, 5000); // Change page every 5 seconds
     
-    const scroll = () => {
-      if (container && !isPaused) {
-        container.scrollLeft += scrollSpeed;
-        
-        // Reset to start when reaching the end (infinite loop effect)
-        if (container.scrollLeft >= container.scrollWidth - container.clientWidth - 10) {
-          container.scrollLeft = 0;
-        }
-      }
-      animationId = requestAnimationFrame(scroll);
-    };
-    
-    animationId = requestAnimationFrame(scroll);
-    
-    return () => cancelAnimationFrame(animationId);
-  }, [items.length, isPaused]);
+    return () => clearInterval(interval);
+  }, [items.length, totalPages, isPaused]);
 
   return (
-    <div className="space-y-3">
+    <div 
+      className="space-y-3"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <Icon className="w-5 h-5 text-primary" />
           <h3 className="text-lg font-semibold text-foreground">{title}</h3>
         </div>
+        
+        {/* Page dots indicator */}
+        {!loading && totalPages > 1 && (
+          <div className="flex items-center gap-1.5">
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i)}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  i === currentPage ? 'bg-primary w-4' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
       
       {loading ? (
@@ -124,26 +137,25 @@ const CategoryRow = ({
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       ) : items.length > 0 ? (
-        <div 
-          ref={scrollRef}
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-          onTouchStart={() => setIsPaused(true)}
-          onTouchEnd={() => setIsPaused(false)}
-          className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 scroll-smooth"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {/* Duplicate items for seamless infinite scroll */}
-          {[...items, ...items].map((item, index) => (
-            <div key={`${item.id}-${item.mediaType}-${index}`} className="flex-shrink-0 w-[140px] md:w-[160px]">
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={currentPage}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="grid grid-cols-3 md:grid-cols-6 gap-3"
+          >
+            {visibleItems.map((item, index) => (
               <MediaCard
+                key={`${item.id}-${item.mediaType}`}
                 item={item}
-                index={index % items.length}
+                index={index}
                 onClick={() => onSelectItem?.(item)}
               />
-            </div>
-          ))}
-        </div>
+            ))}
+          </motion.div>
+        </AnimatePresence>
       ) : (
         <div className="flex items-center justify-center h-[200px] text-muted-foreground">
           No content available
