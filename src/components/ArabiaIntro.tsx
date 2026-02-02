@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import introVideo from '@/assets/arabia-intro.mp4';
 
 interface ArabiaIntroProps {
@@ -25,48 +25,43 @@ export const ArabiaIntro = ({ onComplete }: ArabiaIntroProps) => {
     };
 
     const hardTimeout = window.setTimeout(() => {
-      // Absolute failsafe: never block app startup on the intro.
       onComplete();
     }, 12000);
 
     const handleEnded = () => onComplete();
     const handleError = () => {
       setState('error');
-      // If the asset/codecs fail in a browser, move on.
       onComplete();
     };
 
-    const tryPlay = () => {
+    const tryPlay = async () => {
       clearStuckTimer();
-      video
-        .play()
-        .then(() => {
-          setState('playing');
-          // If the video doesn't advance, it's effectively "stuck" (common in some browsers/codecs).
-          stuckTimer = window.setTimeout(() => {
-            if (video.currentTime < 0.1) onComplete();
-          }, 2500);
-        })
-        .catch(() => setState('blocked'));
+      
+      // First try: play WITH sound (unmuted)
+      video.muted = false;
+      try {
+        await video.play();
+        setState('playing');
+        stuckTimer = window.setTimeout(() => {
+          if (video.currentTime < 0.1) onComplete();
+        }, 2500);
+      } catch {
+        // Autoplay with sound was blocked - show tap prompt
+        setState('blocked');
+      }
     };
 
     const handleCanPlay = () => {
-      // Attempt autoplay once the browser reports it can play.
-      tryPlay();
-    };
-
-    const handleTimeUpdate = () => {
-      // Video is playing, update handled internally
+      if (state === 'loading') {
+        tryPlay();
+      }
     };
 
     video.addEventListener('ended', handleEnded);
     video.addEventListener('error', handleError);
     video.addEventListener('canplay', handleCanPlay);
-    video.addEventListener('timeupdate', handleTimeUpdate);
 
-    // Kick off load + best-effort autoplay.
     video.load();
-    tryPlay();
 
     return () => {
       clearTimeout(hardTimeout);
@@ -74,15 +69,16 @@ export const ArabiaIntro = ({ onComplete }: ArabiaIntroProps) => {
       video.removeEventListener('ended', handleEnded);
       video.removeEventListener('error', handleError);
       video.removeEventListener('canplay', handleCanPlay);
-      video.removeEventListener('timeupdate', handleTimeUpdate);
     };
-  }, [onComplete]);
+  }, [onComplete, state]);
 
   const handleUserStart = async () => {
     const video = videoRef.current;
     if (!video) return;
 
     try {
+      video.muted = false;
+      video.currentTime = 0;
       await video.play();
       setState('playing');
     } catch {
@@ -98,20 +94,16 @@ export const ArabiaIntro = ({ onComplete }: ArabiaIntroProps) => {
     }
   };
 
-  const handleSkip = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onComplete();
-  };
-
   return (
     <motion.div
-      className="fixed inset-0 z-[100] bg-black flex items-center justify-center overflow-hidden"
+      className="fixed inset-0 z-[100] bg-black flex items-center justify-center overflow-hidden cursor-pointer"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
+      onClick={handleTap}
     >
-      {/* Simple corner accents - no animation */}
+      {/* Simple corner accents */}
       <div className="absolute top-0 left-0 w-32 h-32 border-l-2 border-t-2 border-primary/30" />
       <div className="absolute top-0 right-0 w-32 h-32 border-r-2 border-t-2 border-accent/30" />
       <div className="absolute bottom-0 left-0 w-32 h-32 border-l-2 border-b-2 border-accent/30" />
@@ -125,11 +117,31 @@ export const ArabiaIntro = ({ onComplete }: ArabiaIntroProps) => {
         className="w-full h-full object-contain"
         playsInline
         preload="auto"
-        autoPlay
-        muted
       >
         <source src={introVideo} type="video/mp4" />
       </video>
+
+      {/* Tap to play overlay - only shows when blocked */}
+      {state === 'blocked' && (
+        <motion.div
+          className="absolute inset-0 flex items-center justify-center bg-black/60"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <div className="text-center">
+            <motion.div
+              className="w-20 h-20 rounded-full bg-primary/80 flex items-center justify-center mx-auto mb-4"
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ repeat: Infinity, duration: 1.5 }}
+            >
+              <svg className="w-10 h-10 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </motion.div>
+            <p className="text-white/80 text-lg font-medium">Tap to play with sound</p>
+          </div>
+        </motion.div>
+      )}
     </motion.div>
   );
 };
