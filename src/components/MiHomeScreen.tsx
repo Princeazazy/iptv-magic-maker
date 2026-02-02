@@ -10,6 +10,7 @@ import { HomeBottomBar } from './HomeBottomBar';
 import { TMDBBrowseSection } from './TMDBBrowseSection';
 import { TMDBItem } from '@/hooks/useTMDB';
 import { WeatherIcon } from './shared/WeatherIcon';
+import { Channel } from '@/hooks/useIPTV';
 
 interface MiHomeScreenProps {
   channelCount: number;
@@ -24,6 +25,8 @@ interface MiHomeScreenProps {
   onVoiceSearchClick?: () => void;
   onContinueWatchingSelect?: (channelId: string) => void;
   onTMDBSelect?: (item: TMDBItem) => void;
+  channels?: Channel[];
+  onChannelSelect?: (channel: Channel) => void;
 }
 
 // Mi Player Pro style tile card
@@ -110,6 +113,8 @@ export const MiHomeScreen = ({
   onVoiceSearchClick,
   onContinueWatchingSelect,
   onTMDBSelect,
+  channels,
+  onChannelSelect,
 }: MiHomeScreenProps) => {
   const [time, setTime] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -270,7 +275,7 @@ export const MiHomeScreen = ({
             
             {/* TMDB Browse Section */}
             <div className="mt-6">
-              <TMDBBrowseSection onSelectItem={onTMDBSelect} />
+              <TMDBBrowseSection onSelectItem={onTMDBSelect} channels={channels} onChannelSelect={onChannelSelect} />
             </div>
           </div>
         ) : (
@@ -359,7 +364,7 @@ export const MiHomeScreen = ({
               
               {/* TMDB Browse Section */}
               <div className="mt-6">
-                <TMDBBrowseSection onSelectItem={onTMDBSelect} />
+                <TMDBBrowseSection onSelectItem={onTMDBSelect} channels={channels} onChannelSelect={onChannelSelect} />
               </div>
             </div>
 
