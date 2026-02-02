@@ -385,42 +385,81 @@ export const sortGroupsByPriority = (groups: { name: string; count: number }[]):
 // Translate Arabic group names to English for display
 export const translateGroupName = (groupName: string): string => {
   const translations: Record<string, string> = {
-    // Movies
+    // Movies - full phrases first
+    'أفلام عربية حديثة': 'New Arabic Movies',
     'أفلام عربية': 'Arabic Movies',
     'افلام عربي': 'Arabic Movies',
     'افلام عربية': 'Arabic Movies',
-    'أفلام عربية حديثة': 'New Arabic Movies',
     'اجنبية مترجمة': 'Foreign Subtitled',
     'افلام اجنبية': 'Foreign Movies',
     'من عام': 'From Year',
-    // Series  
-    'مسلسلات عربية': 'Arabic Series',
-    'مسلسلات عربي': 'Arabic Series',
+    // Series - full phrases first
     'مسلسلات مصرية': 'Egyptian Series',
     'مسلسلات خليجية': 'Gulf Series',
     'مسلسلات تركية': 'Turkish Series',
     'مسلسلات اجنبية': 'Foreign Series',
+    'مسلسلات عربية': 'Arabic Series',
+    'مسلسلات عربي': 'Arabic Series',
+    'مسلسلات شامية': 'Levantine Series',
+    'مسلسلات مغربية': 'Moroccan Series',
+    'مسلسلات تركي': 'Turkish Series',
+    'مسلسلات': 'Series',
+    // Regional content
+    'خليجية': 'Gulf',
+    'مصرية': 'Egyptian',
+    'شامية': 'Levantine',
+    'مغربية': 'Moroccan',
+    'الامازيغية': 'Amazigh',
+    'تلفزيونية': 'TV',
+    'تركي': 'Turkish',
+    'تركية': 'Turkish',
+    'قبل عام': 'Before Year',
+    'عربي': 'Arabic',
+    'عربية': 'Arabic',
+    'مترجمة': 'Subtitled',
+    'اجنبية': 'Foreign',
     // Ramadan
     'رمضان': 'Ramadan',
-    'مسلسلات رمضان': 'Ramadan Series',
     // Genres
     'كوميدي': 'Comedy',
+    'كوميديا': 'Comedy',
     'رعب': 'Horror',
     'رومانسي': 'Romance',
+    'رومانسية': 'Romance',
     'دراما': 'Drama',
     'انمي': 'Anime',
     'اطفال': 'Kids',
     'وثائقي': 'Documentary',
     'كرتون': 'Cartoon',
+    'خيال علمي': 'Sci-Fi',
+    'غموض': 'Mystery',
+    'حركة': 'Action',
+    'ومغامرة': '& Adventure',
+    'مغامرة': 'Adventure',
+    'اثارة': 'Thriller',
+    'جريمة': 'Crime',
+    'تاريخي': 'Historical',
+    'حرب': 'War',
+    'موسيقى': 'Music',
+    'عائلي': 'Family',
+    // Connectors
+    'و ': ' & ',
+    ' و ': ' & ',
   };
 
   let translated = groupName;
   
-  for (const [arabic, english] of Object.entries(translations)) {
-    if (groupName.includes(arabic)) {
-      translated = translated.replace(arabic, english);
+  // Sort by length descending to match longer phrases first
+  const sortedKeys = Object.keys(translations).sort((a, b) => b.length - a.length);
+  
+  for (const arabic of sortedKeys) {
+    if (translated.includes(arabic)) {
+      translated = translated.replace(new RegExp(arabic, 'g'), translations[arabic]);
     }
   }
+  
+  // Clean up extra spaces
+  translated = translated.replace(/\s+/g, ' ').trim();
   
   return translated;
 };
