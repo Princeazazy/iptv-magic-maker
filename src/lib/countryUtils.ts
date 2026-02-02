@@ -409,7 +409,10 @@ export const translateGroupName = (groupName: string): string => {
     'مصرية': 'Egyptian',
     'شامية': 'Levantine',
     'مغربية': 'Moroccan',
+    'والامازيغ': '& Amazigh',
     'الامازيغية': 'Amazigh',
+    'الامازيغ': 'Amazigh',
+    'تليفزيونية': 'TV',
     'تلفزيونية': 'TV',
     'تركي': 'Turkish',
     'تركية': 'Turkish',
@@ -443,8 +446,8 @@ export const translateGroupName = (groupName: string): string => {
     'موسيقى': 'Music',
     'عائلي': 'Family',
     // Connectors
-    'و ': ' & ',
     ' و ': ' & ',
+    'و ': '& ',
   };
 
   let translated = groupName;
@@ -458,8 +461,8 @@ export const translateGroupName = (groupName: string): string => {
     }
   }
   
-  // Clean up extra spaces
-  translated = translated.replace(/\s+/g, ' ').trim();
+  // Clean up extra spaces and ampersands
+  translated = translated.replace(/\s+/g, ' ').replace(/&\s+&/g, '&').trim();
   
   return translated;
 };
