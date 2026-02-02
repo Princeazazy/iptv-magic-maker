@@ -254,6 +254,8 @@ const Index = () => {
             onVoiceSearchClick={() => nav.setIsSearchOpen(true)}
             onContinueWatchingSelect={nav.handleContinueWatchingSelect}
             onTMDBSelect={handleTMDBSelect}
+            channels={channels}
+            onChannelSelect={(channel) => nav.handleItemSelect(channel, 'home')}
           />
         );
 
@@ -351,6 +353,8 @@ const Index = () => {
             onVoiceSearchClick={() => nav.setIsSearchOpen(true)}
             onContinueWatchingSelect={nav.handleContinueWatchingSelect}
             onTMDBSelect={handleTMDBSelect}
+            channels={channels}
+            onChannelSelect={(channel) => nav.handleItemSelect(channel, 'home')}
           />
         );
     }

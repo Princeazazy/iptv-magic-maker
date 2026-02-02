@@ -1,10 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Star, Film, Tv, TrendingUp, Loader2 } from 'lucide-react';
+import { Play, Star, Film, Tv, TrendingUp, Loader2, Globe } from 'lucide-react';
 import { useTMDB, TMDBItem } from '@/hooks/useTMDB';
+import { Channel } from '@/hooks/useIPTV';
 
 interface TMDBBrowseSectionProps {
   onSelectItem?: (item: TMDBItem) => void;
+  channels?: Channel[];
+  onChannelSelect?: (channel: Channel) => void;
 }
 
 const ITEMS_PER_PAGE = 6;
@@ -70,6 +73,55 @@ const MediaCard = ({ item, onClick, index }: { item: TMDBItem; onClick?: () => v
     </div>
   </motion.button>
 );
+
+// Card for playlist items (Arabic movies)
+const PlaylistCard = ({ channel, onClick, index }: { channel: Channel; onClick?: () => void; index: number }) => {
+  const cleanName = (name: string) => name.replace(/[_-]/g, ' ').replace(/\s+/g, ' ').trim();
+  const yearMatch = channel.name.match(/\b(19|20)\d{2}\b/);
+  const year = yearMatch ? yearMatch[0] : null;
+  
+  return (
+    <motion.button
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: index * 0.05, duration: 0.2 }}
+      whileHover={{ scale: 1.05, y: -5 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className="flex-shrink-0 w-full group relative"
+    >
+      <div className="aspect-[2/3] rounded-xl overflow-hidden bg-card border border-border/30 relative">
+        {channel.logo ? (
+          <img
+            src={channel.logo}
+            alt={channel.name}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+            <Film className="w-10 h-10 text-primary/50" />
+          </div>
+        )}
+        
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
+          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+            <Play className="w-5 h-5 text-primary-foreground fill-current" />
+          </div>
+        </div>
+        
+        <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-emerald-500/80 backdrop-blur-sm">
+          <span className="text-[10px] font-bold text-white uppercase">عربي</span>
+        </div>
+      </div>
+      
+      <div className="mt-2 px-1">
+        <h4 className="text-sm font-medium text-foreground truncate">{cleanName(channel.name)}</h4>
+        {year && <p className="text-xs text-muted-foreground">{year}</p>}
+      </div>
+    </motion.button>
+  );
+};
 
 const CategoryRow = ({ 
   title, 
@@ -165,7 +217,90 @@ const CategoryRow = ({
   );
 };
 
-export const TMDBBrowseSection = ({ onSelectItem }: TMDBBrowseSectionProps) => {
+// Row for playlist items (Arabic movies)
+const PlaylistRow = ({ 
+  title, 
+  icon: Icon, 
+  channels, 
+  onChannelSelect 
+}: { 
+  title: string; 
+  icon: typeof Film;
+  channels: Channel[]; 
+  onChannelSelect?: (channel: Channel) => void;
+}) => {
+  const [currentPage, setCurrentPage] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const totalPages = Math.ceil(channels.length / ITEMS_PER_PAGE);
+  
+  const visibleItems = channels.slice(
+    currentPage * ITEMS_PER_PAGE,
+    (currentPage + 1) * ITEMS_PER_PAGE
+  );
+
+  useEffect(() => {
+    if (channels.length <= ITEMS_PER_PAGE || isPaused) return;
+    
+    const interval = setInterval(() => {
+      setCurrentPage((prev) => (prev + 1) % totalPages);
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [channels.length, totalPages, isPaused]);
+
+  if (channels.length === 0) return null;
+
+  return (
+    <div 
+      className="space-y-3"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
+          <Icon className="w-5 h-5 text-primary" />
+          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+        </div>
+        
+        {totalPages > 1 && (
+          <div className="flex items-center gap-1.5">
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i)}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  i === currentPage ? 'bg-primary w-4' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+      
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={currentPage}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.3 }}
+          className="grid grid-cols-3 md:grid-cols-6 gap-3"
+        >
+          {visibleItems.map((channel, index) => (
+            <PlaylistCard
+              key={channel.id}
+              channel={channel}
+              index={index}
+              onClick={() => onChannelSelect?.(channel)}
+            />
+          ))}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+};
+
+export const TMDBBrowseSection = ({ onSelectItem, channels = [], onChannelSelect }: TMDBBrowseSectionProps) => {
   const { getTrending, getMovies, getTVShows, error } = useTMDB();
   const [trending, setTrending] = useState<TMDBItem[]>([]);
   const [popularMovies, setPopularMovies] = useState<TMDBItem[]>([]);
@@ -176,9 +311,27 @@ export const TMDBBrowseSection = ({ onSelectItem }: TMDBBrowseSectionProps) => {
     tv: true,
   });
 
+  // Filter Arabic movies from playlist, sorted by year (newest first)
+  const arabicMovies = useMemo(() => {
+    const arabicContent = channels.filter(ch => {
+      const isMovie = ch.type === 'movies' || ch.url?.includes('/movie/') || ch.group?.toLowerCase().includes('movie');
+      const isArabic = ch.group?.toLowerCase().includes('arab') || 
+                       ch.name.match(/[\u0600-\u06FF]/) || // Arabic characters
+                       ch.group?.toLowerCase().includes('مصري') ||
+                       ch.group?.toLowerCase().includes('عربي');
+      return isMovie && isArabic;
+    });
+
+    // Sort by year extracted from name (newest first)
+    return arabicContent.sort((a, b) => {
+      const yearA = a.name.match(/\b(20[2-9]\d|202[4-9])\b/)?.[0] || '0';
+      const yearB = b.name.match(/\b(20[2-9]\d|202[4-9])\b/)?.[0] || '0';
+      return parseInt(yearB) - parseInt(yearA);
+    }).slice(0, 24);
+  }, [channels]);
+
   useEffect(() => {
     const loadContent = async () => {
-      // Load all categories in parallel
       const [trendingData, moviesData, tvData] = await Promise.all([
         getTrending().finally(() => setLoadingState(s => ({ ...s, trending: false }))),
         getMovies('popular').finally(() => setLoadingState(s => ({ ...s, movies: false }))),
@@ -190,10 +343,8 @@ export const TMDBBrowseSection = ({ onSelectItem }: TMDBBrowseSectionProps) => {
       setPopularTV(tvData.results.slice(0, 18));
     };
     
-    // Initial load
     loadContent();
     
-    // Auto-refresh every 30 minutes
     const refreshInterval = setInterval(() => {
       loadContent();
     }, 30 * 60 * 1000);
@@ -211,7 +362,6 @@ export const TMDBBrowseSection = ({ onSelectItem }: TMDBBrowseSectionProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Section Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
           <TrendingUp className="w-5 h-5 text-primary" />
@@ -222,8 +372,17 @@ export const TMDBBrowseSection = ({ onSelectItem }: TMDBBrowseSectionProps) => {
         </div>
       </div>
       
-      {/* Content Rows */}
       <div className="space-y-6">
+        {/* New Arabic Movies from Playlist */}
+        {arabicMovies.length > 0 && (
+          <PlaylistRow
+            title="New Arabic Movies"
+            icon={Globe}
+            channels={arabicMovies}
+            onChannelSelect={onChannelSelect}
+          />
+        )}
+        
         <CategoryRow
           title="Trending Now"
           icon={TrendingUp}
