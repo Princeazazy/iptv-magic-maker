@@ -311,10 +311,11 @@ const Index = () => {
               key={nav.currentScreen}
               items={filteredChannelsByCategory}
               favorites={nav.favorites}
-              onItemSelect={(item) => nav.handleItemSelect(item, nav.currentScreen)}
+              onItemSelect={(item, selectedGroup) => nav.handleItemSelect(item, nav.currentScreen, selectedGroup)}
               onToggleFavorite={nav.handleToggleFavorite}
               onBack={() => nav.setCurrentScreen('home')}
               category={nav.currentScreen}
+              initialSelectedGroup={nav.selectedMediaGroup}
             />
           </div>
         );
